@@ -13,12 +13,18 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('wallet'))
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
+                TextColumn::make('wallet.balance')
+                    ->label('Wallet Balance')
+                    ->money('BDT')
+                    ->default('0.00')
+                    ->sortable(),
                 TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable(),

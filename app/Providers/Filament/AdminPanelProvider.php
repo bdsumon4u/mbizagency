@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Admin\Pages\Auth\LoginPage;
+use App\Filament\Admin\Widgets\WalletBalanceWidget;
+use App\Filament\Resources\Transactions\TransactionResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,12 +36,16 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Neutral,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
+            ->resources([
+                TransactionResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\Filament\Admin\Widgets')
             ->widgets([
+                WalletBalanceWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
