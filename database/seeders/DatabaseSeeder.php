@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,8 +20,15 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Hotash User',
+            'email' => 'user@hotash.tech',
+            'password' => Hash::make('password'),
+        ]);
+
+        Admin::query()->create([
+            'name' => 'Hotash Admin',
+            'email' => 'admin@hotash.tech',
+            'password' => Hash::make('password'),
         ]);
     }
 }
