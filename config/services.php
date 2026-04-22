@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'facebook' => [
+        'app_id' => env('FACEBOOK_APP_ID'),
+        'app_secret' => env('FACEBOOK_APP_SECRET'),
+        'oauth_scopes' => env('FACEBOOK_OAUTH_SCOPES', ['business_management', 'ads_management']),
+    ],
+
 ];
