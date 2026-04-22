@@ -1,7 +1,11 @@
 {
     "agents": [
         "cursor",
-        "gemini"
+        "gemini",
+        "claude_code",
+        "codex",
+        "copilot",
+        "opencode"
     ],
     "guidelines": true,
     "mcp": true,
