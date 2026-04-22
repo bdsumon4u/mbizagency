@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\LoginPage;
 use App\Filament\Resources\Transactions\TransactionResource;
+use App\Filament\Widgets\PendingDepositWidget;
 use App\Filament\Widgets\WalletBalanceWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -48,6 +49,7 @@ class AppPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 WalletBalanceWidget::class,
+                PendingDepositWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
