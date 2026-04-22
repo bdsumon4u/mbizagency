@@ -5,11 +5,13 @@ namespace App\Filament\Admin\Resources\AdAccounts\Tables;
 use App\Enums\AdAccountStatus;
 use App\Models\AdAccount;
 use App\Models\BusinessManager;
+use App\Models\User;
 use App\Services\FacebookAdAccountService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Callout;
@@ -92,6 +94,30 @@ class AdAccountsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('assign_user')
+                    ->label('Assign User')
+                    ->icon('heroicon-o-user-plus')
+                    ->schema([
+                        Select::make('user_id')
+                            ->label('User')
+                            ->options(fn (): array => User::query()->pluck('email', 'id')->toArray())
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                    ])
+                    ->fillForm(fn (AdAccount $record): array => [
+                        'user_id' => $record->user_id,
+                    ])
+                    ->action(function (AdAccount $record, array $data): void {
+                        $record->update([
+                            'user_id' => $data['user_id'],
+                        ]);
+
+                        Notification::make()
+                            ->title('Ad account assigned successfully.')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('limit')
                     ->icon('heroicon-o-currency-dollar')
                     ->modalWidth(Width::Large)

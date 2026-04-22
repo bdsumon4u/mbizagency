@@ -43,6 +43,10 @@ class TransactionsTable
                     ->badge(),
                 TextColumn::make('source')
                     ->badge(),
+                TextColumn::make('note')
+                    ->label('Transaction Log')
+                    ->limit(80)
+                    ->toggleable(),
                 TextColumn::make('approvedByAdmin.email')
                     ->label('Approved By')
                     ->toggleable(isToggledHiddenByDefault: true)
