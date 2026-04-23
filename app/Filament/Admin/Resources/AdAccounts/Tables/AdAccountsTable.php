@@ -12,6 +12,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -94,6 +95,7 @@ class AdAccountsTable
                 Action::make('assign_user')
                     ->label('Assign User')
                     ->icon('heroicon-o-user-plus')
+                    ->modalWidth(Width::Large)
                     ->schema([
                         Select::make('user_id')
                             ->label('User')

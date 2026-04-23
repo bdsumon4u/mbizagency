@@ -27,6 +27,7 @@ class DepositFundAction
             ->icon('heroicon-o-banknotes')
             ->color('success')
             ->modalWidth(Width::Large)
+            ->visible(fn (AdAccount $record): bool => $record->user instanceof User)
             ->schema(fn (AdAccount $record): array => [
                 Callout::make('Current Wallet Balance: '.number_format((float) self::resolveWalletBalance($record), 2).' BDT')
                     ->icon('heroicon-o-banknotes')
