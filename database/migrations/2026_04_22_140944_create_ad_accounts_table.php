@@ -13,20 +13,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ad_accounts', function (Blueprint $table) {
-            $table->id();
+            $table->id()->startingValue(1001);
             $table->foreignId('business_manager_id')->constrained();
             $table->foreignId('user_id')->nullable()->constrained();
             $table->string('name')->index();
             $table->string('act_id')->unique();
             $table->string('status')->index()->default(AdAccountStatus::ACTIVE->value);
             $table->string('currency')->default('USD');
-            $table->integer('balance')->default(0);
-
-            // Card and payment information
-            $table->string('payment_method')->nullable();
-
-            // Account limits and thresholds
             $table->integer('spend_cap')->nullable();
+            $table->integer('amount_spent')->default(0);
+            $table->integer('balance')->default(0);
+            $table->string('payment_method')->nullable();
+            $table->integer('prepaid_fund_added')->default(0);
+            $table->integer('billing_threshold')->default(0);
 
             // Additional metadata
             $table->string('timezone')->nullable();

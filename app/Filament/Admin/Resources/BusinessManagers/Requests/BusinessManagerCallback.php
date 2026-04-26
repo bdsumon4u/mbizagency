@@ -3,7 +3,6 @@
 namespace App\Filament\Admin\Resources\BusinessManagers\Requests;
 
 use App\Filament\Admin\Resources\BusinessManagers\BusinessManagerResource;
-use App\Filament\Admin\Resources\BusinessManagers\Pages\ListBusinessManagers;
 use App\Services\FacebookBusinessManagerSyncService;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
@@ -29,7 +28,7 @@ class BusinessManagerCallback
                 ->danger()
                 ->send();
 
-            return redirect(ListBusinessManagers::getUrl());
+            return redirect($this->getAdminBusinessManagersUrl());
         }
 
         $cache = Cache::get('facebook_oauth_state:'.$state);
@@ -39,7 +38,7 @@ class BusinessManagerCallback
                 ->danger()
                 ->send();
 
-            return redirect(ListBusinessManagers::getUrl());
+            return redirect($this->getAdminBusinessManagersUrl());
         }
 
         $response = Http::get('https://graph.facebook.com/v21.0/oauth/access_token', [
@@ -57,7 +56,7 @@ class BusinessManagerCallback
                 ->danger()
                 ->send();
 
-            return redirect(ListBusinessManagers::getUrl());
+            return redirect($this->getAdminBusinessManagersUrl());
         }
 
         $syncedCount = $this->facebookBusinessManagerSyncService->sync(
@@ -71,14 +70,20 @@ class BusinessManagerCallback
                 ->warning()
                 ->send();
 
-            return redirect(ListBusinessManagers::getUrl());
+            return redirect($this->getAdminBusinessManagersUrl());
         }
 
         Notification::make()
-            ->title("Business managers synced successfully. Total: {$syncedCount}.")
+            ->title('Facebook connected successfully.')
+            ->body("Synced {$syncedCount} business manager(s).")
             ->success()
             ->send();
 
-        return redirect(ListBusinessManagers::getUrl());
+        return redirect($this->getAdminBusinessManagersUrl());
+    }
+
+    private function getAdminBusinessManagersUrl(): string
+    {
+        return route('filament.admin.resources.business-managers.index');
     }
 }

@@ -3,9 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Admin\Pages\Auth\LoginPage;
-use App\Filament\Admin\Widgets\PendingDepositWidget;
-use App\Filament\Admin\Widgets\WalletBalanceWidget;
-use App\Filament\Resources\Transactions\TransactionResource;
+use App\Filament\Pages\OrderHistory;
+use App\Http\Controllers\ApproveOrderController;
+use App\Http\Controllers\RejectOrderController;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -21,6 +21,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -30,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->login(LoginPage::class)
             ->passwordReset()
             ->emailVerification()
@@ -37,17 +39,13 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Neutral,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
-            ->resources([
-                TransactionResource::class,
-            ])
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
                 Dashboard::class,
+                OrderHistory::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\Filament\Admin\Widgets')
             ->widgets([
-                WalletBalanceWidget::class,
-                PendingDepositWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
@@ -65,6 +63,14 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->authenticatedRoutes(function (): void {
+                Route::get('/orders/{order}/approve', ApproveOrderController::class)
+                    ->middleware('signed')
+                    ->name('orders.approve');
+                Route::get('/orders/{order}/reject', RejectOrderController::class)
+                    ->middleware('signed')
+                    ->name('orders.reject');
+            })
             ->authGuard('admin');
     }
 }

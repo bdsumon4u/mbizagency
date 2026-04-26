@@ -5,12 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 #[Fillable([
-    'wallet_id',
     'user_id',
+    'ad_account_id',
     'approved_by_admin_id',
     'type',
     'source',
@@ -43,11 +42,6 @@ class Transaction extends Model
         ];
     }
 
-    public function wallet(): BelongsTo
-    {
-        return $this->belongsTo(Wallet::class);
-    }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -63,17 +57,6 @@ class Transaction extends Model
         if ($this->status !== self::STATUS_PENDING) {
             throw new RuntimeException('Only pending transactions can be approved.');
         }
-
-        DB::transaction(function (): void {
-            $wallet = Wallet::query()->lockForUpdate()->findOrFail($this->wallet_id);
-            $amount = (float) $this->amount;
-
-            if ($this->type === self::TYPE_DEPOSIT) {
-                $wallet->credit($amount);
-            } else {
-                $wallet->debit($amount);
-            }
-        });
 
         $this->update([
             'status' => self::STATUS_APPROVED,

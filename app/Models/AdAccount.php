@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Casts\FacebookDollar;
 use App\Enums\AdAccountDisableReason;
+use App\Enums\AdAccountStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'business_manager_id',
@@ -15,6 +18,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'status',
     'currency',
     'balance',
+    'amount_spent',
+    'prepaid_fund_added',
+    'billing_threshold',
     'payment_method',
     'spend_cap',
     'timezone',
@@ -28,9 +34,20 @@ class AdAccount extends Model
     protected function casts(): array
     {
         return [
+            'status' => AdAccountStatus::class,
+            'spend_cap' => FacebookDollar::class,
+            'amount_spent' => FacebookDollar::class,
+            'balance' => FacebookDollar::class,
+            'prepaid_fund_added' => FacebookDollar::class,
+            'billing_threshold' => FacebookDollar::class,
             'disable_reason' => AdAccountDisableReason::class,
             'synced_at' => 'datetime',
         ];
+    }
+
+    public function priceRates(): HasMany
+    {
+        return $this->hasMany(PriceRate::class);
     }
 
     public function businessManager(): BelongsTo

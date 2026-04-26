@@ -13,14 +13,17 @@ use Illuminate\Support\Facades\Http;
 
 final class FacebookAdAccountService
 {
+    private const GRAPH_API_VERSION = 'v25.0';
+
+    private const AD_ACCOUNT_FIELDS = 'id,name,account_status,currency,spend_cap,amount_spent,balance,timezone_name,funding_source_details,disable_reason';
+
     /**
      * @throws Exception
      */
-    public function importFromBusinessManager(BusinessManager $businessManager): int
+    public function syncFromBusinessManager(BusinessManager $businessManager): int
     {
         $adAccounts = $this->fetchBusinessManagerAdAccounts($businessManager);
-
-        $importedCount = 0;
+        $syncedCount = 0;
 
         foreach ($adAccounts as $account) {
             $rawId = (string) ($account['id'] ?? '');
@@ -34,64 +37,42 @@ final class FacebookAdAccountService
                 ['act_id' => $actId],
                 [
                     'business_manager_id' => $businessManager->id,
-                    'name' => (string) ($account['name'] ?? $actId),
-                    'status' => (int) ($account['account_status'] ?? AdAccountStatus::ACTIVE->value),
-                    'currency' => (string) ($account['currency'] ?? 'USD'),
-                    'balance' => (int) ($account['balance'] ?? 0),
-                    'payment_method' => (string) ($account['funding_source_details']['display_string'] ?? ''),
-                    'spend_cap' => isset($account['spend_cap']) ? (int) $account['spend_cap'] : null,
-                    'timezone' => (string) ($account['timezone_name'] ?? ''),
-                    'disable_reason' => AdAccountDisableReason::tryFrom((int) ($account['disable_reason'] ?? 0)),
-                    'synced_at' => now(),
+                    ...$this->mapAdAccountData($account),
                 ],
             );
 
-            $importedCount++;
+            $syncedCount++;
         }
 
-        return $importedCount;
+        $businessManager->update([
+            'synced_at' => now(),
+        ]);
+
+        return $syncedCount;
     }
 
-    public function validateSpendLimit(float $spendLimit, string $currency = 'USD'): array
+    /**
+     * @throws Exception
+     */
+    public function syncSingleAdAccount(AdAccount $adAccount): void
     {
-        $errors = [];
+        $businessManager = $adAccount->businessManager;
 
-        if ($spendLimit <= 0) {
-            $errors[] = "Spend cap must be greater than 0 {$currency}.";
+        if (! $businessManager instanceof BusinessManager) {
+            throw new Exception('Business manager not found for this ad account.');
         }
 
-        if ($spendLimit > 1000000) {
-            $errors[] = "Spend cap cannot exceed 1,000,000 {$currency}.";
-        }
-
-        return [
-            'valid' => $errors === [],
-            'errors' => $errors,
-        ];
-    }
-
-    public function setSpendLimit(BusinessManager $businessManager, string $actId, float $spendLimit): array
-    {
-        $adAccountId = str_starts_with($actId, 'act_') ? $actId : 'act_'.$actId;
-
-        $response = Http::post("https://graph.facebook.com/v21.0/{$adAccountId}", [
+        $response = Http::get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/act_'.$adAccount->act_id, [
             'access_token' => $businessManager->access_token,
-            'spend_cap' => (int) round($spendLimit),
+            'fields' => self::AD_ACCOUNT_FIELDS,
         ]);
 
         if ($response->failed()) {
-            return [
-                'success' => false,
-                'message' => $response->json('error.message')
-                    ?? $response->json('error_description')
-                    ?? 'Failed to update spend cap on Facebook.',
-            ];
+            throw new Exception('Failed to fetch ad account details from Facebook.');
         }
 
-        return [
-            'success' => true,
-            'spend_limit' => (int) round($spendLimit),
-        ];
+        $details = (array) $response->json();
+        $adAccount->update($this->mapAdAccountData($details));
     }
 
     /**
@@ -101,9 +82,9 @@ final class FacebookAdAccountService
      */
     private function fetchBusinessManagerAdAccounts(BusinessManager $businessManager): array
     {
-        $response = Http::get("https://graph.facebook.com/v21.0/{$businessManager->bm_id}/owned_ad_accounts", [
+        $response = Http::get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/'.$businessManager->bm_id.'/owned_ad_accounts', [
             'access_token' => $businessManager->access_token,
-            'fields' => 'id,name,account_status,currency,balance,spend_cap,timezone_name,funding_source_details,disable_reason',
+            'fields' => self::AD_ACCOUNT_FIELDS,
             'limit' => 500,
         ]);
 
@@ -116,5 +97,21 @@ final class FacebookAdAccountService
         }
 
         return (array) $response->json('data', []);
+    }
+
+    private function mapAdAccountData(array $account): array
+    {
+        return [
+            'name' => (string) ($account['name'] ?? $account['id'] ?? ''),
+            'status' => (int) ($account['account_status'] ?? AdAccountStatus::ACTIVE->value),
+            'currency' => (string) ($account['currency'] ?? 'USD'),
+            'spend_cap' => (int) ($account['spend_cap'] ?? 0),
+            'amount_spent' => (int) ($account['amount_spent'] ?? 0),
+            'balance' => (int) ($account['balance'] ?? 0),
+            'payment_method' => (string) ($account['funding_source_details']['display_string'] ?? ''),
+            'timezone' => (string) ($account['timezone_name'] ?? ''),
+            'disable_reason' => AdAccountDisableReason::tryFrom((int) ($account['disable_reason'] ?? 0)),
+            'synced_at' => now(),
+        ];
     }
 }

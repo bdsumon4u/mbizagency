@@ -4,9 +4,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\LoginPage;
 use App\Filament\Pages\Dashboard;
-use App\Filament\Resources\Transactions\TransactionResource;
-use App\Filament\Widgets\PendingDepositWidget;
-use App\Filament\Widgets\WalletBalanceWidget;
+use App\Filament\Pages\OrderHistory;
+use App\Filament\Widgets\AdAccountsTableWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,6 +30,7 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
+            ->viteTheme('resources/css/filament/app/theme.css')
             ->login(LoginPage::class)
             ->passwordReset()
             ->registration()
@@ -39,17 +39,14 @@ class AppPanelProvider extends PanelProvider
                 'primary' => Color::Neutral,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            ->resources([
-                TransactionResource::class,
-            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
+                OrderHistory::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                WalletBalanceWidget::class,
-                PendingDepositWidget::class,
+                AdAccountsTableWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])

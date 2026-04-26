@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum BusinessManagerStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
+
+enum BusinessManagerStatus: string implements HasColor, HasIcon, HasLabel
 {
     case NONE = 'none';
     case ACTIVE = 'active';
@@ -51,7 +55,7 @@ enum BusinessManagerStatus: string
     {
         return match ($this) {
             self::NONE => 'heroicon-o-question-mark-circle',
-            self::ACTIVE => 'heroicon-o-building-office-2',
+            self::ACTIVE => 'heroicon-o-check-circle',
             self::INACTIVE => 'heroicon-o-pause-circle',
             self::SUSPENDED => 'heroicon-o-x-circle',
             self::PENDING_VERIFICATION => 'heroicon-o-clock',

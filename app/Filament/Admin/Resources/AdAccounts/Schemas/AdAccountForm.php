@@ -38,6 +38,22 @@ class AdAccountForm
                     ->required()
                     ->default('USD'),
                 TextInput::make('balance')
+                    ->label('Outstanding Due')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                TextInput::make('amount_spent')
+                    ->label('Spent')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                TextInput::make('prepaid_fund_added')
+                    ->label('Fund Added')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                TextInput::make('billing_threshold')
+                    ->label('Threshold')
                     ->required()
                     ->numeric()
                     ->default(0),

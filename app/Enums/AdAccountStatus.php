@@ -58,27 +58,6 @@ enum AdAccountStatus: int implements HasColor, HasIcon, HasLabel
     }
 
     /**
-     * Create enum from Facebook API status code
-     */
-    public static function fromFacebookStatus(int $status): self
-    {
-        return self::from($status);
-    }
-
-    /**
-     * Get all statuses as options array for forms
-     */
-    public static function getOptions(): array
-    {
-        $options = [];
-        foreach (self::cases() as $status) {
-            $options[$status->value] = $status->getLabel();
-        }
-
-        return $options;
-    }
-
-    /**
      * Get the human-readable label for the status
      */
     public function getLabel(): string

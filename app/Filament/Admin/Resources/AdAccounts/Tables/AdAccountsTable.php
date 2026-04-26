@@ -3,19 +3,25 @@
 namespace App\Filament\Admin\Resources\AdAccounts\Tables;
 
 use App\Enums\AdAccountStatus;
+use App\Filament\Actions\AssignUserAction;
+use App\Filament\Actions\AssignUserBulkAction;
 use App\Filament\Actions\DepositFundAction;
+use App\Filament\Admin\Resources\Users\UserResource;
+use App\Filament\Tables\Columns\AdAccountColumn;
+use App\Filament\Tables\Columns\CurrencyColumn;
+use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
-use App\Models\User;
+use App\Services\FacebookAdAccountService;
+use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
-use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Number;
 
 class AdAccountsTable
 {
@@ -24,57 +30,76 @@ class AdAccountsTable
         return $table
             ->columns([
                 TextColumn::make('businessManager.name')
-                    ->label('Business Manager')
+                    ->label('BM')
                     ->sortable()
+                    ->description(fn (AdAccount $record): string => $record->businessManager?->bm_id)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('user.email')
                     ->label('User')
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('name')
-                    ->label('Ad Account')
-                    ->searchable(),
-                TextColumn::make('act_id')
-                    ->label('Ad Account ID')
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->url(function (AdAccount $record): ?string {
+                        if (! $record->user_id) {
+                            return null;
+                        }
+
+                        return UserResource::getUrl('view', ['record' => $record->user_id]);
+                    }),
+                AdAccountColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn (int|string $state): string => AdAccountStatus::tryFrom((int) $state)?->getLabel() ?? (string) $state)
                     ->searchable(),
-                TextColumn::make('currency')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('balance')
-                    ->numeric()
+                CurrencyColumn::make('spend_cap')
+                    ->label('Spend Limit')
+                    ->sortable(),
+                CurrencyColumn::make('amount_spent')
+                    ->label('Spent')
+                    ->sortable(),
+                TextColumn::make('remaining')
+                    ->label('Remaining')
+                    ->sortable()
+                    ->getStateUsing(function (AdAccount $record): string {
+                        return Number::currency($record->spend_cap - $record->amount_spent, $record->currency);
+                    }),
+                CurrencyColumn::make('balance')
+                    ->label('Due')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('payment_method')
-                    ->searchable()
+                CurrencyColumn::make('prepaid_fund_added')
+                    ->label('Fund')
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('spend_cap')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('timezone')
-                    ->searchable()
+                CurrencyColumn::make('billing_threshold')
+                    ->label('Threshold')
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('account_type')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('synced_at')
-                    ->dateTime()
+                DateTimeColumn::make('synced_at')
                     ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
+                DateTimeColumn::make('created_at')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
+                DateTimeColumn::make('updated_at')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('business_manager_id')
+                    ->label('BM')
+                    ->relationship('businessManager', 'name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('user_id')
+                    ->label('User')
+                    ->relationship('user', 'email')
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('status')
-                    ->options(AdAccountStatus::getOptions())
+                    ->options(AdAccountStatus::class)
                     ->searchable(),
                 SelectFilter::make('currency')
                     ->options(fn (): array => AdAccount::query()
@@ -83,43 +108,35 @@ class AdAccountsTable
                         ->pluck('currency', 'currency')
                         ->toArray())
                     ->searchable(),
-                SelectFilter::make('business_manager_id')
-                    ->label('Business Manager')
-                    ->relationship('businessManager', 'name')
-                    ->searchable()
-                    ->preload(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DepositFundAction::make(),
-                Action::make('assign_user')
-                    ->label('Assign User')
-                    ->icon('heroicon-o-user-plus')
-                    ->modalWidth(Width::Large)
-                    ->schema([
-                        Select::make('user_id')
-                            ->label('User')
-                            ->options(fn (): array => User::query()->pluck('email', 'id')->toArray())
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-                    ])
-                    ->fillForm(fn (AdAccount $record): array => [
-                        'user_id' => $record->user_id,
-                    ])
-                    ->action(function (AdAccount $record, array $data): void {
-                        $record->update([
-                            'user_id' => $data['user_id'],
-                        ]);
+                Action::make('sync')
+                    ->tooltip(fn (AdAccount $record): string => 'Sync '.$record->name.'.')
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->color('info')
+                    ->button()
+                    ->action(function (AdAccount $record): void {
+                        try {
+                            app(FacebookAdAccountService::class)->syncSingleAdAccount($record);
 
-                        Notification::make()
-                            ->title('Ad account assigned successfully.')
-                            ->success()
-                            ->send();
+                            Notification::make()
+                                ->title('Ad account synced successfully.')
+                                ->success()
+                                ->send();
+                        } catch (Exception $exception) {
+                            Notification::make()
+                                ->title('Ad account sync failed')
+                                ->body($exception->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
+                DepositFundAction::make(),
+                AssignUserAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    AssignUserBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);

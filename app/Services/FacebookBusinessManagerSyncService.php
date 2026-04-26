@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Http;
 
 final readonly class FacebookBusinessManagerSyncService
 {
+    private const GRAPH_API_VERSION = 'v25.0';
+
     public function sync(string $accessToken, ?int $userId = null): int
     {
         $businessManagers = $this->fetchAccessibleBusinessManagers($accessToken);
@@ -49,7 +51,7 @@ final readonly class FacebookBusinessManagerSyncService
      */
     private function fetchAccessibleBusinessManagers(string $accessToken): array
     {
-        $response = Http::get('https://graph.facebook.com/v21.0/me/businesses', [
+        $response = Http::get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/me/businesses', [
             'access_token' => $accessToken,
             'fields' => 'id,name,about',
             'limit' => 200,

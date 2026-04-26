@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('business_managers', function (Blueprint $table) {
-            $table->id();
+            $table->id()->startingValue(1001);
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('bm_id')->unique();
             $table->text('access_token');
@@ -21,8 +21,6 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('status')->default(BusinessManagerStatus::NONE);
-            $table->string('currency')->default('USD');
-            $table->integer('balance')->default(0);
             $table->timestamp('synced_at')->nullable();
             $table->timestamps();
         });

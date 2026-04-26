@@ -30,9 +30,15 @@ class FacebookOAuthRedirect extends Page
         request()->session()->put('facebook_oauth_state', $state);
         Cache::put('facebook_oauth_state:'.$state, true, now()->addMinutes(10));
 
+        $scopes = config('services.facebook.oauth_scopes', ['business_management', 'ads_management', 'ads_read']);
+
+        if (is_string($scopes)) {
+            $scopes = explode(',', $scopes);
+        }
+
         $scopes = array_values(array_filter(array_map(
             static fn (mixed $scope): string => mb_trim((string) $scope),
-            (array) config('services.facebook.oauth_scopes', ['business_management', 'ads_management'])
+            (array) $scopes
         )));
 
         $query = http_build_query([

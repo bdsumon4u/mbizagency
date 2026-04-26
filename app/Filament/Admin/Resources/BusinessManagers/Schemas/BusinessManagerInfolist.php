@@ -20,9 +20,6 @@ final class BusinessManagerInfolist
                 TextEntry::make('name'),
                 TextEntry::make('description'),
                 TextEntry::make('status'),
-                TextEntry::make('currency'),
-                TextEntry::make('balance')
-                    ->numeric(),
                 TextEntry::make('synced_at')
                     ->dateTime(),
                 TextEntry::make('created_at')

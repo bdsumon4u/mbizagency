@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\BusinessManagers\Tables;
 
+use App\Filament\Tables\Columns\BusinessManagerColumn;
+use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\BusinessManager;
 use App\Services\FacebookAdAccountService;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -20,28 +22,24 @@ final class BusinessManagersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->withCount('adAccounts'))
             ->columns([
-                TextColumn::make('name')
-                    ->label('Business Manager')
+                BusinessManagerColumn::make('name')
                     ->searchable()
+                    ->sortable(),
+                TextColumn::make('ad_accounts_count')
+                    ->label('Accounts')
+                    ->badge()
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('currency')
-                    ->searchable(),
-                TextColumn::make('balance')
-                    ->numeric()
+                DateTimeColumn::make('synced_at')
                     ->sortable(),
-                TextColumn::make('synced_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
+                DateTimeColumn::make('created_at')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
+                DateTimeColumn::make('updated_at')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -49,23 +47,22 @@ final class BusinessManagersTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-                Action::make('import_ad_accounts')
-                    ->label('Import Ad Accounts')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->requiresConfirmation()
+                Action::make('sync')
+                    ->tooltip('Import Ad Accounts')
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->color('info')
+                    ->button()
                     ->action(function (BusinessManager $record): void {
                         try {
-                            $importedCount = app(FacebookAdAccountService::class)->importFromBusinessManager($record);
+                            $syncedCount = app(FacebookAdAccountService::class)->syncFromBusinessManager($record);
 
                             Notification::make()
-                                ->title("Imported {$importedCount} ad account(s).")
+                                ->title("Synced {$syncedCount} ad account(s).")
                                 ->success()
                                 ->send();
                         } catch (Exception $exception) {
                             Notification::make()
-                                ->title('Ad account import failed')
+                                ->title('Ad account sync failed')
                                 ->body($exception->getMessage())
                                 ->danger()
                                 ->send();

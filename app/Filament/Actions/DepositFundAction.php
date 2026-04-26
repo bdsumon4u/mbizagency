@@ -2,21 +2,30 @@
 
 namespace App\Filament\Actions;
 
+use App\Actions\ApproveOrderAction;
+use App\Enums\OrderSource;
+use App\Enums\OrderStatus;
+use App\Mail\NewOrderPendingApprovalMail;
 use App\Models\AdAccount;
 use App\Models\Admin;
-use App\Models\BusinessManager;
-use App\Models\Transaction;
+use App\Models\Order;
 use App\Models\User;
-use App\Models\Wallet;
-use App\Services\FacebookAdAccountService;
+use App\Services\PriceRateService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Callout;
+use Filament\Schemas\Components\View;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use RuntimeException;
+use Throwable;
 
 class DepositFundAction
 {
@@ -24,69 +33,84 @@ class DepositFundAction
     {
         return Action::make('add_fund')
             ->label('Add Fund')
-            ->icon('heroicon-o-banknotes')
+            ->tooltip(fn (AdAccount $record): string => 'Add fund to '.$record->name.'.')
+            ->icon(Heroicon::OutlinedBanknotes)
             ->color('success')
+            ->button()
             ->modalWidth(Width::Large)
             ->visible(fn (AdAccount $record): bool => $record->user instanceof User)
             ->schema(fn (AdAccount $record): array => [
-                Callout::make('Current Wallet Balance: '.number_format((float) self::resolveWalletBalance($record), 2).' BDT')
-                    ->icon('heroicon-o-banknotes')
-                    ->description('This amount will be debited from wallet and added to this ad account.')
-                    ->success(),
+                View::make('effective_price_rates_table')
+                    ->view('filament.actions.effective-price-rates-table')
+                    ->viewData([
+                        'rates' => app(PriceRateService::class)->getEffectiveRateRowsForAdAccount($record),
+                    ]),
                 Callout::make('Ad Account: '.$record->name.' ('.$record->act_id.')')
                     ->icon('heroicon-o-information-circle')
                     ->description('Current ad account balance: '.number_format((float) $record->balance, 2).' '.$record->currency)
                     ->info(),
-                TextInput::make('amount')
-                    ->label('Amount (BDT)')
+                TextInput::make('usd_amount')
+                    ->label('Amount (USD)')
                     ->numeric()
-                    ->integer()
                     ->minValue(1)
+                    ->extraInputAttributes([
+                        'x-on:input' => '$dispatch(\'usd-updated\', { usd: Number($el.value || 0) })',
+                    ])
                     ->required(),
+                FileUpload::make('screenshot')
+                    ->label('Screenshot')
+                    ->image()
+                    ->disk('public')
+                    ->directory('orders/screenshots')
+                    ->visibility('public')
+                    ->optimize('webp', 75)
+                    ->automaticallyResizeImagesMode('contain')
+                    ->maxImageWidth('300')
+                    ->maxImageHeight('500')
+                    ->automaticallyUpscaleImagesWhenResizing(false)
+                    ->required(Filament::getCurrentPanel()?->getId() !== 'admin'),
+                Textarea::make('note')
+                    ->label('Note (optional)')
+                    ->maxLength(500),
             ])
             ->action(function (AdAccount $record, array $data): void {
-                if (! $record->user) {
-                    Notification::make()
-                        ->title('Please assign a user to this ad account first.')
-                        ->danger()
-                        ->send();
-
-                    return;
-                }
-
                 try {
-                    DB::transaction(function () use ($record, $data): void {
-                        $wallet = Wallet::query()->lockForUpdate()->firstOrCreate(
-                            ['user_id' => $record->user->id],
-                            ['balance' => 0]
-                        );
+                    $admin = self::whichAdmin();
 
-                        $amount = (float) $data['amount'];
-                        $wallet->debit($amount);
+                    $order = DB::transaction(function () use ($record, $data, $admin): Order {
+                        $amountUsd = (float) $data['usd_amount'];
+                        $pricing = app(PriceRateService::class)->convertUsdToBdtForAdAccount($record, $amountUsd);
+                        $amountBdt = (float) $pricing['bdt_amount'];
 
-                        $record->increment('balance', (int) $amount);
-                        $record->update(['synced_at' => now()]);
-
-                        $admin = self::whichAdmin();
-
-                        Transaction::query()->create([
-                            'wallet_id' => $wallet->id,
-                            'user_id' => $record->user->id,
-                            'approved_by_admin_id' => $admin?->id,
-                            'type' => Transaction::TYPE_WITHDRAWAL,
-                            'source' => $admin ? Transaction::SOURCE_ADMIN : Transaction::SOURCE_USER,
-                            'status' => Transaction::STATUS_APPROVED,
-                            'amount' => $amount,
-                            'note' => 'Fund transferred to ad account: '.$record->act_id,
-                            'approved_at' => now(),
+                        return Order::query()->create([
+                            'admin_id' => $admin?->id,
+                            'user_id' => $record->user_id,
+                            'ad_account_id' => $record->id,
+                            'usd_amount' => $amountUsd,
+                            'dollar_rate' => $pricing['dollar_rate'],
+                            'bdt_amount' => $amountBdt,
+                            'source' => $admin ? OrderSource::ADMIN : OrderSource::USER,
+                            'status' => OrderStatus::PENDING,
+                            'note' => $data['note'] ?? null,
+                            'screenshot' => $data['screenshot'] ?? null,
                         ]);
                     });
 
-                    $record->refresh();
-                    self::syncSpendCapForAdmin($record);
+                    if (! $order instanceof Order) {
+                        throw new RuntimeException('Failed to create order.');
+                    }
+
+                    if ($admin) {
+                        app(ApproveOrderAction::class)($order, $admin);
+                    } else {
+                        $order->load(['user', 'adAccount']);
+                        self::sendPendingOrderEmails($order);
+                    }
 
                     Notification::make()
-                        ->title('Fund added to ad account successfully.')
+                        ->title($admin
+                            ? 'Order approved and spend cap synced successfully.'
+                            : 'Order submitted and sent to admins for confirmation.')
                         ->success()
                         ->send();
                 } catch (RuntimeException $exception) {
@@ -94,17 +118,14 @@ class DepositFundAction
                         ->title($exception->getMessage())
                         ->danger()
                         ->send();
+                } catch (Throwable $exception) {
+                    Notification::make()
+                        ->title('Failed to submit order.')
+                        ->body($exception->getMessage())
+                        ->danger()
+                        ->send();
                 }
             });
-    }
-
-    private static function resolveWalletBalance(AdAccount $record): float
-    {
-        if (! $record->user instanceof User) {
-            return 0;
-        }
-
-        return (float) (Wallet::query()->where('user_id', $record->user->id)->value('balance') ?? 0);
     }
 
     private static function whichAdmin(): ?Admin
@@ -118,51 +139,31 @@ class DepositFundAction
         return $admin instanceof Admin ? $admin : null;
     }
 
-    private static function syncSpendCapForAdmin(AdAccount $record): void
+    private static function sendPendingOrderEmails(Order $order): void
     {
-        $admin = self::whichAdmin();
-        if (! $admin instanceof Admin) {
-            return;
+        $admins = Admin::query()
+            ->whereNotNull('email')
+            ->get(['id', 'email']);
+
+        foreach ($admins as $admin) {
+            $approveUrl = URL::temporarySignedRoute(
+                'filament.admin.orders.approve',
+                now()->addDays(2),
+                [
+                    'order' => $order->id,
+                    'admin' => $admin->id,
+                ],
+            );
+            $rejectUrl = URL::temporarySignedRoute(
+                'filament.admin.orders.reject',
+                now()->addDays(2),
+                [
+                    'order' => $order->id,
+                    'admin' => $admin->id,
+                ],
+            );
+
+            Mail::to($admin->email)->send(new NewOrderPendingApprovalMail($order, $approveUrl, $rejectUrl));
         }
-
-        $businessManager = $record->businessManager;
-        if (! $businessManager instanceof BusinessManager) {
-            return;
-        }
-
-        $service = app(FacebookAdAccountService::class);
-        $targetSpendLimit = (float) $record->balance;
-        $validation = $service->validateSpendLimit($targetSpendLimit, (string) $record->currency);
-
-        if (! $validation['valid']) {
-            Notification::make()
-                ->title('Fund added, but spend cap validation failed.')
-                ->body(implode("\n", $validation['errors']))
-                ->warning()
-                ->send();
-
-            return;
-        }
-
-        $response = $service->setSpendLimit(
-            $businessManager,
-            (string) $record->act_id,
-            $targetSpendLimit,
-        );
-
-        if (! ($response['success'] ?? false)) {
-            Notification::make()
-                ->title('Fund added, but failed to update spend cap on Meta.')
-                ->body((string) ($response['message'] ?? 'Unknown error'))
-                ->warning()
-                ->send();
-
-            return;
-        }
-
-        $record->update([
-            'spend_cap' => $response['spend_limit'] ?? (int) $record->balance,
-            'synced_at' => now(),
-        ]);
     }
 }

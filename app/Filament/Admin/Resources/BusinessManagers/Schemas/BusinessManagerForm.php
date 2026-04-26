@@ -34,13 +34,6 @@ final class BusinessManagerForm
                     ->default(BusinessManagerStatus::ACTIVE->value)
                     ->searchable()
                     ->required(),
-                TextInput::make('currency')
-                    ->default('USD')
-                    ->required(),
-                TextInput::make('balance')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
             ])
             ->columns(3);
     }

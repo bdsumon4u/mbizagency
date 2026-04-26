@@ -2,14 +2,14 @@
 
 namespace App\Filament\Admin\Resources\Users\RelationManagers;
 
-use Filament\Actions\Action;
+use App\Filament\Tables\Columns\DateTimeColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class TransactionsRelationManager extends RelationManager
+class OrdersRelationManager extends RelationManager
 {
-    protected static string $relationship = 'transactions';
+    protected static string $relationship = 'orders';
 
     public function table(Table $table): Table
     {
@@ -28,19 +28,11 @@ class TransactionsRelationManager extends RelationManager
                 TextColumn::make('approvedByAdmin.email')
                     ->label('Approved By')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
-                    ->dateTime()
+                DateTimeColumn::make('created_at')
                     ->sortable(),
             ])
             ->headerActions([
-                Action::make('current_balance')
-                    ->label(function (): string {
-                        $currentBalance = (float) ($this->getOwnerRecord()->wallet?->balance ?? 0);
-
-                        return 'Current Balance: BDT '.number_format($currentBalance, 2);
-                    })
-                    ->color('gray')
-                    ->disabled(),
+                //
             ])
             ->recordActions([]);
     }
