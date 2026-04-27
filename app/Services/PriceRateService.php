@@ -18,6 +18,12 @@ class PriceRateService
             throw new RuntimeException('USD amount must be greater than zero.');
         }
 
+        $minimumUsd = $this->getMinimumUsdForAdAccount($adAccount);
+
+        if ($minimumUsd !== null && $usdAmount < $minimumUsd) {
+            throw new RuntimeException('Minimum deposit amount is '.number_format($minimumUsd, 2).' USD.');
+        }
+
         $rate = $this->resolveRate(
             $usdAmount,
             $this->getEffectiveRatesForAdAccount($adAccount)->sortByDesc('min_usd')->values()
@@ -35,6 +41,16 @@ class PriceRateService
             'min_usd' => (float) $rate->min_usd,
             'source' => $rate->ad_account_id ? 'special' : 'global',
         ];
+    }
+
+    public function getMinimumUsdForAdAccount(AdAccount $adAccount): ?float
+    {
+        /** @var PriceRate|null $minimumRate */
+        $minimumRate = $this->getEffectiveRatesForAdAccount($adAccount)
+            ->sortBy('min_usd')
+            ->first();
+
+        return $minimumRate ? (float) $minimumRate->min_usd : null;
     }
 
     public function getEffectiveRatesForAdAccount(AdAccount $adAccount): Collection

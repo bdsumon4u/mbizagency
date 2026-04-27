@@ -4,3 +4,8 @@
 @source '../../../../resources/views/filament/actions/**/*';
 @source '../../../../resources/views/filament/tables/columns/**/*';
 @source '../../../../resources/views/filament/**/*';
+
+.fi-ta-text:not(.fi-inline) {
+    padding-inline: calc(var(--spacing) * 2);
+    padding-block: calc(var(--spacing) * 2);
+}

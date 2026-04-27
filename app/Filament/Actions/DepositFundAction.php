@@ -39,46 +39,63 @@ class DepositFundAction
             ->button()
             ->modalWidth(Width::Large)
             ->visible(fn (AdAccount $record): bool => $record->user instanceof User)
-            ->schema(fn (AdAccount $record): array => [
-                View::make('effective_price_rates_table')
-                    ->view('filament.actions.effective-price-rates-table')
-                    ->viewData([
-                        'rates' => app(PriceRateService::class)->getEffectiveRateRowsForAdAccount($record),
-                    ]),
-                Callout::make('Ad Account: '.$record->name.' ('.$record->act_id.')')
-                    ->icon('heroicon-o-information-circle')
-                    ->description('Current ad account balance: '.number_format((float) $record->balance, 2).' '.$record->currency)
-                    ->info(),
-                TextInput::make('usd_amount')
-                    ->label('Amount (USD)')
-                    ->numeric()
-                    ->minValue(1)
-                    ->extraAttributes([
-                        'onwheel' => 'return false;',
-                    ])
-                    ->extraInputAttributes([
-                        'x-on:input' => '$dispatch(\'usd-updated\', { usd: Number($el.value || 0) })',
-                    ])
-                    ->required(),
-                FileUpload::make('screenshot')
-                    ->label('Screenshot')
-                    ->image()
-                    ->disk('public')
-                    ->directory('orders/screenshots')
-                    ->visibility('public')
-                    ->optimize('webp', 75)
-                    ->automaticallyResizeImagesMode('contain')
-                    ->maxImageWidth('300')
-                    ->maxImageHeight('500')
-                    ->automaticallyUpscaleImagesWhenResizing(false)
-                    ->required(Filament::getCurrentPanel()?->getId() !== 'admin'),
-                Textarea::make('note')
-                    ->label('Note (optional)')
-                    ->maxLength(500),
-            ])
+            ->schema(function (AdAccount $record): array {
+                $priceRateService = app(PriceRateService::class);
+                $effectiveRates = $priceRateService->getEffectiveRateRowsForAdAccount($record);
+
+                return [
+                    View::make('effective_price_rates_table')
+                        ->view('filament.actions.effective-price-rates-table')
+                        ->viewData([
+                            'rates' => $effectiveRates,
+                        ]),
+                    Callout::make('Ad Account: '.$record->name.' ('.$record->act_id.')')
+                        ->icon('heroicon-o-information-circle')
+                        ->description('Current ad account balance: '.number_format((float) $record->balance, 2).' '.$record->currency)
+                        ->info(),
+                    TextInput::make('usd_amount')
+                        ->label('Amount (USD)')
+                        ->numeric()
+                        ->minValue(1)
+                        ->extraAttributes([
+                            'onwheel' => 'return false;',
+                        ])
+                        ->extraInputAttributes([
+                            'x-on:input' => '$dispatch(\'usd-updated\', { usd: Number($el.value || 0) })',
+                        ])
+                        ->required(),
+                    View::make('effective_price_rate_feedback')
+                        ->view('filament.actions.effective-price-rate-feedback')
+                        ->viewData([
+                            'rates' => $effectiveRates,
+                        ]),
+                    FileUpload::make('screenshot')
+                        ->label('Screenshot')
+                        ->image()
+                        ->disk('public')
+                        ->directory('orders/screenshots')
+                        ->visibility('public')
+                        ->optimize('webp', 75)
+                        ->automaticallyResizeImagesMode('contain')
+                        ->maxImageWidth('300')
+                        ->maxImageHeight('500')
+                        ->automaticallyUpscaleImagesWhenResizing(false)
+                        ->required(Filament::getCurrentPanel()?->getId() !== 'admin'),
+                    Textarea::make('note')
+                        ->label('Note (optional)')
+                        ->maxLength(500),
+                ];
+            })
             ->action(function (AdAccount $record, array $data): void {
                 try {
                     $admin = self::whichAdmin();
+                    $priceRateService = app(PriceRateService::class);
+                    $amountUsd = (float) $data['usd_amount'];
+                    $minimumUsd = $priceRateService->getMinimumUsdForAdAccount($record);
+
+                    if ($minimumUsd !== null && $amountUsd < $minimumUsd) {
+                        throw new RuntimeException('Minimum deposit amount is '.number_format($minimumUsd, 2).' USD.');
+                    }
 
                     $order = DB::transaction(function () use ($record, $data, $admin): Order {
                         $amountUsd = (float) $data['usd_amount'];
