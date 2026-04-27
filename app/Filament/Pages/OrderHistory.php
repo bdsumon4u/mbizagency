@@ -37,6 +37,11 @@ class OrderHistory extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        return self::configureTable($table);
+    }
+
+    public static function configureTable(Table $table): Table
+    {
         $isAdminPanel = Filament::getCurrentPanel()?->getId() === 'admin';
 
         return $table
@@ -108,17 +113,17 @@ class OrderHistory extends Page implements HasTable
                             'record' => $record,
                         ]))
                         ->modalFooterActions([
-                            $this->printInvoiceAction(),
-                            $this->approveOrderAction(),
-                            $this->rejectOrderAction(),
+                            self::printInvoiceAction(),
+                            self::approveOrderAction(),
+                            self::rejectOrderAction(),
                         ]),
-                    $this->printInvoiceAction(),
+                    self::printInvoiceAction(),
                 ]),
             ])
             ->recordAction('viewProof');
     }
 
-    private function printInvoiceAction(): Action
+    private static function printInvoiceAction(): Action
     {
         return Action::make('printInvoice')
             ->label('View/Print Invoice')
@@ -133,7 +138,7 @@ class OrderHistory extends Page implements HasTable
             ->openUrlInNewTab();
     }
 
-    private function approveOrderAction(): Action
+    private static function approveOrderAction(): Action
     {
         return Action::make('approveOrder')
             ->label('Approve')
@@ -154,7 +159,7 @@ class OrderHistory extends Page implements HasTable
             ->visible(fn (Order $record): bool => $record->status !== OrderStatus::APPROVED);
     }
 
-    private function rejectOrderAction(): Action
+    private static function rejectOrderAction(): Action
     {
         return Action::make('rejectOrder')
             ->label('Reject')

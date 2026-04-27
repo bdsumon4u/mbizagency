@@ -9,11 +9,13 @@ use App\Mail\NewOrderPendingApprovalMail;
 use App\Models\AdAccount;
 use App\Models\Admin;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Services\PriceRateService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -24,6 +26,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\HtmlString;
 use RuntimeException;
 use Throwable;
 
@@ -42,17 +45,47 @@ class DepositFundAction
             ->schema(function (AdAccount $record): array {
                 $priceRateService = app(PriceRateService::class);
                 $effectiveRates = $priceRateService->getEffectiveRateRowsForAdAccount($record);
+                $assignedPaymentMethods = $record->user->paymentMethods()->active()->orderBy('name')->get();
+                $paymentMethodOptions = $assignedPaymentMethods
+                    ->pluck('name', 'id')
+                    ->toArray();
+                $paymentMethodsForView = $assignedPaymentMethods
+                    ->map(fn (PaymentMethod $paymentMethod): array => [
+                        'id' => $paymentMethod->id,
+                        'name' => $paymentMethod->name,
+                        'type' => $paymentMethod->type,
+                        'processing_fee_percent' => number_format((float) $paymentMethod->processing_fee_percent, 2),
+                        'processing_fee_percent_raw' => (float) $paymentMethod->processing_fee_percent,
+                        'account_name' => $paymentMethod->account_name,
+                        'account_number' => $paymentMethod->account_number,
+                        'branch' => $paymentMethod->branch,
+                        'instructions' => $paymentMethod->instructions,
+                    ])
+                    ->values()
+                    ->all();
 
                 return [
-                    View::make('effective_price_rates_table')
-                        ->view('filament.actions.effective-price-rates-table')
+                    Callout::make('Ad Account: '.$record->name.' ('.$record->act_id.')')
+                        ->icon('heroicon-o-information-circle')
+                        ->description(function (AdAccount $record): HtmlString {
+                            return new HtmlString('Limit: '.$record->spend_cap.' '.$record->currency
+                                .' | Spent: '.$record->amount_spent.' '.$record->currency
+                                .' | Remaining: '.$record->spend_cap - $record->amount_spent.' '.$record->currency
+                                .'<br>Last synced at: '.($record?->synced_at->format('d-M-Y h:i A') ?? 'Never'));
+                        })
+                        ->info(),
+                    View::make('deposit_reference_sections')
+                        ->view('filament.actions.deposit-reference-sections')
                         ->viewData([
                             'rates' => $effectiveRates,
                         ]),
-                    Callout::make('Ad Account: '.$record->name.' ('.$record->act_id.')')
-                        ->icon('heroicon-o-information-circle')
-                        ->description('Current ad account balance: '.number_format((float) $record->balance, 2).' '.$record->currency)
-                        ->info(),
+                    Select::make('payment_method_id')
+                        ->label('Payment Method')
+                        ->placeholder('Select a payment method')
+                        ->options($paymentMethodOptions)
+                        ->searchable()
+                        ->preload()
+                        ->required(),
                     TextInput::make('usd_amount')
                         ->label('Amount (USD)')
                         ->numeric()
@@ -68,6 +101,7 @@ class DepositFundAction
                         ->view('filament.actions.effective-price-rate-feedback')
                         ->viewData([
                             'rates' => $effectiveRates,
+                            'paymentMethods' => $paymentMethodsForView,
                         ]),
                     FileUpload::make('screenshot')
                         ->label('Screenshot')
@@ -92,12 +126,21 @@ class DepositFundAction
                     $priceRateService = app(PriceRateService::class);
                     $amountUsd = (float) $data['usd_amount'];
                     $minimumUsd = $priceRateService->getMinimumUsdForAdAccount($record);
+                    $paymentMethodId = (int) ($data['payment_method_id'] ?? 0);
+                    $paymentMethod = $record->user?->paymentMethods()
+                        ->active()
+                        ->whereKey($paymentMethodId)
+                        ->first();
 
                     if ($minimumUsd !== null && $amountUsd < $minimumUsd) {
                         throw new RuntimeException('Minimum deposit amount is '.number_format($minimumUsd, 2).' USD.');
                     }
 
-                    $order = DB::transaction(function () use ($record, $data, $admin): Order {
+                    if (! $paymentMethod instanceof PaymentMethod) {
+                        throw new RuntimeException('Please select an assigned payment method.');
+                    }
+
+                    $order = DB::transaction(function () use ($record, $data, $admin, $paymentMethod): Order {
                         $amountUsd = (float) $data['usd_amount'];
                         $pricing = app(PriceRateService::class)->convertUsdToBdtForAdAccount($record, $amountUsd);
                         $amountBdt = (float) $pricing['bdt_amount'];
@@ -111,7 +154,11 @@ class DepositFundAction
                             'bdt_amount' => $amountBdt,
                             'source' => $admin ? OrderSource::ADMIN : OrderSource::USER,
                             'status' => OrderStatus::PENDING,
-                            'note' => $data['note'] ?? null,
+                            'note' => self::formatOrderNote(
+                                baseNote: $data['note'] ?? null,
+                                paymentMethod: $paymentMethod,
+                                bdtAmount: $amountBdt,
+                            ),
                             'screenshot' => $data['screenshot'] ?? null,
                         ]);
                     });
@@ -185,5 +232,23 @@ class DepositFundAction
 
             Mail::to($admin->email)->send(new NewOrderPendingApprovalMail($order, $approveUrl, $rejectUrl));
         }
+    }
+
+    private static function formatOrderNote(?string $baseNote, PaymentMethod $paymentMethod, float $bdtAmount): string
+    {
+        $processingFeePercent = (float) $paymentMethod->processing_fee_percent;
+        $processingFeeAmount = $bdtAmount * ($processingFeePercent / 100);
+        $totalPayable = $bdtAmount + $processingFeeAmount;
+
+        $paymentSummary = 'Payment Method: '.$paymentMethod->name
+            .' (Fee '.number_format($processingFeePercent, 2).'%)'
+            .' | Processing Fee: '.number_format($processingFeeAmount, 2).' BDT'
+            .' | Total Payable: '.number_format($totalPayable, 2).' BDT';
+
+        if (! $baseNote) {
+            return $paymentSummary;
+        }
+
+        return $baseNote."\n\n".$paymentSummary;
     }
 }

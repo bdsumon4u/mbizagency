@@ -47,4 +47,9 @@ class PriceRate extends Model
     {
         return $this->belongsTo(AdAccount::class);
     }
+
+    public function getDisplayTypeAttribute(): string
+    {
+        return $this->ad_account_id ? 'আপনার জন্য স্পেশাল' : 'সবার জন্যই এই রেট';
+    }
 }

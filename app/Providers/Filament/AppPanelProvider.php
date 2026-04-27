@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\LoginPage;
+use App\Filament\Pages\Auth\RegisterPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\OrderHistory;
 use App\Filament\Widgets\AdAccountsTableWidget;
@@ -33,11 +34,12 @@ class AppPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/app/theme.css')
             ->login(LoginPage::class)
             ->passwordReset()
-            ->registration()
+            ->registration(RegisterPage::class)
             ->emailVerification()
             ->colors([
                 'primary' => Color::Neutral,
             ])
+            ->sidebarWidth('16rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

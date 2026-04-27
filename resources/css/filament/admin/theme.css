@@ -1,9 +1,9 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
-@source '../../../../app/Filament/Admin/**/*';
+@source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/actions/**/*';
 @source '../../../../resources/views/filament/tables/columns/**/*';
-@source '../../../../resources/views/filament/admin/**/*';
+@source '../../../../resources/views/filament/**/*';
 
 .fi-ta-text:not(.fi-inline) {
     padding-inline: calc(var(--spacing) * 2);

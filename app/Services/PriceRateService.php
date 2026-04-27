@@ -39,7 +39,6 @@ class PriceRateService
             'bdt_amount' => $usdAmount * $dollarRate,
             'dollar_rate' => $dollarRate,
             'min_usd' => (float) $rate->min_usd,
-            'source' => $rate->ad_account_id ? 'special' : 'global',
         ];
     }
 
@@ -93,7 +92,8 @@ class PriceRateService
     {
         return $this->getEffectiveRatesForAdAccount($adAccount)
             ->map(fn (PriceRate $rate): array => [
-                'type' => $rate->ad_account_id ? 'Special' : 'Global',
+                'type' => $rate->ad_account_id ? 'special' : 'global',
+                'display_type' => $rate->displayType,
                 'min_usd' => number_format((float) $rate->min_usd, 2),
                 'dollar_rate' => number_format((float) $rate->dollar_rate, 2),
                 'min_usd_raw' => (float) $rate->min_usd,

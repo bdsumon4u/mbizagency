@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\BusinessManagers\Pages\CreateBusinessManager;
 use App\Filament\Admin\Resources\BusinessManagers\Pages\EditBusinessManager;
 use App\Filament\Admin\Resources\BusinessManagers\Pages\FacebookOAuthRedirect;
 use App\Filament\Admin\Resources\BusinessManagers\Pages\ListBusinessManagers;
+use App\Filament\Admin\Resources\BusinessManagers\RelationManagers\AdAccountsRelationManager;
 use App\Filament\Admin\Resources\BusinessManagers\Schemas\BusinessManagerForm;
 use App\Filament\Admin\Resources\BusinessManagers\Tables\BusinessManagersTable;
 use App\Models\BusinessManager;
@@ -36,7 +37,7 @@ class BusinessManagerResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AdAccountsRelationManager::class,
         ];
     }
 

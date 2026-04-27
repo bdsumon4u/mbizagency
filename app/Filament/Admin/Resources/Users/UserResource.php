@@ -6,8 +6,11 @@ use App\Filament\Admin\Resources\Users\Pages\CreateUser;
 use App\Filament\Admin\Resources\Users\Pages\EditUser;
 use App\Filament\Admin\Resources\Users\Pages\ListUsers;
 use App\Filament\Admin\Resources\Users\Pages\ViewUser;
+use App\Filament\Admin\Resources\Users\RelationManagers\AdAccountsRelationManager;
+use App\Filament\Admin\Resources\Users\RelationManagers\BankAccountsRelationManager;
 use App\Filament\Admin\Resources\Users\RelationManagers\OrdersRelationManager;
 use App\Filament\Admin\Resources\Users\Schemas\UserForm;
+use App\Filament\Admin\Resources\Users\Schemas\UserInfolist;
 use App\Filament\Admin\Resources\Users\Tables\UsersTable;
 use App\Models\User;
 use BackedEnum;
@@ -29,6 +32,11 @@ class UserResource extends Resource
         return UserForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return UserInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
@@ -38,6 +46,8 @@ class UserResource extends Resource
     {
         return [
             OrdersRelationManager::class,
+            AdAccountsRelationManager::class,
+            BankAccountsRelationManager::class,
         ];
     }
 
