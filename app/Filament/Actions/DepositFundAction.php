@@ -53,6 +53,9 @@ class DepositFundAction
                     ->label('Amount (USD)')
                     ->numeric()
                     ->minValue(1)
+                    ->extraAttributes([
+                        'onwheel' => 'return false;',
+                    ])
                     ->extraInputAttributes([
                         'x-on:input' => '$dispatch(\'usd-updated\', { usd: Number($el.value || 0) })',
                     ])
