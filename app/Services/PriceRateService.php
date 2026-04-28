@@ -39,6 +39,59 @@ class PriceRateService
             'bdt_amount' => $usdAmount * $dollarRate,
             'dollar_rate' => $dollarRate,
             'min_usd' => (float) $rate->min_usd,
+            'usd_amount' => $usdAmount,
+        ];
+    }
+
+    /**
+     * @return array{usd_amount: float, bdt_amount: float, dollar_rate: float, min_usd: float}
+     */
+    public function convertBdtToUsdForAdAccount(AdAccount $adAccount, float $bdtAmount): array
+    {
+        if ($bdtAmount <= 0) {
+            throw new RuntimeException('BDT amount must be greater than zero.');
+        }
+
+        $rates = $this->getEffectiveRatesForAdAccount($adAccount)
+            ->sortByDesc('min_usd')
+            ->values();
+
+        /** @var PriceRate|null $matchedRate */
+        $matchedRate = null;
+        $usdAmount = 0.0;
+
+        foreach ($rates as $rate) {
+            $dollarRate = (float) $rate->dollar_rate;
+
+            if ($dollarRate <= 0) {
+                continue;
+            }
+
+            $candidateUsdAmount = $bdtAmount / $dollarRate;
+
+            if ($candidateUsdAmount >= (float) $rate->min_usd) {
+                $matchedRate = $rate;
+                $usdAmount = $candidateUsdAmount;
+                break;
+            }
+        }
+
+        if (! $matchedRate) {
+            $minimumUsd = $this->getMinimumUsdForAdAccount($adAccount);
+            $minimumRate = $rates->sortBy('min_usd')->first();
+
+            if ($minimumUsd !== null && $minimumRate instanceof PriceRate) {
+                throw new RuntimeException('Minimum deposit amount is '.number_format($minimumUsd * (float) $minimumRate->dollar_rate, 2).' BDT.');
+            }
+
+            throw new RuntimeException('No price rate configured. Please ask admin to set pricing.');
+        }
+
+        return [
+            'usd_amount' => $usdAmount,
+            'bdt_amount' => $bdtAmount,
+            'dollar_rate' => (float) $matchedRate->dollar_rate,
+            'min_usd' => (float) $matchedRate->min_usd,
         ];
     }
 
@@ -50,6 +103,20 @@ class PriceRateService
             ->first();
 
         return $minimumRate ? (float) $minimumRate->min_usd : null;
+    }
+
+    public function getMinimumBdtForAdAccount(AdAccount $adAccount): ?float
+    {
+        /** @var PriceRate|null $minimumRate */
+        $minimumRate = $this->getEffectiveRatesForAdAccount($adAccount)
+            ->sortBy('min_usd')
+            ->first();
+
+        if (! $minimumRate) {
+            return null;
+        }
+
+        return (float) $minimumRate->min_usd * (float) $minimumRate->dollar_rate;
     }
 
     public function getEffectiveRatesForAdAccount(AdAccount $adAccount): Collection

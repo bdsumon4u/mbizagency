@@ -15,11 +15,13 @@ use App\Services\PriceRateService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Callout;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\View;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
@@ -35,7 +37,7 @@ class DepositFundAction
     public static function make(): Action
     {
         return Action::make('add_fund')
-            ->label('Add Fund')
+            ->label('Fund')
             ->tooltip(fn (AdAccount $record): string => 'Add fund to '.$record->name.'.')
             ->icon(Heroicon::OutlinedBanknotes)
             ->color('success')
@@ -66,14 +68,24 @@ class DepositFundAction
 
                 return [
                     Callout::make('Ad Account: '.$record->name.' ('.$record->act_id.')')
-                        ->icon('heroicon-o-information-circle')
                         ->description(function (AdAccount $record): HtmlString {
-                            return new HtmlString('Limit: '.$record->spend_cap.' '.$record->currency
-                                .' | Spent: '.$record->amount_spent.' '.$record->currency
-                                .' | Remaining: '.$record->spend_cap - $record->amount_spent.' '.$record->currency
-                                .'<br>Last synced at: '.($record?->synced_at->format('d-M-Y h:i A') ?? 'Never'));
+                            $limit = (float) $record->spend_cap;
+                            $spent = (float) $record->amount_spent;
+                            $remaining = $limit - $spent;
+                            $currency = (string) $record->currency;
+                            $lastSyncedAt = $record?->synced_at?->format('d-M-Y h:i A') ?? 'Never';
+
+                            return new HtmlString(
+                                '<ul style="margin: 0.25rem 0 0; padding: 0; list-style: none; line-height: 1.45; display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem;">'
+                                .'<li><strong>Limit:</strong> '.number_format($limit, 2).' '.$currency.'</li>'
+                                .'<li><strong>Spent:</strong> '.number_format($spent, 2).' '.$currency.'</li>'
+                                .'<li><strong>Remaining:</strong> '.number_format($remaining, 2).' '.$currency.'</li>'
+                                .'<li><strong>Last synced:</strong> '.$lastSyncedAt.'</li>'
+                                .'</ul>',
+                            );
                         })
-                        ->info(),
+                        ->info()
+                        ->icon(null),
                     View::make('deposit_reference_sections')
                         ->view('filament.actions.deposit-reference-sections')
                         ->viewData([
@@ -86,27 +98,46 @@ class DepositFundAction
                         ->searchable()
                         ->preload()
                         ->required(),
-                    TextInput::make('usd_amount')
-                        ->label('Amount (USD)')
-                        ->numeric()
-                        ->minValue(1)
-                        ->extraAttributes([
-                            'onwheel' => 'return false;',
+                    View::make('selected_payment_method_details')
+                        ->view('filament.actions.selected-payment-method-details')
+                        ->viewData([
+                            'paymentMethods' => $paymentMethodsForView,
                         ])
-                        ->extraInputAttributes([
-                            'x-on:input' => '$dispatch(\'usd-updated\', { usd: Number($el.value || 0) })',
-                        ])
-                        ->required(),
+                        ->visibleJs('$get(\'payment_method_id\') !== null'),
+                    Group::make([
+                        Radio::make('currency')
+                            ->options([
+                                'usd' => 'USD',
+                                'bdt' => 'BDT',
+                            ])
+                            ->default('usd')
+                            ->inline()
+                            ->required(),
+                        TextInput::make('amount')
+                            ->numeric()
+                            ->minValue(1)
+                            ->extraAttributes([
+                                'onwheel' => 'return false;',
+                            ])
+                            ->extraInputAttributes([
+                                'x-on:input' => '$dispatch(\'amount-updated\', { amount: Number($el.value || 0) })',
+                            ])
+                            ->required()
+                            ->columnSpan(2),
+                    ])
+                        ->columns(3)
+                        ->visibleJs('$get(\'payment_method_id\') !== null'),
                     View::make('effective_price_rate_feedback')
                         ->view('filament.actions.effective-price-rate-feedback')
                         ->viewData([
                             'rates' => $effectiveRates,
                             'paymentMethods' => $paymentMethodsForView,
-                        ]),
-                    FileUpload::make('screenshot')
-                        ->label('Screenshot')
+                        ])
+                        ->visibleJs('$get(\'payment_method_id\') !== null && $get(\'amount\') !== null'),
+                    FileUpload::make('screenshots')
                         ->image()
                         ->disk('public')
+                        ->multiple()
                         ->directory('orders/screenshots')
                         ->visibility('public')
                         ->optimize('webp', 75)
@@ -124,25 +155,36 @@ class DepositFundAction
                 try {
                     $admin = self::whichAdmin();
                     $priceRateService = app(PriceRateService::class);
-                    $amountUsd = (float) $data['usd_amount'];
-                    $minimumUsd = $priceRateService->getMinimumUsdForAdAccount($record);
+                    $amountCurrency = (string) ($data['currency'] ?? 'usd');
+                    $amount = (float) ($data['amount'] ?? 0);
                     $paymentMethodId = (int) ($data['payment_method_id'] ?? 0);
                     $paymentMethod = $record->user?->paymentMethods()
                         ->active()
                         ->whereKey($paymentMethodId)
                         ->first();
 
-                    if ($minimumUsd !== null && $amountUsd < $minimumUsd) {
-                        throw new RuntimeException('Minimum deposit amount is '.number_format($minimumUsd, 2).' USD.');
-                    }
-
                     if (! $paymentMethod instanceof PaymentMethod) {
                         throw new RuntimeException('Please select an assigned payment method.');
                     }
 
-                    $order = DB::transaction(function () use ($record, $data, $admin, $paymentMethod): Order {
-                        $amountUsd = (float) $data['usd_amount'];
-                        $pricing = app(PriceRateService::class)->convertUsdToBdtForAdAccount($record, $amountUsd);
+                    $processingFeeMultiplier = 1 + (((float) $paymentMethod->processing_fee_percent) / 100);
+
+                    $pricing = match ($amountCurrency) {
+                        'bdt' => (function () use ($priceRateService, $record, $amount, $processingFeeMultiplier): array {
+                            $minimumBdt = $priceRateService->getMinimumBdtForAdAccount($record);
+                            $netBdtAmount = $amount / $processingFeeMultiplier;
+
+                            if ($minimumBdt !== null && $amount < ($minimumBdt * $processingFeeMultiplier)) {
+                                throw new RuntimeException('Minimum deposit amount is '.number_format($minimumBdt * $processingFeeMultiplier, 2).' BDT.');
+                            }
+
+                            return $priceRateService->convertBdtToUsdForAdAccount($record, $netBdtAmount);
+                        })(),
+                        default => $priceRateService->convertUsdToBdtForAdAccount($record, $amount),
+                    };
+
+                    $order = DB::transaction(function () use ($record, $data, $admin, $paymentMethod, $pricing): Order {
+                        $amountUsd = (float) $pricing['usd_amount'];
                         $amountBdt = (float) $pricing['bdt_amount'];
 
                         return Order::query()->create([

@@ -21,11 +21,12 @@ return new class extends Migration
             $table->decimal('usd_amount', 12, 2);
             $table->decimal('dollar_rate', 12, 2);
             $table->decimal('bdt_amount', 12, 2);
-            $table->integer('spend_cap')->nullable();
+            $table->integer('old_limit')->nullable();
+            $table->integer('new_limit')->nullable();
             $table->string('source')->default(OrderSource::USER);
             $table->string('status')->index()->default(OrderStatus::PENDING);
             $table->text('note')->nullable();
-            $table->string('screenshot')->nullable();
+            $table->json('screenshots')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->timestamps();
         });

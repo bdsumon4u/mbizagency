@@ -43,8 +43,8 @@ class PaymentMethodsTable
             ->filters([
                 SelectFilter::make('type')
                     ->options([
-                        'bank' => 'Bank',
-                        'mfs' => 'MFS',
+                        'Bank' => 'Bank',
+                        'MFS' => 'MFS',
                     ])
                     ->searchable(),
                 TernaryFilter::make('is_active')

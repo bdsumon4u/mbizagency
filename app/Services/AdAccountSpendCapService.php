@@ -45,7 +45,7 @@ class AdAccountSpendCapService
         $errors = [];
 
         if ($targetSpendLimit <= 0) {
-            $errors[] = 'Spend limit must be greater than 0.';
+            $errors[] = 'Limit must be greater than 0.';
         }
 
         if ($currency !== 'USD') {
@@ -53,7 +53,7 @@ class AdAccountSpendCapService
         }
 
         if ($targetSpendLimit > 30_000) {
-            $errors[] = 'Spend limit must be less than 30,000 USD.';
+            $errors[] = 'Limit must be less than 30,000 USD.';
         }
 
         return [

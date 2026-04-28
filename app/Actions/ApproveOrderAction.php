@@ -33,7 +33,7 @@ class ApproveOrderAction
             $lockedOrder->update([
                 'admin_id' => $admin?->id,
                 'status' => OrderStatus::APPROVED,
-                'spend_cap' => $adAccount->spend_cap,
+                'new_limit' => $adAccount->spend_cap,
                 'approved_at' => now(),
             ]);
 

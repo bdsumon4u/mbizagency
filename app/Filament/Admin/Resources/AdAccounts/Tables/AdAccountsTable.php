@@ -7,7 +7,7 @@ use App\Filament\Actions\AssignUserAction;
 use App\Filament\Actions\AssignUserBulkAction;
 use App\Filament\Actions\DepositFundAction;
 use App\Filament\Admin\Resources\Users\UserResource;
-use App\Filament\Tables\Columns\AdAccountColumn;
+use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
@@ -19,9 +19,9 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Number;
 
 class AdAccountsTable
 {
@@ -29,6 +29,8 @@ class AdAccountsTable
     {
         return $table
             ->columns([
+                TextColumn::make('#')
+                    ->rowIndex(),
                 TextColumn::make('businessManager.name')
                     ->label('BM')
                     ->sortable()
@@ -48,21 +50,12 @@ class AdAccountsTable
                 AdAccountColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('status')
-                    ->badge()
-                    ->searchable(),
                 CurrencyColumn::make('spend_cap')
-                    ->label('Spend Limit')
+                    ->label('Limit')
                     ->sortable(),
                 CurrencyColumn::make('amount_spent')
                     ->label('Spent')
                     ->sortable(),
-                TextColumn::make('remaining')
-                    ->label('Remaining')
-                    ->sortable()
-                    ->getStateUsing(function (AdAccount $record): string {
-                        return Number::currency($record->spend_cap - $record->amount_spent, $record->currency);
-                    }),
                 CurrencyColumn::make('balance')
                     ->label('Due')
                     ->sortable()
@@ -133,7 +126,7 @@ class AdAccountsTable
                     }),
                 DepositFundAction::make(),
                 AssignUserAction::make(),
-            ])
+            ], RecordActionsPosition::AfterColumns)
             ->toolbarActions([
                 BulkActionGroup::make([
                     AssignUserBulkAction::make(),

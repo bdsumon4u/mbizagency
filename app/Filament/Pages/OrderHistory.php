@@ -6,9 +6,9 @@ use App\Actions\ApproveOrderAction;
 use App\Actions\RejectOrderAction;
 use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
-use App\Filament\Tables\Columns\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
+use App\Filament\Tables\Columns\OrderHistoryTable\AdAccountColumn;
 use App\Models\Order;
 use BackedEnum;
 use Exception;
@@ -69,12 +69,10 @@ class OrderHistory extends Page implements HasTable
                 CurrencyColumn::make('dollar_rate', 'BDT')
                     ->label('Dollar Rate'),
                 CurrencyColumn::make('spend_cap')
-                    ->label('Spend Limit'),
+                    ->label('Limit'),
                 TextColumn::make('source')
                     ->badge()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('status')
-                    ->badge(),
                 DateTimeColumn::make('approved_at')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -114,8 +112,8 @@ class OrderHistory extends Page implements HasTable
                         ]))
                         ->modalFooterActions([
                             self::printInvoiceAction(),
-                            self::approveOrderAction(),
-                            self::rejectOrderAction(),
+                            self::approveOrderAction($isAdminPanel),
+                            self::rejectOrderAction($isAdminPanel),
                         ]),
                     self::printInvoiceAction(),
                 ]),
@@ -138,7 +136,7 @@ class OrderHistory extends Page implements HasTable
             ->openUrlInNewTab();
     }
 
-    private static function approveOrderAction(): Action
+    private static function approveOrderAction(bool $isAdminPanel): Action
     {
         return Action::make('approveOrder')
             ->label('Approve')
@@ -156,10 +154,10 @@ class OrderHistory extends Page implements HasTable
             })
             ->cancelParentActions()
             ->requiresConfirmation()
-            ->visible(fn (Order $record): bool => $record->status !== OrderStatus::APPROVED);
+            ->visible(fn (Order $record): bool => $isAdminPanel && $record->status !== OrderStatus::APPROVED);
     }
 
-    private static function rejectOrderAction(): Action
+    private static function rejectOrderAction(bool $isAdminPanel): Action
     {
         return Action::make('rejectOrder')
             ->label('Reject')
@@ -178,6 +176,6 @@ class OrderHistory extends Page implements HasTable
             })
             ->cancelParentActions()
             ->requiresConfirmation()
-            ->visible(fn (Order $record): bool => $record->status !== OrderStatus::REJECTED);
+            ->visible(fn (Order $record): bool => $isAdminPanel && $record->status !== OrderStatus::REJECTED);
     }
 }

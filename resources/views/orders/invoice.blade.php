@@ -293,6 +293,7 @@
 </head>
 <body>
     @php
+        use Illuminate\Support\Facades\Storage;
         $statusClass = match ($order->status->value) {
             'approved' => 'badge badge-approved',
             'rejected' => 'badge badge-rejected',
@@ -366,14 +367,16 @@
             <section class="card full">
                 <div class="card-header">Payment Proof</div>
                 <div class="proof-wrap">
-                    @if ($order->screenshot)
+                    @if ($order->screenshots)
+                        @foreach ($order->screenshots as $screenshot)
                         <img
-                            src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($order->screenshot) }}"
-                            alt="Order Screenshot"
-                            class="proof-image"
-                        >
+                            src="{{ Storage::disk('public')->url($screenshot) }}"
+                                alt="Order Screenshot"
+                                class="proof-image"
+                            >
+                        @endforeach
                     @else
-                        <div class="proof-empty">No screenshot uploaded.</div>
+                        <div class="proof-empty">No screenshots uploaded.</div>
                     @endif
                 </div>
             </section>

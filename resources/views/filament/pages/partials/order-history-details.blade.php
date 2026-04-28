@@ -1,24 +1,20 @@
 @php
-    $screenshotUrl = null;
-
-    if (filled($record->screenshot)) {
-        $screenshotUrl = str_starts_with($record->screenshot, 'http')
-            ? $record->screenshot
-            : \Illuminate\Support\Facades\Storage::url($record->screenshot);
-    }
+    use Illuminate\Support\Facades\Storage;
 @endphp
 
 <div class="space-y-4">
     <div>
         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Screenshot</h3>
-        @if ($screenshotUrl)
+        @if ($record->screenshots)
+            @foreach ($record->screenshots as $screenshot)
             <img
-                src="{{ $screenshotUrl }}"
+                src="{{ Storage::disk('public')->url($screenshot) }}"
                 alt="Order screenshot"
                 class="mt-2 max-h-96 w-full rounded-lg border border-gray-200 object-contain dark:border-gray-700"
             />
+            @endforeach
         @else
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No screenshot uploaded.</p>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No screenshots uploaded.</p>
         @endif
     </div>
 

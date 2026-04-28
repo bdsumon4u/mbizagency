@@ -18,10 +18,10 @@ class PaymentMethodForm
                 Group::make([
                     Radio::make('type')
                         ->options([
-                            'bank' => 'Bank',
-                            'mfs' => 'MFS',
+                            'Bank' => 'Bank',
+                            'MFS' => 'MFS',
                         ])
-                        ->default('bank')
+                        ->default('Bank')
                         ->required()
                         ->inline(),
                     Toggle::make('is_active')
@@ -43,13 +43,13 @@ class PaymentMethodForm
                     ->required(),
                 TextInput::make('account_name')
                     ->maxLength(255)
-                    ->hiddenJs('$get(\'type\') === \'mfs\''),
+                    ->hiddenJs('$get(\'type\') === \'MFS\''),
                 TextInput::make('account_number')
                     ->maxLength(255)
                     ->required(),
                 TextInput::make('branch')
                     ->maxLength(255)
-                    ->hiddenJs('$get(\'type\') === \'mfs\''),
+                    ->hiddenJs('$get(\'type\') === \'MFS\''),
                 Textarea::make('instructions')
                     ->rows(4)
                     ->columnSpanFull(),
