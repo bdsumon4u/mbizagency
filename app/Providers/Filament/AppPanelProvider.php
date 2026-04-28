@@ -37,10 +37,13 @@ class AppPanelProvider extends PanelProvider
             ->passwordReset()
             ->registration(RegisterPage::class)
             ->emailVerification()
+            ->profile()
             ->colors([
                 'primary' => Color::Neutral,
             ])
             ->sidebarWidth('16rem')
+            ->brandLogo(asset('logo.png'))
+            ->brandLogoHeight('2.25rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

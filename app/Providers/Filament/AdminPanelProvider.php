@@ -40,6 +40,8 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Neutral,
             ])
             ->sidebarWidth('16rem')
+            ->brandLogo(asset('logo.png'))
+            ->brandLogoHeight('2.25rem')
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
