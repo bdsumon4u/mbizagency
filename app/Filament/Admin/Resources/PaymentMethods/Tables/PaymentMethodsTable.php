@@ -34,7 +34,7 @@ class PaymentMethodsTable
                 TextColumn::make('account_number')
                     ->searchable(),
                 TextColumn::make('users_count')
-                    ->label('Assigned Users')
+                    ->label('Users')
                     ->counts('users')
                     ->sortable(),
                 IconColumn::make('is_active')

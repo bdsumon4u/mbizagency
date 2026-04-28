@@ -44,7 +44,7 @@ class AdAccountResource extends Resource
         return [
             'index' => ListAdAccounts::route('/'),
             'create' => CreateAdAccount::route('/create'),
-            'edit' => EditAdAccount::route('/{record}/edit'),
+            // 'edit' => EditAdAccount::route('/{record}/edit'),
         ];
     }
 }

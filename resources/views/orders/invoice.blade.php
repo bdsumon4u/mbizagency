@@ -359,7 +359,7 @@
                     </div>
                     <div class="row">
                         <div class="key">Spend Cap</div>
-                        <div class="value">{{ $order->spend_cap !== null ? number_format((float) $order->spend_cap, 0) : 'N/A' }}</div>
+                        <div class="value">{{ $order->new_limit !== null ? number_format((float) $order->new_limit, 0) : 'N/A' }}</div>
                     </div>
                 </div>
             </section>

@@ -13,6 +13,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 
 class PricingPage extends Page implements HasTable
@@ -35,7 +36,13 @@ class PricingPage extends Page implements HasTable
                     ->with('adAccount')
                     ->orderByRaw('ad_account_id is null desc')
             )
-            ->defaultGroup('adAccount.name')
+            ->groups([
+                Group::make('adAccount.name')
+                    ->label('Ad Account'),
+                Group::make('adAccount.user.name')
+                    ->label('User Account'),
+            ])
+            ->defaultGroup('adAccount.user.name')
             ->defaultSort('min_usd', 'asc')
             ->columns([
                 TextColumn::make('adAccount.name')

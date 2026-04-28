@@ -9,7 +9,7 @@
         </p>
 
         <div class="fi-size-sm fi-ta-text-description flex items-center gap-2">
-            <a class="hover:underline flex items-center gap-1" href="https://business.facebook.com/adsmanager/manage/accounts?act={{ $record->adAccount->act_id }}" target="_blank" rel="noopener noreferrer">
+            <a class="hover:underline flex items-center gap-1" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act={{ $record->adAccount->act_id }}" target="_blank" rel="noopener noreferrer">
                 {{ $record->adAccount->act_id }}<x-heroicon-s-arrow-top-right-on-square class="h-4 w-4 text-blue-600" />
             </a>
 

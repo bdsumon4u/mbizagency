@@ -31,34 +31,33 @@ class OrderHistory extends Page implements HasTable
 {
     use InteractsWithTable;
 
+    public ?int $adAccountId = null;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected string $view = 'filament.pages.order-history';
 
     public function table(Table $table): Table
     {
-        return self::configureTable($table);
+        return self::configureTable($table)
+            ->query(
+                Order::query()->when(! static::isAdminPanel(), function ($query) {
+                    return $query->whereBelongsTo(Filament::auth()->user());
+                })->when(static::isAdminPanel(), function ($query) {
+                    return $query->with('user');
+                })->when($this->adAccountId, function ($query) {
+                    return $query->where('ad_account_id', $this->adAccountId);
+                })->with('adAccount')
+            );
     }
 
     public static function configureTable(Table $table): Table
     {
-        $isAdminPanel = Filament::getCurrentPanel()?->getId() === 'admin';
-
         return $table
-            ->query(
-                Order::query()->when(! $isAdminPanel, function ($query) {
-                    return $query->whereBelongsTo(Filament::auth()->user());
-                })->when($isAdminPanel, function ($query) {
-                    return $query->with('user');
-                })->with('adAccount')
-            )
             ->defaultSort('id', 'desc')
             ->columns([
-                DateTimeColumn::make('created_at'),
-                TextColumn::make('user.email')
-                    ->label('User')
-                    ->searchable()
-                    ->visible($isAdminPanel),
+                DateTimeColumn::make('created_at')
+                    ->label('Date-Time'),
                 AdAccountColumn::make('adAccount.name')
                     ->searchable(),
                 CurrencyColumn::make('usd_amount')
@@ -77,15 +76,11 @@ class OrderHistory extends Page implements HasTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('user_id')
-                    ->label('User')
-                    ->relationship('user', 'email')
-                    ->searchable()
-                    ->preload()
-                    ->visible($isAdminPanel),
                 SelectFilter::make('ad_account_id')
                     ->label('Account')
-                    ->relationship('adAccount', 'name')
+                    ->relationship('adAccount', 'name', fn ($query) => $query->when(! static::isAdminPanel(), function ($query) {
+                        return $query->whereBelongsTo(Filament::auth()->user());
+                    }))
                     ->searchable()
                     ->preload(),
                 SelectFilter::make('source')
@@ -112,13 +107,18 @@ class OrderHistory extends Page implements HasTable
                         ]))
                         ->modalFooterActions([
                             self::printInvoiceAction(),
-                            self::approveOrderAction($isAdminPanel),
-                            self::rejectOrderAction($isAdminPanel),
+                            self::approveOrderAction(),
+                            self::rejectOrderAction(),
                         ]),
                     self::printInvoiceAction(),
                 ]),
             ])
             ->recordAction('viewProof');
+    }
+
+    private static function isAdminPanel(): bool
+    {
+        return Filament::getCurrentPanel()?->getId() === 'admin';
     }
 
     private static function printInvoiceAction(): Action
@@ -136,7 +136,7 @@ class OrderHistory extends Page implements HasTable
             ->openUrlInNewTab();
     }
 
-    private static function approveOrderAction(bool $isAdminPanel): Action
+    private static function approveOrderAction(): Action
     {
         return Action::make('approveOrder')
             ->label('Approve')
@@ -154,10 +154,10 @@ class OrderHistory extends Page implements HasTable
             })
             ->cancelParentActions()
             ->requiresConfirmation()
-            ->visible(fn (Order $record): bool => $isAdminPanel && $record->status !== OrderStatus::APPROVED);
+            ->visible(fn (Order $record): bool => static::isAdminPanel() && $record->status !== OrderStatus::APPROVED);
     }
 
-    private static function rejectOrderAction(bool $isAdminPanel): Action
+    private static function rejectOrderAction(): Action
     {
         return Action::make('rejectOrder')
             ->label('Reject')
@@ -176,6 +176,6 @@ class OrderHistory extends Page implements HasTable
             })
             ->cancelParentActions()
             ->requiresConfirmation()
-            ->visible(fn (Order $record): bool => $isAdminPanel && $record->status !== OrderStatus::REJECTED);
+            ->visible(fn (Order $record): bool => static::isAdminPanel() && $record->status !== OrderStatus::REJECTED);
     }
 }

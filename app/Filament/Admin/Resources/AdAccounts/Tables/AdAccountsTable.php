@@ -7,6 +7,7 @@ use App\Filament\Actions\AssignUserAction;
 use App\Filament\Actions\AssignUserBulkAction;
 use App\Filament\Actions\DepositFundAction;
 use App\Filament\Admin\Resources\Users\UserResource;
+use App\Filament\Pages\OrderHistory;
 use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
@@ -17,6 +18,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
@@ -103,6 +105,17 @@ class AdAccountsTable
                     ->searchable(),
             ])
             ->recordActions([
+                Action::make('orders')
+                    ->label('Orders')
+                    ->modalWidth(Width::SevenExtraLarge)
+                    ->modalContent(fn (AdAccount $record) => view('filament.actions.ad-account-view-orders', [
+                        'record' => $record,
+                        'orderHistoryClass' => OrderHistory::class,
+                    ]))
+                    ->modalHeading('')
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
+                    ->extraAttributes(['class' => 'hidden']),
                 Action::make('sync')
                     ->tooltip(fn (AdAccount $record): string => 'Sync '.$record->name.'.')
                     ->icon(Heroicon::OutlinedArrowPath)
@@ -127,6 +140,7 @@ class AdAccountsTable
                 DepositFundAction::make(),
                 AssignUserAction::make(),
             ], RecordActionsPosition::AfterColumns)
+            ->recordAction('orders')
             ->toolbarActions([
                 BulkActionGroup::make([
                     AssignUserBulkAction::make(),

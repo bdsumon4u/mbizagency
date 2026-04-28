@@ -3,11 +3,14 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Actions\DepositFundAction;
+use App\Filament\Pages\OrderHistory;
 use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
@@ -34,7 +37,19 @@ class AdAccountsTableWidget extends BaseWidget
                     ->label('Spent'),
                 DateTimeColumn::make('synced_at'),
             ])
+            ->recordAction('orders')
             ->recordActions([
+                Action::make('orders')
+                    ->label('Orders')
+                    ->modalWidth(Width::SevenExtraLarge)
+                    ->modalContent(fn (AdAccount $record) => view('filament.actions.ad-account-view-orders', [
+                        'record' => $record,
+                        'orderHistoryClass' => OrderHistory::class,
+                    ]))
+                    ->modalHeading('')
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
+                    ->extraAttributes(['class' => 'hidden']),
                 DepositFundAction::make()->button(),
             ], RecordActionsPosition::BeforeCells);
     }

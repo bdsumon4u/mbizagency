@@ -5,6 +5,7 @@ namespace App\Filament\Actions;
 use App\Actions\ApproveOrderAction;
 use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
+use App\Filament\Pages\OrderHistory;
 use App\Mail\NewOrderPendingApprovalMail;
 use App\Models\AdAccount;
 use App\Models\Admin;
@@ -73,14 +74,14 @@ class DepositFundAction
                             $spent = (float) $record->amount_spent;
                             $remaining = $limit - $spent;
                             $currency = (string) $record->currency;
-                            $lastSyncedAt = $record?->synced_at?->format('d-M-Y h:i A') ?? 'Never';
+                            $lastSyncedAt = $record?->synced_at?->diffForHumans() ?? 'Never';
 
                             return new HtmlString(
                                 '<ul style="margin: 0.25rem 0 0; padding: 0; list-style: none; line-height: 1.45; display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem;">'
                                 .'<li><strong>Limit:</strong> '.number_format($limit, 2).' '.$currency.'</li>'
                                 .'<li><strong>Spent:</strong> '.number_format($spent, 2).' '.$currency.'</li>'
                                 .'<li><strong>Remaining:</strong> '.number_format($remaining, 2).' '.$currency.'</li>'
-                                .'<li><strong>Last synced:</strong> '.$lastSyncedAt.'</li>'
+                                .'<li><strong>Synced:</strong> '.$lastSyncedAt.'</li>'
                                 .'</ul>',
                             );
                         })
@@ -234,7 +235,8 @@ class DepositFundAction
                         ->danger()
                         ->send();
                 }
-            });
+            })
+            ->successRedirectUrl(fn (AdAccount $record): string => OrderHistory::getUrl());
     }
 
     private static function whichAdmin(): ?Admin

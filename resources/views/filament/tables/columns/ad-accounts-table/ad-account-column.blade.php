@@ -4,12 +4,16 @@
     @endphp
 
     <div class="fi-ta-text-has-descriptions fi-ta-text">
-        <p class="fi-size-sm fi-ta-text-item">
+        <a
+            type="button"
+            class="fi-size-sm fi-ta-text-item cursor-pointer text-left hover:underline"
+            wire:click="mountTableAction('orders', '{{ $record->getKey() }}')"
+        >
             {{ $getState() }}
-        </p>
+        </a>
 
         <div class="fi-size-sm fi-ta-text-description flex items-center gap-2">
-            <a class="hover:underline flex items-center gap-1" href="https://business.facebook.com/adsmanager/manage/accounts?act={{ $record->act_id }}" target="_blank" rel="noopener noreferrer">
+            <a class="hover:underline flex items-center gap-1" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act={{ $record->act_id }}" target="_blank" rel="noopener noreferrer">
                 {{ $record->act_id }}<x-heroicon-s-arrow-top-right-on-square class="h-4 w-4 text-blue-600" />
             </a>
 
