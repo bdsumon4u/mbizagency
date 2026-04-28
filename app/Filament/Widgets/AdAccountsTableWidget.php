@@ -20,6 +20,8 @@ class AdAccountsTableWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
 
+    protected static ?int $sort = 1;
+
     public function table(Table $table): Table
     {
         return $table

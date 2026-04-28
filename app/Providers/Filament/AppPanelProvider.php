@@ -7,6 +7,7 @@ use App\Filament\Pages\Auth\RegisterPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\OrderHistory;
 use App\Filament\Widgets\AdAccountsTableWidget;
+use App\Filament\Widgets\PendingOrdersTableWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -48,9 +49,10 @@ class AppPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AdAccountsTableWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+                PendingOrdersTableWidget::class,
+                AdAccountsTableWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
