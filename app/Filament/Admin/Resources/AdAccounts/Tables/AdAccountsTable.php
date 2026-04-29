@@ -32,7 +32,8 @@ class AdAccountsTable
         return $table
             ->columns([
                 TextColumn::make('#')
-                    ->rowIndex(),
+                    ->rowIndex()
+                    ->alignCenter(),
                 TextColumn::make('businessManager.name')
                     ->label('BM')
                     ->sortable()

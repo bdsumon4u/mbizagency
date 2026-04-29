@@ -30,7 +30,8 @@ class AdAccountsTableWidget extends BaseWidget
             ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('#')
-                    ->rowIndex(),
+                    ->rowIndex()
+                    ->alignCenter(),
                 AdAccountColumn::make('name')
                     ->label('Ad Account')
                     ->searchable(),

@@ -34,7 +34,8 @@ class AdAccounts extends Page implements HasTable
             ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('#')
-                    ->rowIndex(),
+                    ->rowIndex()
+                    ->alignCenter(),
                 AdAccountColumn::make('name')
                     ->label('Ad Account')
                     ->searchable(),
