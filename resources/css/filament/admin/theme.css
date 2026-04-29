@@ -30,6 +30,7 @@
 .add-fund-button {
     padding: 5px;
     box-shadow: none;
+    background: none;
 
     .fi-icon {
         width: 36px;

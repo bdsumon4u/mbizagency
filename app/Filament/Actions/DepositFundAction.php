@@ -24,7 +24,7 @@ class DepositFundAction
             ->label('')
             ->tooltip(fn (AdAccount $record): string => 'Add fund to '.$record->name.'.')
             ->icon(new HtmlString('<img src="'.asset('dollar.png').'" alt="Fund" width="36" height="36">'))
-            ->color('')
+            ->color('success')
             ->button()
             ->modalWidth(Width::Large)
             ->extraAttributes(['class' => 'add-fund-button'])
