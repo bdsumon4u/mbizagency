@@ -22,7 +22,7 @@ class PriceRatesTable
             ->columns([
                 TextColumn::make('adAccount.name')
                     ->label('Ad Account')
-                    ->placeholder('Global')
+                    ->placeholder('Regular Rate')
                     ->searchable()
                     ->sortable(),
                 CurrencyColumn::make('min_usd')
