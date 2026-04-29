@@ -10,6 +10,6 @@
         [
             'adAccountId' => $record->id,
         ],
-        key('ad-account-order-history-'.$record->id)
+        key($table.'-ad-account-order-history-'.$record->id)
     )
 </div>

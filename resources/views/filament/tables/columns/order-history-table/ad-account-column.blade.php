@@ -4,9 +4,9 @@
     @endphp
 
     <div class="fi-ta-text-has-descriptions fi-ta-text">
-        <p class="fi-size-sm fi-ta-text-item">
+        <a type="button" class="fi-size-sm fi-ta-text-item cursor-pointer text-left hover:underline" wire:click="mountTableAction('orders', '{{ $record->getKey() }}')">
             {{ $getState() }}
-        </p>
+        </a>
 
         <div class="fi-size-sm fi-ta-text-description flex items-center gap-2">
             <a class="hover:underline flex items-center gap-1" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act={{ $record->adAccount->act_id }}" target="_blank" rel="noopener noreferrer">

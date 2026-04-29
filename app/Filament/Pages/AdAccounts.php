@@ -1,26 +1,31 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Pages;
 
 use App\Filament\Actions\DepositFundAction;
-use App\Filament\Pages\OrderHistory;
 use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
 
-class AdAccountsTableWidget extends BaseWidget
+class AdAccounts extends Page implements HasTable
 {
-    protected int|string|array $columnSpan = 'full';
+    use InteractsWithTable;
 
-    protected static ?int $sort = 1;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected string $view = 'filament.pages.ad-accounts';
 
     public function table(Table $table): Table
     {

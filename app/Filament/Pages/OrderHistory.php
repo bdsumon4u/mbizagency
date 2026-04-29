@@ -91,6 +91,18 @@ class OrderHistory extends Page implements HasTable
                     ->searchable(),
             ])
             ->recordActions([
+                Action::make('orders')
+                    ->label('Orders')
+                    ->modalWidth(Width::SevenExtraLarge)
+                    ->modalContent(fn (Order $record) => view('filament.actions.ad-account-view-orders', [
+                        'record' => $record->adAccount,
+                        'table' => 'order-history',
+                        'orderHistoryClass' => OrderHistory::class,
+                    ]))
+                    ->modalHeading('')
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
+                    ->extraAttributes(['class' => 'hidden']),
                 ActionGroup::make([
                     Action::make('viewProof')
                         ->label('Proof of Payment')

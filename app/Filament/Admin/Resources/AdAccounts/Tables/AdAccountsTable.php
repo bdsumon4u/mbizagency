@@ -110,6 +110,7 @@ class AdAccountsTable
                     ->modalWidth(Width::SevenExtraLarge)
                     ->modalContent(fn (AdAccount $record) => view('filament.actions.ad-account-view-orders', [
                         'record' => $record,
+                        'table' => 'ad-accounts',
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
                     ->modalHeading('')
