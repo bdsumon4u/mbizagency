@@ -15,7 +15,7 @@ enum OrderStatus: string implements HasColor, HasIcon, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::PENDING => 'Payment Verifying',
+            self::PENDING => 'Verification Processing',
             self::APPROVED => 'Approved',
             self::REJECTED => 'Rejected',
         };

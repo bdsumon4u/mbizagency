@@ -14,10 +14,12 @@ class Order extends Model
         return [
             'usd_amount' => 'decimal:2',
             'bdt_amount' => 'decimal:2',
+            'processing_fee' => 'decimal:2',
             'dollar_rate' => 'decimal:2',
             'spend_cap' => 'integer',
             'source' => OrderSource::class,
             'status' => OrderStatus::class,
+            'screenshots' => 'array',
             'approved_at' => 'datetime',
         ];
     }

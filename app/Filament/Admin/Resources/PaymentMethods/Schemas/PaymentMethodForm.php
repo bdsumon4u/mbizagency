@@ -32,11 +32,13 @@ class PaymentMethodForm
                         ->required(),
                 ])
                     ->columns(2),
+                Group::make()->visibleJs('$get(\'type\') === \'Bank\''),
                 TextInput::make('processing_fee_percent')
-                    ->label('Processing Fee (%)')
+                    ->label('Mobile Banking Charge (%)')
                     ->numeric()
                     ->minValue(0)
-                    ->default(0),
+                    ->default(0)
+                    ->visibleJs('$get(\'type\') === \'MFS\''),
                 TextInput::make('name')
                     ->label('Method Name')
                     ->placeholder('bKash Personal')

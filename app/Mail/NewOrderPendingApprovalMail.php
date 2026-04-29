@@ -5,7 +5,6 @@ namespace App\Mail;
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -37,20 +36,5 @@ class NewOrderPendingApprovalMail extends Mailable
                 'rejectUrl' => $this->rejectUrl,
             ],
         );
-    }
-
-    /**
-     * @return array<int, Attachment>
-     */
-    public function attachments(): array
-    {
-        if (! $this->order->screenshot) {
-            return [];
-        }
-
-        return [
-            Attachment::fromStorageDisk('public', $this->order->screenshot)
-                ->as('order-screenshot.jpg'),
-        ];
     }
 }

@@ -56,11 +56,8 @@
         }
 
         .logo {
-            width: 42px;
-            height: 42px;
+            height: 64px;
             border-radius: 12px;
-            background: var(--indigo-600);
-            color: #fff;
             display: grid;
             place-items: center;
             font-weight: 700;
@@ -182,6 +179,9 @@
 
         .proof-wrap {
             padding: 10px 12px 12px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
         }
 
         .proof-image {
@@ -201,6 +201,7 @@
             color: var(--slate-500);
             font-size: 13px;
             background: var(--slate-50);
+            grid-column: 1 / -1;
         }
 
         .footer {
@@ -266,6 +267,10 @@
                 grid-template-columns: 1fr;
                 gap: 2px;
             }
+
+            .proof-wrap {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media print {
@@ -304,11 +309,7 @@
     <div class="invoice">
         <div class="header">
             <div class="brand">
-                <div class="logo">-</div>
-                <div>
-                    <h1 class="title">Invoice</h1>
-                    <p class="subtitle">{{ config('app.name') }}</p>
-                </div>
+                <img class="logo" src="{{ asset('logo.png') }}" alt="{{ config('app.name') }}" class="logo-image">
             </div>
             <div class="meta">
                 <div><strong>Invoice #</strong> {{ $order->id }}</div>
@@ -351,15 +352,15 @@
                     </div>
                     <div class="row">
                         <div class="key">Dollar Rate</div>
-                        <div class="value">{{ number_format((float) $order->dollar_rate, 4) }} BDT</div>
+                        <div class="value">{{ number_format((float) $order->dollar_rate, 2) }} BDT</div>
                     </div>
                     <div class="row">
                         <div class="key">Total (BDT)</div>
                         <div class="value">{{ number_format((float) $order->bdt_amount, 2) }} BDT</div>
                     </div>
                     <div class="row">
-                        <div class="key">Spend Cap</div>
-                        <div class="value">{{ $order->new_limit !== null ? number_format((float) $order->new_limit, 0) : 'N/A' }}</div>
+                        <div class="key">Spending Limit</div>
+                        <div class="value">{{ $order->new_limit !== null ? number_format((float) $order->new_limit, 2) : 'N/A' }} USD</div>
                     </div>
                 </div>
             </section>

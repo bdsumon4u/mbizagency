@@ -6,7 +6,9 @@ use App\Enums\OrderStatus;
 use App\Models\Admin;
 use App\Models\Order;
 use App\Services\AdAccountSpendCapService;
+use App\Services\FacebookAdAccountService;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class ApproveOrderAction
 {
@@ -26,6 +28,16 @@ class ApproveOrderAction
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            try {
+                if (! $adAccount->synced_at?->isAfter(now()->subMinutes(5))) {
+                    app(FacebookAdAccountService::class)->syncSingleAdAccount($adAccount);
+                    $adAccount->refresh();
+                }
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+
+            $oldSpendCap = $adAccount->spend_cap;
             $adAccount->increment('spend_cap', $lockedOrder->usd_amount * 100);
 
             app(AdAccountSpendCapService::class)->sync($adAccount->refresh());
@@ -33,6 +45,7 @@ class ApproveOrderAction
             $lockedOrder->update([
                 'admin_id' => $admin?->id,
                 'status' => OrderStatus::APPROVED,
+                'old_limit' => $oldSpendCap,
                 'new_limit' => $adAccount->spend_cap,
                 'approved_at' => now(),
             ]);

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('usd_amount', 12, 2);
             $table->decimal('dollar_rate', 12, 2);
             $table->decimal('bdt_amount', 12, 2);
+            $table->decimal('processing_fee', 12, 2)->default(0);
             $table->integer('old_limit')->nullable();
             $table->integer('new_limit')->nullable();
             $table->string('source')->default(OrderSource::USER);

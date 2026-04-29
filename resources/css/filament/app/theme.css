@@ -15,3 +15,27 @@
     padding-inline: calc(var(--spacing) * 2);
     padding-block: calc(var(--spacing) * 2);
 }
+[wire\:name="App\\Filament\\Widgets\\PendingOrdersTableWidget"] .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    content: 'Pending Orders';
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+    --tw-font-weight: var(--font-weight-semibold);
+    color: var(--gray-950);
+    white-space: nowrap;
+}
+[wire\:name="App\\Filament\\Widgets\\AdAccountsTableWidget"] .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    content: 'Ad Accounts';
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+    --tw-font-weight: var(--font-weight-semibold);
+    color: var(--gray-950);
+    white-space: nowrap;
+}

@@ -25,6 +25,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Number;
 
 class OrderHistory extends Page implements HasTable
@@ -67,7 +68,8 @@ class OrderHistory extends Page implements HasTable
                     }),
                 CurrencyColumn::make('dollar_rate', 'BDT')
                     ->label('Dollar Rate'),
-                CurrencyColumn::make('spend_cap')
+                CurrencyColumn::make('new_limit')
+                    ->description(fn (Order $order) => new HtmlString('<del>'.Number::currency($order->old_limit ?? 0, 'USD').'</del>`'))
                     ->label('Limit'),
                 TextColumn::make('source')
                     ->badge()

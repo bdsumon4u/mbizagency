@@ -14,13 +14,12 @@ class PendingOrdersTableWidget extends TableWidget
 {
     protected int|string|array $columnSpan = 'full';
 
-    protected static ?string $heading = 'Pending Orders';
-
     protected static ?int $sort = -1;
 
     public function table(Table $table): Table
     {
         return OrderHistory::configureTable($table)
+            ->heading(null)
             ->query(function (): Builder {
                 return Order::query()
                     ->where('status', OrderStatus::PENDING)

@@ -19,7 +19,7 @@
             this.selectedPaymentMethod = this.paymentMethods.find(method => Number(method.id) === selectedPaymentMethodId) ?? null;
             const sortedByMinAsc = [...this.rates].sort((a, b) => Number(a.min_usd_raw) - Number(b.min_usd_raw));
             const sortedByMinDesc = [...this.rates].sort((a, b) => Number(b.min_usd_raw) - Number(a.min_usd_raw));
-            const processingFeePercent = Number(this.selectedPaymentMethod.processing_fee_percent_raw || 0);
+            const processingFeePercent = Number(this.selectedPaymentMethod?.processing_fee_percent_raw || 0);
             const processingFeeMultiplier = 1 + (processingFeePercent / 100);
 
             this.minimumUsd = sortedByMinAsc.length ? Number(sortedByMinAsc[0].min_usd_raw) : 0;
@@ -78,7 +78,7 @@
                 <strong x-text="amountCurrency === 'bdt' ? `${usdAmount.toFixed(2)} USD` : `Tk. ${bdtAmount.toFixed(2)}`"></strong>
             </div>
             <div style="margin-top: 2px;">
-                Processing Fee:
+                Mobile Banking Charge:
                 <strong x-text="`Tk. ${processingFeeBdt.toFixed(2)}`"></strong>
             </div>
             <div style="margin-top: 2px;">
