@@ -25,7 +25,7 @@
                 {{ $record->adAccount->act_id }}<x-heroicon-s-arrow-top-right-on-square class="h-4 w-4 text-blue-600" />
             </a>
 
-            <x-filament::badge :color="$record->status->getColor()" :icon="$record->status->getIcon()">
+            <x-filament::badge :color="$record->status->getColor()" :icon="$record->status->getIcon()" class="order-status-badge">
                 {{ $record->status->getLabel() }}
             </x-filament::badge>
 

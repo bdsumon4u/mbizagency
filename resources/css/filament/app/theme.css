@@ -56,3 +56,6 @@
         height: 36px;
     }
 }
+.order-status-badge .fi-badge-label {
+    overflow: visible;
+}
