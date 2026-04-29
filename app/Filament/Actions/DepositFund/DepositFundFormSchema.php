@@ -101,12 +101,14 @@ final class DepositFundFormSchema
                     ->inline()
                     ->required(),
                 TextInput::make('amount')
+                    ->hint(new HtmlString('<span x-text="$get(\'currency\') === \'bdt\' ? \'BDT\' : \'USD\'"></span>'))
                     ->numeric()
                     ->minValue(1)
                     ->extraAttributes([
                         'onwheel' => 'return false;',
                     ])
                     ->extraInputAttributes([
+                        'x-bind:placeholder' => '$get(\'currency\') === \'bdt\' ? \'Enter BDT amount\' : \'Enter USD amount\'',
                         'x-on:input' => '$dispatch(\'amount-updated\', { amount: Number($el.value || 0) })',
                     ])
                     ->required()
