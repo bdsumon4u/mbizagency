@@ -39,6 +39,9 @@
     color: var(--gray-950);
     white-space: nowrap;
 }
+.fi-ta-cell:has(.fi-ta-actions):first-of-type {
+    padding-inline-start: calc(var(--spacing) * 2);
+}
 .add-fund-button {
     padding: 5px;
     box-shadow: none;
