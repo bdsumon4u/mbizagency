@@ -4,8 +4,20 @@
     @endphp
 
     <div class="fi-ta-text-has-descriptions fi-ta-text">
-        <a type="button" class="fi-size-sm fi-ta-text-item cursor-pointer text-left hover:underline" wire:click="mountTableAction('orders', '{{ $record->getKey() }}')">
-            {{ $getState() }}
+        <a
+            type="button"
+            class="fi-size-sm fi-ta-text-item inline-flex items-center gap-1.5 cursor-pointer text-left transition-colors hover:underline"
+            wire:click="mountTableAction('orders', '{{ $record->getKey() }}')"
+            wire:loading.class="text-info-600 dark:text-info-400"
+            wire:target="mountTableAction('orders', '{{ $record->getKey() }}')"
+        >
+            <x-heroicon-o-arrow-path
+                class="h-4 w-4 animate-spin"
+                wire:loading
+                wire:target="mountTableAction('orders', '{{ $record->getKey() }}')"
+            />
+
+            <span>{{ $getState() }}</span>
         </a>
 
         <div class="fi-size-sm fi-ta-text-description flex items-center gap-2">
