@@ -246,21 +246,25 @@
 
         @media (max-width: 720px) {
             .grid {
-                grid-template-columns: 1fr;
+                padding: 6px 7px 0;
+                gap: 10px;
             }
 
             .header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .meta {
-                text-align: left;
+                align-items: center;
+                gap: 10px;
+                padding: 14px;
             }
 
             .footer {
                 flex-direction: column;
                 align-items: flex-start;
+                padding: 8px 14px 10px;
+                font-size: 11px;
+            }
+
+            .logo {
+                height: 36px;
             }
 
             .row {
