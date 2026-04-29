@@ -8,8 +8,8 @@ use Filament\Auth\Pages\EditProfile;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 
-final class EditProfilePage extends EditProfile {
-
+final class EditProfilePage extends EditProfile
+{
     protected function getNameFormComponent(): Component
     {
         return TextInput::make('name')

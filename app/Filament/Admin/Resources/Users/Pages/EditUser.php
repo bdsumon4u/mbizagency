@@ -24,8 +24,8 @@ class EditUser extends EditRecord
                 ->schema([
                     TextInput::make('password')
                         ->label('New Password')
-                        ->password()
-                        ->default('passx32')
+                        // ->password()
+                        ->default('dollar32')
                         ->required(),
                 ])
                 ->action(fn (User $record, array $data) => $record->update(['password' => Hash::make($data['password'])]))
