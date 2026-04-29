@@ -72,6 +72,7 @@ class AdminPanelProvider extends PanelProvider
                     ->middleware('signed')
                     ->name('orders.reject');
             })
-            ->authGuard('admin');
+            ->authGuard('admin')
+            ->spa();
     }
 }
