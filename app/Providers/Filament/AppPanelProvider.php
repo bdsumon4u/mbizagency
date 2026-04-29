@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfilePage;
 use App\Filament\Pages\Auth\LoginPage;
 use App\Filament\Pages\Auth\RegisterPage;
 use App\Filament\Pages\Dashboard;
@@ -36,7 +37,7 @@ class AppPanelProvider extends PanelProvider
             ->passwordReset()
             ->registration(RegisterPage::class)
             ->emailVerification()
-            ->profile()
+            ->profile(EditProfilePage::class)
             ->colors([
                 'primary' => Color::Neutral,
             ])
