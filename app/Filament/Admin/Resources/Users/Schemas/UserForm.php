@@ -23,6 +23,10 @@ class UserForm
                 TextInput::make('phone_number')
                     ->label('Phone Number')
                     ->maxLength(30),
+                TextInput::make('password')
+                    ->label('Password')
+                    ->password()
+                    ->required(),
             ]);
     }
 }

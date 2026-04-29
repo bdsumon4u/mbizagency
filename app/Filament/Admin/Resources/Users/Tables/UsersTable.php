@@ -18,8 +18,14 @@ class UsersTable
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
+                TextColumn::make('page_name')
+                    ->label('Company Name')
+                    ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
+                    ->searchable(),
+                TextColumn::make('phone_number')
+                    ->label('Phone Number')
                     ->searchable(),
                 TextColumn::make('ad_accounts_count')
                     ->label('Accounts')
