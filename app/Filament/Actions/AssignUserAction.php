@@ -3,6 +3,7 @@
 namespace App\Filament\Actions;
 
 use App\Models\AdAccount;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
@@ -22,7 +23,10 @@ class AssignUserAction
                 Select::make('user_id')
                     ->label('Select User')
                     ->relationship('user', 'email')
-                    ->searchable()
+                    ->getOptionLabelFromRecordUsing(function (User $record): string {
+                        return $record->name.'_'.$record->page_name.' ('.$record->email.')';
+                    })
+                    ->searchable(['name', 'page_name', 'email'])
                     ->preload()
                     ->required(),
             ])

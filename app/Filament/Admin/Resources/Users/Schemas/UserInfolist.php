@@ -13,7 +13,7 @@ final class UserInfolist
             ->components([
                 TextEntry::make('name'),
                 TextEntry::make('page_name')
-                    ->label('Page Name')
+                    ->label('Company Name')
                     ->placeholder('-'),
                 TextEntry::make('email')
                     ->label('Email Address'),

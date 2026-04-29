@@ -14,7 +14,7 @@ class RegisterPage extends Register
             ->components([
                 $this->getNameFormComponent(),
                 TextInput::make('page_name')
-                    ->label('Page Name')
+                    ->label('Company Name')
                     ->maxLength(255)
                     ->required(),
                 $this->getEmailFormComponent(),
