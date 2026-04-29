@@ -23,7 +23,14 @@ class BankAccountsRelationManager extends RelationManager
             ->headerActions([
                 AttachAction::make()
                     ->preloadRecordSelect()
-                    ->recordSelectSearchColumns(['name', 'account_number']),
+                    ->recordSelectSearchColumns(['name', 'account_name', 'account_number'])
+                    ->recordTitle(function (PaymentMethod $record): string {
+                        if ($record->type === 'MFS') {
+                            return $record->name.' ('.$record->account_number.')';
+                        }
+
+                        return $record->name.'_'.$record->account_name.' ('.$record->account_number.')';
+                    }),
             ])
             ->recordActions([
                 EditAction::make()

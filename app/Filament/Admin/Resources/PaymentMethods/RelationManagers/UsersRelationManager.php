@@ -23,9 +23,9 @@ class UsersRelationManager extends RelationManager
             ->headerActions([
                 AttachAction::make()
                     ->preloadRecordSelect()
-                    ->recordSelectSearchColumns(['name', 'email'])
+                    ->recordSelectSearchColumns(['name', 'email', 'page_name'])
                     ->recordTitle(
-                        fn (User $record): string => trim(($record->name ?: 'User').' ('.$record->email.')'),
+                        fn (User $record): string => $record->name.'_'.$record->page_name.' ('.$record->email.')',
                     )
                     ->multiple(),
             ])
