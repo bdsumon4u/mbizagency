@@ -15,18 +15,20 @@ use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use RuntimeException;
 use Throwable;
+use Illuminate\Support\HtmlString;
 
 class DepositFundAction
 {
     public static function make(): Action
     {
         return Action::make('add_fund')
-            ->label('Fund')
+            ->label('')
             ->tooltip(fn (AdAccount $record): string => 'Add fund to '.$record->name.'.')
-            ->icon(Heroicon::OutlinedBanknotes)
-            ->color('success')
+            ->icon(new HtmlString('<img src="'.asset('dollar.png').'" alt="Fund" width="36" height="36">'))
+            ->color('')
             ->button()
             ->modalWidth(Width::Large)
+            ->extraAttributes(['class' => 'add-fund-button'])
             ->visible(fn (AdAccount $record): bool => $record->user instanceof User)
             ->mountUsing(function (?Schema $schema, AdAccount $record, FacebookAdAccountService $facebookAdAccountService): void {
                 try {
