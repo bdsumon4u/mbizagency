@@ -38,12 +38,12 @@
         <!-- Vertical Card List -->
         <div class="space-y-2 pb-4">
             @foreach($this->adAccounts as $account)
-                <div class="@container w-full bg-white border border-gray-100 rounded-lg shadow-sm hover:border-gray-200 transition-colors overflow-hidden">
+                <div class="@container w-full bg-white border border-gray-100 rounded-lg shadow-sm hover:border-gray-200 transition-colors overflow-hidden px-1">
                     <div class="overflow-x-auto no-scrollbar snap-x snap-mandatory w-full">
                         <div class="flex w-max min-w-full">
                             
                             <!-- Front: Icon & Info (100% of container width on mobile) -->
-                            <div class="w-[100cqw] lg:w-auto lg:min-w-[280px] snap-start flex items-start justify-between gap-2 p-2 lg:p-3 shrink-0">
+                            <div class="w-[100cqw] lg:w-auto lg:flex-1 snap-start flex items-start justify-between gap-2 p-2 lg:p-3 shrink-0">
                                 <!-- Left: Icon & Info -->
                                 <div class="flex items-start gap-2 lg:gap-3 flex-1 min-w-0">
                                     <div class="flex-shrink-0 w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded-md bg-red-50 text-[#ff3b5c] border border-red-100/50">
@@ -72,7 +72,7 @@
                                                     {{ $account['status'] }}
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-medium bg-red-50 text-red-600 border border-red-200">
                                                     <x-heroicon-o-information-circle class="w-2 h-2 lg:w-3 lg:h-3" />
                                                     {{ $account['status'] }}
                                                 </span>
@@ -103,44 +103,44 @@
                             </div>
                             
                             <!-- Extended Content: Additional Data (Visible on Horizontal Scroll on Mobile, Always Visible on Desktop) -->
-                            <div class="snap-start flex items-center gap-4 lg:gap-8 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent lg:flex-1 lg:justify-end">
+                            <div class="snap-start flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent">
                                 <!-- Date & Time -->
-                                <div class="flex flex-col justify-center">
+                                <div class="flex flex-col justify-center lg:w-[85px]">
                                     <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Date-Time</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $account['date'] }}</span>
                                     <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">{{ $account['time'] }}</span>
                                 </div>
                                 
                                 <!-- Amount -->
-                                <div class="flex flex-col justify-center">
+                                <div class="flex flex-col justify-center lg:w-[95px]">
                                     <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Amount</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $account['amount'] }}</span>
                                     <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">{{ $account['amount_bdt'] }}</span>
                                 </div>
                                 
                                 <!-- Dollar Rate -->
-                                <div class="flex flex-col justify-center">
+                                <div class="flex flex-col justify-center lg:w-[75px]">
                                     <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Dollar Rate</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-1 lg:mt-1.5">{{ $account['dollar_rate'] }}</span>
                                 </div>
                                 
                                 <!-- Limit -->
-                                <div class="flex flex-col justify-center">
+                                <div class="flex flex-col justify-center lg:w-[55px]">
                                     <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Limit</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $account['limit_usd'] }}</span>
                                     <span class="text-[8px] lg:text-xs text-gray-400 line-through mt-0.5">{{ $account['limit_old'] }}</span>
                                 </div>
                                 
                                 <!-- Remaining -->
-                                <div class="flex flex-col justify-center">
+                                <div class="flex flex-col justify-center lg:w-[65px]">
                                     <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Remaining</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-1 lg:mt-1.5">{{ $account['remaining'] }}</span>
                                 </div>
 
                                 <!-- Desktop Balance & Buttons -->
-                                <div class="hidden lg:flex items-center gap-4 flex-shrink-0 ml-4 pl-6 border-l border-gray-200">
+                                <div class="hidden lg:flex items-center gap-3 flex-shrink-0 ml-2 pl-4 border-l border-gray-200">
                                     <!-- Balance -->
-                                    <div class="flex flex-col items-end justify-center">
+                                    <div class="flex flex-col items-end justify-center lg:w-[60px]">
                                         <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
                                         <span class="text-sm font-bold text-green-600 mt-0.5">{{ $account['balance'] }}</span>
                                     </div>
@@ -158,7 +158,7 @@
                                 </div>
                                 
                                 <!-- Actions -->
-                                <div class="flex items-center justify-center pl-2 lg:pl-4">
+                                <div class="flex items-center justify-center pl-2 lg:w-[30px]">
                                     <button class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
                                         <x-heroicon-m-ellipsis-vertical class="w-4 h-4 lg:w-5 lg:h-5" />
                                     </button>
