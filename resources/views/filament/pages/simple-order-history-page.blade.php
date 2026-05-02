@@ -1,35 +1,35 @@
 <x-filament-panels::page class="!pt-0">
-    <div class="max-w-7xl mx-auto space-y-2 w-full">
+    <div class="max-w-7xl mx-auto space-y-3 lg:space-y-6 w-full">
         <!-- Header -->
         <div class="pt-2 sm:pt-0">
-            <h1 class="text-xs font-bold tracking-tight text-gray-950 dark:text-white">Order History</h1>
+            <h1 class="text-xs lg:text-2xl font-bold tracking-tight text-gray-950 dark:text-white">Order History</h1>
         </div>
 
         <!-- Search and Filter -->
-        <div class="flex items-center gap-2 w-full">
+        <div class="flex items-center gap-2 lg:gap-4 w-full">
             <div class="relative flex-1">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none text-gray-400">
-                    <x-heroicon-o-magnifying-glass class="w-3 h-3" />
+                <div class="absolute inset-y-0 left-0 flex items-center pl-2 lg:pl-3 pointer-events-none text-gray-400">
+                    <x-heroicon-o-magnifying-glass class="w-3 h-3 lg:w-5 lg:h-5" />
                 </div>
-                <input type="text" wire:model.live="search" class="block w-full pl-6 pr-2 py-1 border border-gray-200 rounded-md leading-4 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-[10px] shadow-sm transition duration-150 ease-in-out" placeholder="Search ad account...">
+                <input type="text" wire:model.live="search" class="block w-full pl-6 lg:pl-10 pr-2 lg:pr-4 py-1 lg:py-2.5 border border-gray-200 rounded-md leading-4 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-[10px] lg:text-sm shadow-sm transition duration-150 ease-in-out" placeholder="Search ad account...">
             </div>
-            <button class="flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary-500 shadow-sm transition-colors">
-                <x-heroicon-o-funnel class="w-3 h-3 text-gray-500" />
+            <button class="flex items-center gap-1 lg:gap-2 px-2 lg:px-4 py-1 lg:py-2.5 bg-white border border-gray-200 rounded-md text-[10px] lg:text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary-500 shadow-sm transition-colors">
+                <x-heroicon-o-funnel class="w-3 h-3 lg:w-5 lg:h-5 text-gray-500" />
                 Filter
             </button>
         </div>
 
         <!-- Stats Widgets -->
-        <div class="flex overflow-x-auto gap-2 sm:grid sm:grid-cols-3 no-scrollbar pb-1">
+        <div class="flex overflow-x-auto gap-2 lg:gap-6 sm:grid sm:grid-cols-3 no-scrollbar pb-1">
             @foreach($this->stats as $stat)
-                <div class="flex items-center gap-2 p-2 bg-white border border-gray-100 rounded-lg shadow-sm min-w-[100px] flex-1">
-                    <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md {{ $stat['icon_bg'] }} {{ $stat['icon_color'] }}">
-                        @svg($stat['icon'], 'w-3 h-3')
+                <div class="flex items-center gap-2 lg:gap-4 p-2 lg:p-5 bg-white border border-gray-100 rounded-lg shadow-sm min-w-[100px] flex-1">
+                    <div class="flex-shrink-0 w-6 h-6 lg:w-12 lg:h-12 flex items-center justify-center rounded-md {{ $stat['icon_bg'] }} {{ $stat['icon_color'] }}">
+                        @svg($stat['icon'], 'w-3 h-3 lg:w-6 lg:h-6')
                     </div>
                     <div class="flex flex-col min-w-0">
-                        <span class="text-[8px] font-medium text-gray-500 tracking-wider truncate">{{ $stat['label'] }}</span>
-                        <span class="text-xs font-bold text-gray-900 leading-tight">{{ $stat['value'] }}</span>
-                        <span class="text-[8px] text-gray-400">{{ $stat['subtext'] }}</span>
+                        <span class="text-[8px] lg:text-xs font-medium text-gray-500 tracking-wider truncate">{{ $stat['label'] }}</span>
+                        <span class="text-xs lg:text-2xl font-bold text-gray-900 leading-tight lg:mt-1 lg:mb-0.5">{{ $stat['value'] }}</span>
+                        <span class="text-[8px] lg:text-xs text-gray-400">{{ $stat['subtext'] }}</span>
                     </div>
                 </div>
             @endforeach
@@ -40,10 +40,10 @@
             @foreach($this->adAccounts as $account)
                 <div class="@container w-full bg-white border border-gray-100 rounded-lg shadow-sm hover:border-gray-200 transition-colors overflow-hidden px-1">
                     <div class="overflow-x-auto no-scrollbar snap-x snap-mandatory w-full">
-                        <div class="flex w-max min-w-full">
+                        <div class="flex w-max min-w-full lg:w-full">
                             
                             <!-- Front: Icon & Info (100% of container width on mobile) -->
-                            <div class="w-[100cqw] lg:w-auto lg:flex-1 snap-start flex items-start justify-between gap-2 p-2 lg:p-3 shrink-0">
+                            <div class="w-[100cqw] lg:w-auto lg:flex-1 lg:min-w-0 snap-start flex items-start justify-between gap-2 p-2 lg:p-3 shrink-0">
                                 <!-- Left: Icon & Info -->
                                 <div class="flex items-start gap-2 lg:gap-3 flex-1 min-w-0">
                                     <div class="flex-shrink-0 w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded-md bg-red-50 text-[#ff3b5c] border border-red-100/50">
@@ -112,7 +112,7 @@
                                 </div>
                                 
                                 <!-- Amount -->
-                                <div class="flex flex-col justify-center lg:w-[95px]">
+                                <div class="flex flex-col justify-center lg:w-[85px]">
                                     <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Amount</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $account['amount'] }}</span>
                                     <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">{{ $account['amount_bdt'] }}</span>
@@ -120,13 +120,13 @@
                                 
                                 <!-- Dollar Rate -->
                                 <div class="flex flex-col justify-center lg:w-[75px]">
-                                    <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Dollar Rate</span>
+                                    <span class="text-[8px] lg:text-xs text-gray-500 font-medium text-nowrap">Dollar Rate</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-1 lg:mt-1.5">{{ $account['dollar_rate'] }}</span>
                                 </div>
                                 
                                 <!-- Limit -->
-                                <div class="flex flex-col justify-center lg:w-[55px]">
-                                    <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Limit</span>
+                                <div class="flex flex-col justify-center lg:w-[70px]">
+                                    <span class="text-[8px] lg:text-xs text-gray-500 font-medium text-nowrap">Spend Limit</span>
                                     <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $account['limit_usd'] }}</span>
                                     <span class="text-[8px] lg:text-xs text-gray-400 line-through mt-0.5">{{ $account['limit_old'] }}</span>
                                 </div>
