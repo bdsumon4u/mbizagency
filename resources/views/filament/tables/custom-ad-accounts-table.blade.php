@@ -13,7 +13,11 @@
                             </div>
                             
                             <div class="flex flex-col min-w-0 flex-1">
-                                <h3 class="text-[10px] lg:text-sm font-semibold text-gray-900 truncate pr-1">{{ $record->name ?? 'Account ID: ' . $record->id }}</h3>
+                                <h3 class="text-[10px] lg:text-sm font-semibold text-gray-900 truncate pr-1">
+                                    <button type="button" wire:click="mountTableAction('orders', '{{ $record->id }}')" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left cursor-pointer">
+                                        {{ $record->name ?? 'Account ID: ' . $record->id }}
+                                    </button>
+                                </h3>
                                 
                                 <div class="flex justify-between">
                                     <div>
@@ -52,12 +56,15 @@
 
                                         <!-- Buttons -->
                                         <div class="flex flex-col gap-1 w-[55px]">
-                                            <button type="button" wire:click="mountTableAction('deposit', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c]">
-                                                + TopUp
+                                            <button type="button" wire:click="mountTableAction('add_fund', '{{ $record->id }}')" wire:target="mountTableAction('add_fund', '{{ $record->id }}')" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c] disabled:opacity-70">
+                                                <x-heroicon-o-plus class="w-2.5 h-2.5" wire:loading.remove wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
+                                                <x-heroicon-o-arrow-path class="w-2.5 h-2.5 animate-spin" wire:loading wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
+                                                TopUp
                                             </button>
-                                            <button type="button" wire:click="mountTableAction('orders', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
-                                                <x-heroicon-o-arrow-top-right-on-square class="w-2 h-2 text-gray-500" />
-                                                Open
+                                            <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
+                                                <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500" wire:loading.remove wire:target="syncSingle({{ $record->id }})" />
+                                                <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500 animate-spin" wire:loading wire:target="syncSingle({{ $record->id }})" />
+                                                Sync
                                             </button>
                                         </div>
                                     </div>
@@ -67,7 +74,7 @@
                     </div>
                     
                     <!-- Extended Content: Additional Data (Visible on Horizontal Scroll on Mobile, Always Visible on Desktop) -->
-                    <div class="snap-start flex items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent">
+                    <div class="snap-start flex items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent w-[100cqw] lg:w-auto">
                         
                         <!-- Limit -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
@@ -107,29 +114,26 @@
                         <!-- Desktop Balance & Buttons -->
                         <div class="hidden lg:flex items-center gap-3 flex-shrink-0 ml-2 pl-4 border-l border-gray-200">
                             <!-- Balance -->
-                            <div class="flex flex-col items-end justify-center lg:w-[60px] lg:w-[80px]">
+                            <div class="flex flex-col items-end justify-center lg:w-[80px]">
                                 <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
                                 <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format((float) ($record->balance ?? 0), 2) }}</span>
                             </div>
 
                             <!-- Buttons -->
                             <div class="flex flex-col gap-1.5 w-[75px]">
-                                <button type="button" wire:click="mountTableAction('deposit', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c]">
-                                    + TopUp
+                                <button type="button" wire:click="mountTableAction('add_fund', '{{ $record->id }}')" wire:target="mountTableAction('add_fund', '{{ $record->id }}')" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c] disabled:opacity-70">
+                                    <x-heroicon-o-plus class="w-3 h-3" wire:loading.remove wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 animate-spin" wire:loading wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
+                                    TopUp
                                 </button>
-                                <button type="button" wire:click="mountTableAction('orders', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
-                                    <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3 text-gray-500" />
-                                    Open
+                                <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 text-gray-500" wire:loading.remove wire:target="syncSingle({{ $record->id }})" />
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 text-gray-500 animate-spin" wire:loading wire:target="syncSingle({{ $record->id }})" />
+                                    Sync
                                 </button>
                             </div>
                         </div>
-                        
-                        <!-- Actions -->
-                        <div class="flex items-center justify-center pl-2 lg:w-[30px]">
-                            <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
-                                <x-heroicon-m-ellipsis-vertical class="w-4 h-4 lg:w-5 lg:h-5" />
-                            </button>
-                        </div>
+
                         
                     </div>
                     

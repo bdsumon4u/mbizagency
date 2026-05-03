@@ -7,9 +7,12 @@ use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
+use App\Services\FacebookAdAccountService;
 use BackedEnum;
+use Exception;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
@@ -23,6 +26,8 @@ use Livewire\Attributes\Computed;
 class AdAccounts extends Page implements HasTable
 {
     use InteractsWithTable;
+
+    protected ?string $heading = '';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
@@ -63,6 +68,28 @@ class AdAccounts extends Page implements HasTable
                 'icon_bg' => 'bg-blue-50',
             ],
         ];
+    }
+
+    public function syncSingle(int $id): void
+    {
+        $account = AdAccount::query()
+            ->whereBelongsTo(Filament::auth()->user())
+            ->findOrFail($id);
+
+        try {
+            app(FacebookAdAccountService::class)->syncSingleAdAccount($account);
+
+            Notification::make()
+                ->title('Ad account synced successfully.')
+                ->success()
+                ->send();
+        } catch (Exception $exception) {
+            Notification::make()
+                ->title('Ad account sync failed')
+                ->body($exception->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     public function table(Table $table): Table
