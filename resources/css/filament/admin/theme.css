@@ -40,3 +40,7 @@
 .order-status-badge .fi-badge-label {
     overflow: visible;
 }
+
+.fi-modal-heading {
+    @apply line-clamp-1;
+}

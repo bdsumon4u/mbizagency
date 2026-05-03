@@ -150,6 +150,7 @@ class OrderHistory extends Page implements HasTable
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
                     ->modalHeading('')
+                    ->modalCloseButton()
                     ->modalSubmitAction(false)
                     ->modalCancelAction(false)
                     ->extraAttributes(['class' => 'hidden']),
@@ -161,6 +162,7 @@ class OrderHistory extends Page implements HasTable
                         // ->button()
                         ->slideOver()
                         ->modalWidth(Width::Medium)
+                        ->modalCloseButton()
                         ->modalSubmitAction(false)
                         ->modalCancelAction(false)
                         ->modalHeading('Proof of Payment')

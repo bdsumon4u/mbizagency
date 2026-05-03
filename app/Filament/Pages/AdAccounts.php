@@ -123,8 +123,10 @@ class AdAccounts extends Page implements HasTable
                         'table' => 'ad-accounts',
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
-                    ->modalHeading('')
-                    ->modalSubmitAction(false),
+                    ->modalHeading(fn (AdAccount $record) => $record->name.' - Orders')
+                    ->modalCloseButton()
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false),
                 DepositFundAction::make()->button(),
             ], RecordActionsPosition::BeforeCells);
     }
