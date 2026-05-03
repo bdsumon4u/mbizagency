@@ -92,6 +92,41 @@ class AdAccounts extends Page implements HasTable
         }
     }
 
+    public function syncAll(): void
+    {
+        $accounts = AdAccount::query()
+            ->whereBelongsTo(Filament::auth()->user())
+            ->get()
+            ->filter(fn (AdAccount $account) => $account->status->isActive());
+
+        if ($accounts->isEmpty()) {
+            Notification::make()
+                ->title('No active ad accounts found to sync.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        try {
+            $service = app(FacebookAdAccountService::class);
+            foreach ($accounts as $account) {
+                $service->syncSingleAdAccount($account);
+            }
+
+            Notification::make()
+                ->title($accounts->count().' ad accounts synced successfully.')
+                ->success()
+                ->send();
+        } catch (Exception $exception) {
+            Notification::make()
+                ->title('Ad accounts sync failed')
+                ->body($exception->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
     public function table(Table $table): Table
     {
         return $table

@@ -9,9 +9,9 @@
                 </h1>
                 <p class="text-xs text-gray-500 mt-1">Manage and sync your ad account limits</p>
             </div>
-            <button class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#ff3b5c] hover:bg-[#e63553] text-white text-sm font-medium rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff3b5c]">
-                <x-heroicon-o-plus-circle class="w-5 h-5" />
-                Add Account
+            <button wire:click="syncAll" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#ff3b5c] hover:bg-[#e63553] text-white text-sm font-medium rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ff3b5c] disabled:opacity-70">
+                <x-heroicon-o-arrow-path class="w-5 h-5" wire:loading.class="animate-spin" />
+                Sync All Accounts
             </button>
         </div>
 

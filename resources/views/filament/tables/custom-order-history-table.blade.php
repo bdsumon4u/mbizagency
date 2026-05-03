@@ -9,7 +9,10 @@
                         <!-- Left: Icon & Info -->
                         <div class="flex items-start gap-2 flex-1 min-w-0">
                             <div class="flex-shrink-0 w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded-md bg-red-50 text-[#ff3b5c] border border-red-100/50">
-                                <x-heroicon-o-building-storefront class="w-3 h-3 lg:w-4 lg:h-4" />
+                                <svg class="w-3 h-3 lg:w-4 lg:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 1 -2 -2v-12" />
+                                    <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4" />
+                                </svg>
                             </div>
                             
                             <div class="flex flex-col min-w-0 flex-1">
@@ -52,7 +55,7 @@
                                     <div class="flex lg:hidden items-center gap-2 flex-shrink-0">
                                         <!-- Amount -->
                                         <div class="flex flex-col justify-center lg:w-[85px]">
-                                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium mt-0.5">Amount</span>
+                                            <!-- <span class="text-[8px] lg:text-xs text-gray-500 font-medium mt-0.5">Amount</span> -->
                                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5">${{ number_format($record->usd_amount, 2) }}</span>
                                             <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">Tk. {{ number_format($record->bdt_amount, 2) }}</span>
                                         </div>
@@ -62,6 +65,12 @@
                                             <button wire:click="openAccount({{ $record->id }})" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
                                                 <x-heroicon-o-arrow-top-right-on-square class="w-2 h-2 text-gray-500" />
                                                 History
+                                            </button>
+                                            
+                                            <!-- Invoice -->
+                                            <button wire:click="openAccount({{ $record->id }})" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
+                                                <x-heroicon-o-arrow-top-right-on-square class="w-2 h-2 text-gray-500" />
+                                                Invoice
                                             </button>
                                         </div>
                                     </div>
@@ -80,9 +89,16 @@
                         </div>
                         
                         <!-- Amount -->
-                        <div class="flex flex-col justify-center lg:w-[85px]">
+                        <div class="flex-col justify-center lg:w-[85px] hidden lg:flex">
                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Amount</span>
                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format($record->usd_amount, 2) }}</span>
+                            <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">Tk. {{ number_format($record->bdt_amount, 2) }}</span>
+                        </div>
+
+                        <!-- Balance -->
+                        <div class="flex lg:hidden flex-col justify-center lg:w-[85px]">
+                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Balance</span>
+                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format($record->adAccount?->balance ?? 0, 2) }}</span>
                             <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">Tk. {{ number_format($record->bdt_amount, 2) }}</span>
                         </div>
                         
@@ -105,7 +121,7 @@
                             <div class="flex flex-col items-end justify-center lg:w-[60px]">
                                 <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
                                 <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format($record->adAccount?->balance ?? 0, 2) }}</span>
-                            <!-- <span class="text-[6px] text-gray-400 mt-0.5">BEFORE TOPUP</span> -->
+                                <span class="text-[6px] text-gray-400 mt-0.5">BEFORE TOPUP</span>
                             </div>
 
                             <!-- Buttons -->
@@ -113,6 +129,10 @@
                                 <button wire:click="mountTableAction('orders', {{ $record->id }})" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
                                     <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3 text-gray-500" />
                                     History
+                                </button>
+                                <button wire:click="mountTableAction('orders', {{ $record->id }})" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
+                                    <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3 text-gray-500" />
+                                    Invoice
                                 </button>
                             </div>
                         </div>
