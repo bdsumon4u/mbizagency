@@ -2,12 +2,21 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Actions\DepositFundAction;
+use App\Models\AdAccount;
+use App\Models\Order;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Attributes\Computed;
 
-class SimpleOrderHistoryPage extends Page
+class SimpleOrderHistoryPage extends Page implements HasTable
 {
+    use InteractsWithTable;
+
     protected string $view = 'filament.pages.simple-order-history-page';
 
     public string $search = '';
@@ -20,10 +29,15 @@ class SimpleOrderHistoryPage extends Page
     #[Computed]
     public function stats(): array
     {
+        $accounts = AdAccount::query()->whereBelongsTo(Filament::auth()->user())->get();
+        $accountsCount = $accounts->count();
+        $totalBalance = $accounts->sum('balance');
+        $activeAccounts = $accounts->filter(fn ($account) => $account->status->isActive())->count();
+
         return [
             [
                 'label' => 'Total Accounts',
-                'value' => '12',
+                'value' => (string) $accountsCount,
                 'subtext' => 'All Time',
                 'icon' => 'heroicon-o-wallet',
                 'icon_color' => 'text-red-500',
@@ -31,7 +45,7 @@ class SimpleOrderHistoryPage extends Page
             ],
             [
                 'label' => 'Total Balance',
-                'value' => '$1,412.48',
+                'value' => '$'.number_format($totalBalance, 2),
                 'subtext' => 'All Accounts',
                 'icon' => 'heroicon-o-currency-dollar',
                 'icon_color' => 'text-green-500',
@@ -39,7 +53,7 @@ class SimpleOrderHistoryPage extends Page
             ],
             [
                 'label' => 'Active Accounts',
-                'value' => '10',
+                'value' => (string) $activeAccounts,
                 'subtext' => 'Approved',
                 'icon' => 'heroicon-o-check-circle',
                 'icon_color' => 'text-blue-500',
@@ -49,124 +63,62 @@ class SimpleOrderHistoryPage extends Page
     }
 
     #[Computed]
-    public function adAccounts(): array
+    public function orders(): array
     {
-        return [
-            [
-                'id' => '508015572331351',
-                'name' => 'US_188_Cyber 32-029_Sheik Mobeen_CloudMobeen_Cloud',
-                'balance' => '$93.18',
-                'status' => 'Approved',
-                'status_color' => 'green',
-                'date' => '28/04/26',
-                'time' => '11:00 AM',
-                'amount' => '$10.00',
-                'amount_bdt' => 'Tk. 1,350.00',
-                'dollar_rate' => 'Tk. 135.00',
-                'limit_usd' => '$65.00',
-                'limit_old' => '$0.00',
-                'remaining' => '$65.00',
-            ],
-            [
-                'id' => '1389108508978125',
-                'name' => 'US_1194_Cyber 32-008_Atik_Nexus Shop',
-                'balance' => '$193.83',
-                'status' => 'Verification Processing',
-                'status_color' => 'yellow',
-                'date' => '28/04/26',
-                'time' => '10:57 AM',
-                'amount' => '$10.00',
-                'amount_bdt' => 'Tk. 1,350.00',
-                'dollar_rate' => 'Tk. 135.00',
-                'limit_usd' => '$55.00',
-                'limit_old' => '$0.00',
-                'remaining' => '$65.00',
-            ],
-            [
-                'id' => '741866791657878',
-                'name' => 'US_1209_Cyber 32-019_Kamrul Hasan_Punok019_Kamrul Hasan_Punok',
-                'balance' => '$549.72',
-                'status' => 'Rejected',
-                'status_color' => 'green',
-                'date' => '27/04/26',
-                'time' => '04:32 PM',
-                'amount' => '$20.00',
-                'amount_bdt' => 'Tk. 2,700.00',
-                'dollar_rate' => 'Tk. 135.00',
-                'limit_usd' => '$221.00',
-                'limit_old' => '$0.00',
-                'remaining' => '$65.00',
-            ],
-            [
-                'id' => '765131882802829',
-                'name' => 'US_1204_Cyber 32-010_Evan_Resume',
-                'balance' => '$309.67',
-                'status' => 'Verification Processing',
-                'status_color' => 'yellow',
-                'date' => '27/04/26',
-                'time' => '08:38 AM',
-                'amount' => '$10.00',
-                'amount_bdt' => 'Tk. 1,350.00',
-                'dollar_rate' => 'Tk. 135.00',
-                'limit_usd' => '$35.00',
-                'limit_old' => '$0.00',
-                'remaining' => '$0.00',
-            ],
-            [
-                'id' => '3355539781269135',
-                'name' => 'US_1240_Cyber 32-061_Mominul Islam_Mi 3',
-                'balance' => '$122.70',
-                'status' => 'Approved',
-                'status_color' => 'green',
-                'date' => '27/04/26',
-                'time' => '08:36 AM',
-                'amount' => '$300.00',
-                'amount_bdt' => 'Tk. 38,400.00',
-                'dollar_rate' => 'Tk. 128.00',
-                'limit_usd' => '$20.00',
-                'limit_old' => '$0.00',
-                'remaining' => '$0.00',
-            ],
-            [
-                'id' => '1565640794065804',
-                'name' => 'US_1102_Cyber 32-023_Mominul Islam_Mi 1Islam_Mi 1',
-                'balance' => '$124.29',
-                'status' => 'Verification Processing',
-                'status_color' => 'yellow',
-                'date' => '27/04/26',
-                'time' => '08:33 AM',
-                'amount' => '$10.00',
-                'amount_bdt' => 'Tk. 1,350.00',
-                'dollar_rate' => 'Tk. 135.00',
-                'limit_usd' => '$55.00',
-                'limit_old' => '$0.00',
-                'remaining' => '$0.00',
-            ],
-            [
-                'id' => '1252419719191951',
-                'name' => 'US_1183_Cyber 32-028_Tuhin_Return Car',
-                'balance' => '$19.06',
-                'status' => 'Approved',
-                'status_color' => 'green',
-                'date' => '27/04/26',
-                'time' => '06:10 AM',
-                'amount' => '$15.00',
-                'amount_bdt' => 'Tk. 2,025.00',
-                'dollar_rate' => 'Tk. 135.00',
-                'limit_usd' => '$35.00',
-                'limit_old' => '$0.00',
-                'remaining' => '$65.00',
-            ],
-        ];
+        return Order::query()
+            ->whereBelongsTo(Filament::auth()->user())
+            ->with('adAccount')
+            ->when($this->search, function ($query) {
+                $query->whereHas('adAccount', function ($q) {
+                    $q->where('name', 'like', "%{$this->search}%")
+                        ->orWhere('act_id', 'like', "%{$this->search}%");
+                });
+            })
+            ->latest()
+            ->get()
+            ->map(fn (Order $order) => [
+                'id' => $order->id,
+                'account_id' => $order->adAccount?->act_id ?? 'N/A',
+                'name' => $order->adAccount?->name ?? 'Deleted Account',
+                'balance' => '$'.number_format($order->adAccount?->balance ?? 0, 2),
+                'status' => $order->status->getLabel(),
+                'status_color' => $order->status->getColor(),
+                'date' => $order->created_at->format('d/m/y'),
+                'time' => $order->created_at->format('h:i A'),
+                'amount' => '$'.number_format($order->usd_amount, 2),
+                'amount_bdt' => 'Tk. '.number_format($order->bdt_amount, 2),
+                'dollar_rate' => 'Tk. '.number_format($order->dollar_rate, 2),
+                'limit_usd' => '$'.number_format($order->new_limit ?? 0, 2),
+                'limit_old' => '$'.number_format($order->old_limit ?? 0, 2),
+                'remaining' => '$'.number_format($order->adAccount?->balance ?? 0, 2),
+            ])
+            ->toArray();
     }
 
-    public function topUp(string $id)
+    public function topUp(string $actId): void
+    {
+        $adAccount = AdAccount::query()
+            ->whereBelongsTo(Filament::auth()->user())
+            ->where('act_id', $actId)
+            ->first();
+
+        if ($adAccount) {
+            $this->mountTableAction('add_fund', $adAccount->getKey());
+        }
+    }
+
+    public function openAccount(string $id): void
     {
         // Dummy method for demonstration
     }
 
-    public function openAccount(string $id)
+    public function table(Table $table): Table
     {
-        // Dummy method for demonstration
+        return $table
+            ->query(AdAccount::query()->whereBelongsTo(Filament::auth()->user()))
+            ->columns([])
+            ->recordActions([
+                DepositFundAction::make()->button(),
+            ]);
     }
 }
