@@ -116,15 +116,15 @@ class AdAccounts extends Page implements HasTable
                 Action::make('orders')
                     ->label('Orders')
                     ->modalWidth(Width::SevenExtraLarge)
-                    ->modalClasses('hotash')
+                    ->extraModalOverlayAttributes(['class' => 'batash'])
+                    ->extraModalWindowAttributes(['class' => 'hotash'])
                     ->modalContent(fn (AdAccount $record) => view('filament.actions.ad-account-view-orders', [
                         'record' => $record,
                         'table' => 'ad-accounts',
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
                     ->modalHeading('')
-                    ->modalSubmitAction(false)
-                    ->modalCancelAction(false),
+                    ->modalSubmitAction(false),
                 DepositFundAction::make()->button(),
             ], RecordActionsPosition::BeforeCells);
     }
