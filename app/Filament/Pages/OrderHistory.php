@@ -9,6 +9,7 @@ use App\Enums\OrderStatus;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Filament\Tables\Columns\OrderHistoryTable\AdAccountColumn;
+use App\Models\AdAccount;
 use App\Models\Order;
 use BackedEnum;
 use Exception;
@@ -27,6 +28,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Number;
+use Livewire\Attributes\Computed;
 
 class OrderHistory extends Page implements HasTable
 {
@@ -34,9 +36,54 @@ class OrderHistory extends Page implements HasTable
 
     public ?int $adAccountId = null;
 
+    protected ?string $heading = '';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected string $view = 'filament.pages.order-history';
+
+    #[Computed]
+    public function stats(): array
+    {
+        $user = Filament::auth()->user();
+
+        $accounts = AdAccount::query()
+            ->when(! static::isAdminPanel(), function ($query) use ($user) {
+                return $query->whereBelongsTo($user);
+            })
+            ->get();
+
+        $accountsCount = $accounts->count();
+        $totalBalance = $accounts->sum('balance');
+        $activeAccounts = $accounts->filter(fn ($account) => $account->status->isActive())->count();
+
+        return [
+            [
+                'label' => 'Total Accounts',
+                'value' => (string) $accountsCount,
+                'subtext' => 'All Time',
+                'icon' => 'heroicon-o-wallet',
+                'icon_color' => 'text-red-500',
+                'icon_bg' => 'bg-red-50',
+            ],
+            [
+                'label' => 'Total Balance',
+                'value' => '$'.number_format($totalBalance, 2),
+                'subtext' => 'All Accounts',
+                'icon' => 'heroicon-o-currency-dollar',
+                'icon_color' => 'text-green-500',
+                'icon_bg' => 'bg-green-50',
+            ],
+            [
+                'label' => 'Active Accounts',
+                'value' => (string) $activeAccounts,
+                'subtext' => 'Approved',
+                'icon' => 'heroicon-o-check-circle',
+                'icon_color' => 'text-blue-500',
+                'icon_bg' => 'bg-blue-50',
+            ],
+        ];
+    }
 
     public function table(Table $table): Table
     {
@@ -49,7 +96,8 @@ class OrderHistory extends Page implements HasTable
                 })->when($this->adAccountId, function ($query) {
                     return $query->where('ad_account_id', $this->adAccountId);
                 })->with('adAccount')
-            );
+            )
+            ->content(fn () => view('filament.tables.custom-order-history-table'));
     }
 
     public static function configureTable(Table $table): Table

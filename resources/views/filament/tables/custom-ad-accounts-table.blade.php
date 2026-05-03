@@ -7,7 +7,7 @@
                     <!-- Front: Icon & Info (100% of container width on mobile) -->
                     <div class="w-[100cqw] lg:w-auto lg:flex-1 lg:min-w-0 snap-start flex items-start justify-between gap-2 p-2 lg:p-3 shrink-0">
                         <!-- Left: Icon & Info -->
-                        <div class="flex items-start gap-2 lg:gap-3 flex-1 min-w-0">
+                        <div class="flex items-start gap-2 flex-1 min-w-0">
                             <div class="flex-shrink-0 w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded-md bg-red-50 text-[#ff3b5c] border border-red-100/50">
                                 <x-heroicon-o-wallet class="w-3 h-3 lg:w-4 lg:h-4" />
                             </div>
@@ -19,7 +19,7 @@
                                     </button>
                                 </h3>
                                 
-                                <div class="flex justify-between">
+                                <div class="flex justify-between gap-1">
                                     <div>
                                         <div class="flex items-center gap-1 mt-0.5 text-[9px] lg:text-xs text-gray-500">
                                             <span class="truncate">ID: {{ $record->act_id ?? $record->id }}</span>
@@ -74,7 +74,7 @@
                     </div>
                     
                     <!-- Extended Content: Additional Data (Visible on Horizontal Scroll on Mobile, Always Visible on Desktop) -->
-                    <div class="snap-start flex items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent w-[100cqw] lg:w-auto">
+                    <div class="snap-start flex justify-around items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent w-[100cqw] lg:w-auto">
                         
                         <!-- Limit -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
