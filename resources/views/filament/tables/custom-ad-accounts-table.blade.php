@@ -1,4 +1,4 @@
-<div class="space-y-2 pb-4">
+<div class="space-y-2 p-1">
     @foreach($records as $record)
         <div class="@container w-full bg-white border border-gray-100 rounded-lg shadow-sm hover:border-gray-200 transition-colors overflow-hidden px-1">
             <div class="overflow-x-auto no-scrollbar snap-x snap-mandatory w-full">
@@ -15,49 +15,53 @@
                             <div class="flex flex-col min-w-0 flex-1">
                                 <h3 class="text-[10px] lg:text-sm font-semibold text-gray-900 truncate pr-1">{{ $record->name ?? 'Account ID: ' . $record->id }}</h3>
                                 
-                                <div class="flex items-center gap-1 mt-0.5 text-[9px] lg:text-xs text-gray-500">
-                                    <span class="truncate">ID: {{ $record->act_id ?? $record->id }}</span>
-                                    <button x-data="{ copy() { navigator.clipboard.writeText('{{ $record->act_id ?? $record->id }}'); $tooltip('Copied!'); } }" x-on:click="copy()" class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 focus:outline-none" title="Copy ID">
-                                        <x-heroicon-o-document-duplicate class="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5" />
-                                    </button>
-                                </div>
-                                
-                                <div class="mt-1 flex items-center gap-2">
-                                    @php
-                                        $statusColor = match($record->status->getColor()) {
-                                            'success' => 'bg-green-50 text-green-600 border-green-200',
-                                            'danger' => 'bg-red-50 text-red-600 border-red-200',
-                                            'warning' => 'bg-orange-50 text-orange-600 border-orange-200',
-                                            'info' => 'bg-blue-50 text-blue-600 border-blue-200',
-                                            default => 'bg-gray-50 text-gray-600 border-gray-200',
-                                        };
-                                        $statusIcon = $record->status->getIcon();
-                                    @endphp
-                                    <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-medium border {{ $statusColor }}">
-                                        @svg($statusIcon, 'w-2 h-2 lg:w-3 lg:h-3')
-                                        {{ $record->status->getLabel() }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                                <div class="flex justify-between">
+                                    <div>
+                                        <div class="flex items-center gap-1 mt-0.5 text-[9px] lg:text-xs text-gray-500">
+                                            <span class="truncate">ID: {{ $record->act_id ?? $record->id }}</span>
+                                            <button x-data="{ copy() { navigator.clipboard.writeText('{{ $record->act_id ?? $record->id }}'); $tooltip('Copied!'); } }" x-on:click="copy()" class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 focus:outline-none" title="Copy ID">
+                                                <x-heroicon-o-document-duplicate class="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5" />
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="mt-1 flex items-center gap-2">
+                                            @php
+                                                $statusColor = match($record->status->getColor()) {
+                                                    'success' => 'bg-green-50 text-green-600 border-green-200',
+                                                    'danger' => 'bg-red-50 text-red-600 border-red-200',
+                                                    'warning' => 'bg-orange-50 text-orange-600 border-orange-200',
+                                                    'info' => 'bg-blue-50 text-blue-600 border-blue-200',
+                                                    default => 'bg-gray-50 text-gray-600 border-gray-200',
+                                                };
+                                                $statusIcon = $record->status->getIcon();
+                                            @endphp
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-medium border {{ $statusColor }}">
+                                                @svg($statusIcon, 'w-2 h-2 lg:w-3 lg:h-3')
+                                                {{ $record->status->getLabel() }}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                        <!-- Right: Action Buttons (MOBILE ONLY) -->
-                        <div class="flex lg:hidden items-center gap-2 flex-shrink-0">
-                            <!-- Balance -->
-                            <div class="flex flex-col items-end justify-center">
-                                <span class="text-[8px] text-gray-500 tracking-wider font-medium">Balance</span>
-                                <span class="text-[10px] font-bold text-green-600">${{ number_format((float) ($record->balance ?? 0), 2) }}</span>
-                            </div>
+                                    <!-- Right: Action Buttons (MOBILE ONLY) -->
+                                    <div class="flex lg:hidden items-center gap-2 flex-shrink-0">
+                                        <!-- Balance -->
+                                        <div class="flex flex-col items-end justify-center">
+                                            <span class="text-[8px] text-gray-500 tracking-wider font-medium">Balance</span>
+                                            <span class="text-[10px] font-bold text-green-600">${{ number_format((float) ($record->balance ?? 0), 2) }}</span>
+                                        </div>
 
-                            <!-- Buttons -->
-                            <div class="flex flex-col gap-1 w-[55px]">
-                                <button type="button" wire:click="mountTableAction('deposit', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c]">
-                                    + TopUp
-                                </button>
-                                <button type="button" wire:click="mountTableAction('orders', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
-                                    <x-heroicon-o-arrow-top-right-on-square class="w-2 h-2 text-gray-500" />
-                                    Open
-                                </button>
+                                        <!-- Buttons -->
+                                        <div class="flex flex-col gap-1 w-[55px]">
+                                            <button type="button" wire:click="mountTableAction('deposit', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c]">
+                                                + TopUp
+                                            </button>
+                                            <button type="button" wire:click="mountTableAction('orders', '{{ $record->id }}')" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
+                                                <x-heroicon-o-arrow-top-right-on-square class="w-2 h-2 text-gray-500" />
+                                                Open
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -66,7 +70,7 @@
                     <div class="snap-start flex items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent">
                         
                         <!-- Limit -->
-                        <div class="flex flex-col justify-center w-[120px] lg:w-[150px]">
+                        <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Limit</span>
                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->spend_cap ?? 0), 2) }}</span>
                             <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
@@ -75,7 +79,7 @@
                         </div>
                         
                         <!-- Spent -->
-                        <div class="flex flex-col justify-center w-[120px] lg:w-[150px]">
+                        <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Spent</span>
                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->amount_spent ?? 0), 2) }}</span>
                             @php
@@ -89,9 +93,9 @@
                         </div>
 
                         <!-- Synced At -->
-                        <div class="flex flex-col justify-center w-[90px] lg:w-[110px]">
+                        <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Synced At</span>
-                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $record->synced_at ? $record->synced_at->format('d-M-Y') : 'N/A' }}</span>
+                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $record->synced_at ? $record->synced_at->format('d/m/y') : 'N/A' }}</span>
                             <div class="flex items-center gap-1 mt-0.5">
                                 <span class="text-[8px] lg:text-xs text-gray-400">{{ $record->synced_at ? $record->synced_at->format('h:i A') : '' }}</span>
                                 @if($record->synced_at)
@@ -103,7 +107,7 @@
                         <!-- Desktop Balance & Buttons -->
                         <div class="hidden lg:flex items-center gap-3 flex-shrink-0 ml-2 pl-4 border-l border-gray-200">
                             <!-- Balance -->
-                            <div class="flex flex-col items-end justify-center lg:w-[60px]">
+                            <div class="flex flex-col items-end justify-center lg:w-[60px] lg:w-[80px]">
                                 <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
                                 <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format((float) ($record->balance ?? 0), 2) }}</span>
                             </div>

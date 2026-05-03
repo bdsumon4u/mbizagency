@@ -40,16 +40,16 @@ class AdAccounts extends Page implements HasTable
         return [
             [
                 'label' => 'Total Limit',
-                'value' => '$' . number_format($totalLimit, 2),
-                'subtext' => 'Across ' . $accountsCount . ' accounts',
+                'value' => '$'.number_format($totalLimit, 2),
+                'subtext' => 'Across '.$accountsCount.' accounts',
                 'icon' => 'heroicon-o-wallet',
                 'icon_color' => 'text-red-500',
                 'icon_bg' => 'bg-red-50',
             ],
             [
                 'label' => 'Total Spent',
-                'value' => '$' . number_format($totalSpent, 2),
-                'subtext' => 'Across ' . $accountsCount . ' accounts',
+                'value' => '$'.number_format($totalSpent, 2),
+                'subtext' => 'Across '.$accountsCount.' accounts',
                 'icon' => 'heroicon-o-arrow-trending-up',
                 'icon_color' => 'text-green-500',
                 'icon_bg' => 'bg-green-50',
