@@ -18,6 +18,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
+use Livewire\Attributes\Computed;
 
 class AdAccounts extends Page implements HasTable
 {
@@ -27,11 +28,49 @@ class AdAccounts extends Page implements HasTable
 
     protected string $view = 'filament.pages.ad-accounts';
 
+    #[Computed]
+    public function stats(): array
+    {
+        $accounts = AdAccount::query()->whereBelongsTo(Filament::auth()->user())->get();
+        $totalLimit = $accounts->sum('spend_cap');
+        $totalSpent = $accounts->sum('amount_spent');
+        $accountsCount = $accounts->count();
+        $lastSynced = $accounts->max('synced_at');
+
+        return [
+            [
+                'label' => 'Total Limit',
+                'value' => '$' . number_format($totalLimit, 2),
+                'subtext' => 'Across ' . $accountsCount . ' accounts',
+                'icon' => 'heroicon-o-wallet',
+                'icon_color' => 'text-red-500',
+                'icon_bg' => 'bg-red-50',
+            ],
+            [
+                'label' => 'Total Spent',
+                'value' => '$' . number_format($totalSpent, 2),
+                'subtext' => 'Across ' . $accountsCount . ' accounts',
+                'icon' => 'heroicon-o-arrow-trending-up',
+                'icon_color' => 'text-green-500',
+                'icon_bg' => 'bg-green-50',
+            ],
+            [
+                'label' => 'Last Synced',
+                'value' => $lastSynced ? $lastSynced->format('h:i A') : 'N/A',
+                'subtext' => $lastSynced ? $lastSynced->format('d-M-Y') : 'N/A',
+                'icon' => 'heroicon-o-arrow-path',
+                'icon_color' => 'text-blue-500',
+                'icon_bg' => 'bg-blue-50',
+            ],
+        ];
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->query(AdAccount::query()->whereBelongsTo(Filament::auth()->user()))
             ->defaultSort('id', 'desc')
+            ->content(fn () => view('filament.tables.custom-ad-accounts-table'))
             ->columns([
                 TextColumn::make('#')
                     ->rowIndex()
