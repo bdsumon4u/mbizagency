@@ -128,7 +128,7 @@
                         <!-- Balance -->
                         <div class="flex lg:hidden flex-col justify-center lg:w-[85px]">
                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Balance</span>
-                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format($record->adAccount?->balance ?? 0, 2) }}</span>
+                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format($record->balance ?? 0, 2) }}</span>
                         </div>
                         
                         <!-- Dollar Rate -->
@@ -149,7 +149,7 @@
                             <!-- Balance -->
                             <div class="flex flex-col items-end justify-center lg:w-[60px]">
                                 <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
-                                <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format($record->adAccount?->balance ?? 0, 2) }}</span>
+                                <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format($record->balance ?? 0, 2) }}</span>
                             </div>
 
                             @unless($this->adAccountId)

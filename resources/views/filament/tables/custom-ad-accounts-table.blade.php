@@ -56,7 +56,7 @@
                                         <!-- Balance -->
                                         <div class="flex flex-col items-end justify-center">
                                             <span class="text-[8px] text-gray-500 tracking-wider font-medium">Balance</span>
-                                            <span class="text-[10px] font-bold text-green-600">${{ number_format((float) ($record->balance ?? 0), 2) }}</span>
+                                            <span class="text-[10px] font-bold text-green-600">${{ number_format((float) ($record->spend_cap - $record->amount_spent ?? 0), 2) }}</span>
                                         </div>
 
                                         <!-- Buttons -->
@@ -121,7 +121,7 @@
                             <!-- Balance -->
                             <div class="flex flex-col items-end justify-center lg:w-[80px]">
                                 <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
-                                <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format((float) ($record->balance ?? 0), 2) }}</span>
+                                <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format((float) ($record->spend_cap - $record->amount_spent ?? 0), 2) }}</span>
                             </div>
 
                             <!-- Buttons -->

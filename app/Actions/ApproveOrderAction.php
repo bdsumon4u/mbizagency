@@ -37,10 +37,14 @@ class ApproveOrderAction
                 report($exception);
             }
 
+            app(FacebookAdAccountService::class)->syncSingleAdAccount($adAccount);
             $oldSpendCap = $adAccount->spend_cap;
+            $lockedOrder->update(['balance' => $oldSpendCap - $adAccount->amount_spent]);
             $adAccount->increment('spend_cap', $lockedOrder->usd_amount * 100);
+            $adAccount->refresh();
 
-            app(AdAccountSpendCapService::class)->sync($adAccount->refresh());
+            app(AdAccountSpendCapService::class)->sync($adAccount);
+            app(FacebookAdAccountService::class)->syncSingleAdAccount($adAccount);
 
             $lockedOrder->update([
                 'admin_id' => $admin?->id,

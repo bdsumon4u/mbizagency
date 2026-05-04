@@ -26,6 +26,7 @@ class AdAccountsTableWidget extends BaseWidget
     {
         return $table
             ->heading(null)
+            ->extraAttributes(['class' => 'ad-accounts-table'])
             ->query(AdAccount::query()->whereBelongsTo(Filament::auth()->user()))
             ->defaultSort('id', 'desc')
             ->columns([

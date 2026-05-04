@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Enums\OrderStatus;
 use App\Filament\Actions\DepositFundAction;
 use App\Filament\Pages\OrderHistory;
-use App\Models\AdAccount;
 use App\Models\Order;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -37,6 +36,7 @@ class PendingOrdersTableWidget extends TableWidget
     {
         return OrderHistory::configureTable($table)
             ->heading(null)
+            ->extraAttributes(['class' => 'pending-orders-table'])
             ->query(function (): Builder {
                 return Order::query()
                     ->where('status', OrderStatus::PENDING)

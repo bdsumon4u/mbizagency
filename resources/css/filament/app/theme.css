@@ -15,7 +15,19 @@
     padding-inline: calc(var(--spacing) * 1);
     padding-block: calc(var(--spacing) * 1);
 }
-[wire\:name="App\\Filament\\Widgets\\PendingOrdersTableWidget"] .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+.ad-accounts-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    content: 'Ad Accounts';
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+    --tw-font-weight: var(--font-weight-semibold);
+    color: var(--gray-950);
+    white-space: nowrap;
+}
+.pending-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
     content: 'Pending Orders';
     display: inline-flex;
     align-items: center;
@@ -27,8 +39,8 @@
     color: var(--gray-950);
     white-space: nowrap;
 }
-[wire\:name="App\\Filament\\Widgets\\AdAccountsTableWidget"] .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
-    content: 'Ad Accounts';
+.orders-modal-window .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    content: 'Order History';
     display: inline-flex;
     align-items: center;
     font-size: var(--text-base);

@@ -126,6 +126,7 @@ final class SubmitDepositFundOrderAction
                 'dollar_rate' => $pricing['dollar_rate'],
                 'bdt_amount' => $amountBdt,
                 'processing_fee' => $processingFeeAmount,
+                'balance' => $adAccount->spend_cap - $adAccount->amount_spent,
                 'source' => $admin ? OrderSource::ADMIN : OrderSource::USER,
                 'status' => OrderStatus::PENDING,
                 'note' => $data['note'] ?? null,
