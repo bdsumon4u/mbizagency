@@ -30,7 +30,7 @@
                                             </button>
                                         </div>
                                         
-                                        <div class="mt-1 flex items-center gap-2">
+                                        <div class="mt-1 flex items-center gap-1">
                                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">#{{ $record->id }}</span>
                                             @php
                                                 $statusLabel = $record->status->getLabel();
@@ -48,21 +48,36 @@
                                                     default => 'heroicon-o-question-mark-circle',
                                                 };
                                             @endphp
-                                            <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-medium {{ $statusClasses }} border">
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-sm text-[8px] lg:text-[10px] font-medium {{ $statusClasses }} border">
                                                 @svg($statusIcon, 'w-2 h-2 lg:w-3 lg:h-3')
                                                 {{ $statusLabel }}
                                             </span>
+                                            @if(! $this->getTable()->getColumn('source')->isToggledHidden())
+                                                @php
+                                                    $source = $record->source;
+                                                    $sourceColor = $source?->getColor() ?? 'gray';
+                                                    $sourceIcon = $source?->getIcon() ?? 'heroicon-o-question-mark-circle';
+                                                    $sourceClasses = match ($sourceColor) {
+                                                        'success' => 'bg-green-50 text-green-600 border-green-200',
+                                                        default => 'bg-gray-50 text-gray-600 border-gray-200',
+                                                    };
+                                                @endphp
+                                                <span class="inline-flex items-center gap-0.5 px-0.5 py-0.5 rounded-sm text-[8px] lg:text-[10px] font-medium {{ $sourceClasses }} border">
+                                                    @svg($sourceIcon, 'w-2 h-2 lg:w-3 lg:h-3')
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                     <!-- Right: Amount & Buttons (MOBILE ONLY) -->
                                     <div class="flex lg:hidden items-center gap-2 flex-shrink-0">
                                         <!-- Amount -->
                                         <div wire:click="mountTableAction('viewProof', {{ $record->id }})" class="flex flex-col justify-center lg:w-[85px]">
-                                            <!-- <span class="text-[8px] lg:text-xs text-gray-500 font-medium mt-0.5">Amount</span> -->
+                                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium mt-0.5">Amount</span>
                                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5">${{ number_format($record->usd_amount, 2) }}</span>
                                             <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">Tk. {{ number_format($record->bdt_amount, 2) }}</span>
                                         </div>
 
+                                        @unless($this->adAccountId)
                                         <!-- Buttons -->
                                         <div class="flex flex-col gap-1 w-[55px]">
                                             <button wire:click="mountTableAction('orders', {{ $record->id }})" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
@@ -76,6 +91,7 @@
                                                 Invoice
                                             </a>
                                         </div>
+                                        @endunless
                                     </div>
                                 </div>
                             </div>
@@ -86,10 +102,19 @@
                     <div class="w-[100cqw] lg:w-auto snap-start flex justify-around items-baseline gap-3 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent">
                         <!-- Date & Time -->
                         <div class="flex flex-col justify-center lg:w-[85px]">
-                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Date-Time</span>
+                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Ordered at</span>
                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $record->created_at->format('d/m/y') }}</span>
                             <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">{{ $record->created_at->format('h:i A') }}</span>
                         </div>
+
+                        @if (! $this->getTable()->getColumn('approved_at')->isToggledHidden())
+                            <!-- Approved at -->
+                            <div class="flex flex-col justify-center lg:w-[85px]">
+                                <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Approved at</span>
+                                <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $record->approved_at?->format('d/m/y') ?? '---' }}</span>
+                                <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">{{ $record->approved_at?->format('h:i A') ?? '---' }}</span>
+                            </div>
+                        @endif
                         
                         <!-- Amount -->
                         <div wire:click="mountTableAction('viewProof', {{ $record->id }})" class="flex-col cursor-pointer justify-center lg:w-[85px] hidden lg:flex">
@@ -125,6 +150,7 @@
                                 <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format($record->adAccount?->balance ?? 0, 2) }}</span>
                             </div>
 
+                            @unless($this->adAccountId)
                             <!-- Buttons -->
                             <div class="flex flex-col gap-1.5 w-[75px]">
                                 <button wire:click="mountTableAction('orders', {{ $record->id }})" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
@@ -136,6 +162,7 @@
                                     Invoice
                                 </a>
                             </div>
+                            @endunless
                         </div>
                     </div>
                     

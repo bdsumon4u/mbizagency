@@ -133,7 +133,7 @@ class OrderHistory extends Page implements HasTable
                     ->label('Limit'),
                 TextColumn::make('source')
                     ->badge()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
                 DateTimeColumn::make('approved_at')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -188,7 +188,6 @@ class OrderHistory extends Page implements HasTable
                             self::approveOrderAction(),
                             self::rejectOrderAction(),
                         ]),
-                    // self::printInvoiceAction(),
                 ]),
             ])
             ->recordAction('viewProof');
