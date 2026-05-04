@@ -9,7 +9,6 @@ use App\Enums\OrderStatus;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Filament\Tables\Columns\OrderHistoryTable\AdAccountColumn;
-use App\Models\AdAccount;
 use App\Models\Order;
 use BackedEnum;
 use Exception;
@@ -46,39 +45,52 @@ class OrderHistory extends Page implements HasTable
     public function stats(): array
     {
         $user = Filament::auth()->user();
+        $isAdmin = static::isAdminPanel();
 
-        $accounts = AdAccount::query()
-            ->when(! static::isAdminPanel(), function ($query) use ($user) {
+        $query = Order::query()
+            ->when(! $isAdmin, function ($query) use ($user) {
                 return $query->whereBelongsTo($user);
-            })
-            ->get();
+            });
 
-        $accountsCount = $accounts->count();
-        $totalBalance = $accounts->sum('balance');
-        $activeAccounts = $accounts->filter(fn ($account) => $account->status->isActive())->count();
+        $totalDeposit = (clone $query)->sum('usd_amount');
+        $pendingDeposit = (clone $query)->where('status', OrderStatus::PENDING)->sum('usd_amount');
+        $approvedDeposit = (clone $query)->where('status', OrderStatus::APPROVED)->sum('usd_amount');
+        $thisMonthDeposit = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('usd_amount');
 
         return [
             [
-                'label' => 'Total Accounts',
-                'value' => (string) $accountsCount,
-                'subtext' => 'All Time',
-                'icon' => 'heroicon-o-wallet',
-                'icon_color' => 'text-red-500',
-                'icon_bg' => 'bg-red-50',
+                'label' => 'Total Deposit',
+                'value' => '$'.number_format($totalDeposit, 2),
+                'subtext' => 'All Orders',
+                'icon' => 'heroicon-o-banknotes',
+                'icon_color' => 'text-indigo-500',
+                'icon_bg' => 'bg-indigo-50',
             ],
             [
-                'label' => 'Total Balance',
-                'value' => '$'.number_format($totalBalance, 2),
-                'subtext' => 'All Accounts',
-                'icon' => 'heroicon-o-currency-dollar',
+                'label' => 'Pending Deposit',
+                'value' => '$'.number_format($pendingDeposit, 2),
+                'subtext' => 'Awaiting Approval',
+                'icon' => 'heroicon-o-clock',
+                'icon_color' => 'text-orange-500',
+                'icon_bg' => 'bg-orange-50',
+            ],
+            [
+                'label' => 'Approved Deposit',
+                'value' => '$'.number_format($approvedDeposit, 2),
+                'subtext' => 'Ready to Use',
+                'icon' => 'heroicon-o-check-circle',
                 'icon_color' => 'text-green-500',
                 'icon_bg' => 'bg-green-50',
             ],
             [
-                'label' => 'Active Accounts',
-                'value' => (string) $activeAccounts,
-                'subtext' => 'Approved',
-                'icon' => 'heroicon-o-check-circle',
+                'label' => 'This Month',
+                'value' => '$'.number_format($thisMonthDeposit, 2),
+                'subtext' => now()->format('F Y'),
+                'icon' => 'heroicon-o-calendar',
                 'icon_color' => 'text-blue-500',
                 'icon_bg' => 'bg-blue-50',
             ],
