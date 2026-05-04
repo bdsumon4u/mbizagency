@@ -16,7 +16,7 @@
                             </div>
                             
                             <div class="flex flex-col min-w-0 flex-1">
-                                <h3 class="text-[10px] lg:text-sm font-semibold text-gray-900 truncate pr-1">
+                                <h3 class="text-[12px] lg:text-sm font-semibold text-gray-900 truncate pr-1">
                                     <button type="button" wire:click="mountTableAction('orders', {{ $record->id }})" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left">
                                         {{ $record->name ?? 'Account ID: ' . $record->id }}
                                     </button>
@@ -24,7 +24,7 @@
                                 
                                 <div class="flex justify-between gap-1">
                                     <div>
-                                        <div class="flex items-center gap-1 mt-0.5 text-[9px] lg:text-xs text-gray-500">
+                                        <div class="flex items-center gap-1 mt-0.5 text-[11px] lg:text-xs text-gray-500">
                                             <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=act_{{ $record->act_id }}" target="_blank" class="truncate hover:underline hover:text-[#ff3b5c] transition-colors">
                                                 ID: {{ $record->act_id ?? $record->id }}
                                             </a>
@@ -44,7 +44,7 @@
                                                 };
                                                 $statusIcon = $record->status->getIcon();
                                             @endphp
-                                            <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[8px] lg:text-[10px] font-medium border {{ $statusColor }}">
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[10px] lg:text-[12px] font-medium border {{ $statusColor }}">
                                                 @svg($statusIcon, 'w-2 h-2 lg:w-3 lg:h-3')
                                                 {{ $record->status->getLabel() }}
                                             </span>
@@ -55,18 +55,18 @@
                                     <div class="flex lg:hidden items-center gap-2 flex-shrink-0">
                                         <!-- Balance -->
                                         <div class="flex flex-col items-end justify-center">
-                                            <span class="text-[8px] text-gray-500 tracking-wider font-medium">Balance</span>
-                                            <span class="text-[10px] font-bold text-green-600">${{ number_format((float) ($record->spend_cap - $record->amount_spent ?? 0), 2) }}</span>
+                                            <span class="text-[10px] text-gray-500 tracking-wider font-medium">Balance</span>
+                                            <span class="text-[12px] font-bold text-green-600">${{ number_format((float) ($record->spend_cap - $record->amount_spent ?? 0), 2) }}</span>
                                         </div>
 
                                         <!-- Buttons -->
                                         <div class="flex flex-col gap-1 w-[55px]">
-                                            <button type="button" wire:click="mountTableAction('add_fund', '{{ $record->id }}')" wire:target="mountTableAction('add_fund', '{{ $record->id }}')" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c] disabled:opacity-70">
+                                            <button type="button" wire:click="mountTableAction('add_fund', '{{ $record->id }}')" wire:target="mountTableAction('add_fund', '{{ $record->id }}')" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[10px] font-semibold text-white bg-[#ff3b5c] hover:bg-[#e63553] rounded transition-colors shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#ff3b5c] disabled:opacity-70">
                                                 <x-heroicon-o-plus class="w-2.5 h-2.5" wire:loading.remove wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
                                                 <x-heroicon-o-arrow-path class="w-2.5 h-2.5 animate-spin" wire:loading wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
                                                 TopUp
                                             </button>
-                                            <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
+                                            <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[10px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
                                                 <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500" wire:loading.remove wire:target="syncSingle({{ $record->id }})" />
                                                 <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500 animate-spin" wire:loading wire:target="syncSingle({{ $record->id }})" />
                                                 Sync
@@ -83,8 +83,8 @@
                         
                         <!-- Limit -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
-                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Limit</span>
-                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->spend_cap ?? 0), 2) }}</span>
+                            <span class="text-[10px] lg:text-xs text-gray-500 font-medium">Limit</span>
+                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->spend_cap ?? 0), 2) }}</span>
                             <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
                                 <div class="bg-gray-400 h-1 rounded-full" style="width: 100%"></div>
                             </div>
@@ -92,8 +92,8 @@
                         
                         <!-- Spent -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
-                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Spent</span>
-                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->amount_spent ?? 0), 2) }}</span>
+                            <span class="text-[10px] lg:text-xs text-gray-500 font-medium">Spent</span>
+                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->amount_spent ?? 0), 2) }}</span>
                             @php
                                 $cap = (float) ($record->spend_cap ?? 0);
                                 $spent = (float) ($record->amount_spent ?? 0);
@@ -106,10 +106,10 @@
 
                         <!-- Synced At -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
-                            <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Synced At</span>
-                            <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $record->synced_at ? $record->synced_at->format('d/m/y') : 'N/A' }}</span>
+                            <span class="text-[10px] lg:text-xs text-gray-500 font-medium">Synced At</span>
+                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $record->synced_at ? $record->synced_at->format('d/m/y') : 'N/A' }}</span>
                             <div class="flex items-center gap-1 mt-0.5">
-                                <span class="text-[8px] lg:text-xs text-gray-400">{{ $record->synced_at ? $record->synced_at->format('h:i A') : '' }}</span>
+                                <span class="text-[10px] lg:text-xs text-gray-400">{{ $record->synced_at ? $record->synced_at->format('h:i A') : '' }}</span>
                                 @if($record->synced_at)
                                     <span class="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-green-500"></span>
                                 @endif

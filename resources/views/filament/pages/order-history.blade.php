@@ -14,9 +14,9 @@
                         @svg($stat['icon'], 'w-3 h-3 lg:w-6 lg:h-6')
                     </div>
                     <div class="flex flex-col min-w-0">
-                        <span class="text-[8px] lg:text-xs font-medium text-gray-500 tracking-wider truncate">{{ $stat['label'] }}</span>
+                        <span class="text-[10px] lg:text-xs font-medium text-gray-500 tracking-wider truncate">{{ $stat['label'] }}</span>
                         <span class="text-xs lg:text-2xl font-bold text-gray-900 leading-tight lg:mt-1 lg:mb-0.5">{{ $stat['value'] }}</span>
-                        <span class="text-[8px] lg:text-xs text-gray-400">{{ $stat['subtext'] }}</span>
+                        <span class="text-[10px] lg:text-xs text-gray-400">{{ $stat['subtext'] }}</span>
                     </div>
                 </div>
             @endforeach
