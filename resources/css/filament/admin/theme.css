@@ -40,7 +40,20 @@
 .order-status-badge .fi-badge-label {
     overflow: visible;
 }
+.fi-main {
+    @apply p-2 lg:p-4;
+}
+
+.fi-page-header-main-ctn {
+    @apply py-2;
+}
 
 .fi-modal-heading {
     @apply line-clamp-1;
+}
+.orders-modal-overlay+.fi-modal-window-ctn,
+.orders-modal-window .fi-modal-header,
+.orders-modal-window .fi-modal-content,
+.orders-modal-window .fi-modal-footer {
+    @apply p-2 lg:p-4;
 }

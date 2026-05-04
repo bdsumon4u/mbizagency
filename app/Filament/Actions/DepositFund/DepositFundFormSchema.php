@@ -54,7 +54,7 @@ final class DepositFundFormSchema
             ->all();
 
         return [
-            Callout::make('Ad Account: '.$adAccount->name.' ('.$adAccount->act_id.')')
+            Callout::make('Ad Account ID: '.$adAccount->act_id)
                 ->description(function (AdAccount $record): HtmlString {
                     $limit = (float) $record->spend_cap;
                     $spent = (float) $record->amount_spent;

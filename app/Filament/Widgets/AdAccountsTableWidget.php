@@ -46,16 +46,20 @@ class AdAccountsTableWidget extends BaseWidget
                 Action::make('orders')
                     ->label('Orders')
                     ->modalWidth(Width::SevenExtraLarge)
+                    ->extraModalOverlayAttributes(['class' => 'orders-modal-overlay'])
+                    ->extraModalWindowAttributes(['class' => 'orders-modal-window'])
                     ->modalContent(fn (AdAccount $record) => view('filament.actions.ad-account-view-orders', [
                         'record' => $record,
                         'table' => 'ad-accounts',
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
-                    ->modalHeading('')
+                    ->modalHeading(fn (AdAccount $record) => $record->name.'- Order History')
+                    ->modalCloseButton()
                     ->modalSubmitAction(false)
                     ->modalCancelAction(false)
                     ->extraAttributes(['class' => 'hidden']),
                 DepositFundAction::make()->button(),
-            ], RecordActionsPosition::BeforeCells);
+            ], RecordActionsPosition::BeforeCells)
+            ->content(fn () => view('filament.tables.custom-ad-accounts-table'));
     }
 }

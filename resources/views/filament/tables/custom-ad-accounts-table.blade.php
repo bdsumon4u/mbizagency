@@ -17,7 +17,7 @@
                             
                             <div class="flex flex-col min-w-0 flex-1">
                                 <h3 class="text-[10px] lg:text-sm font-semibold text-gray-900 truncate pr-1">
-                                    <button type="button" wire:click="mountTableAction('orders', '{{ $record->id }}')" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left cursor-pointer">
+                                    <button type="button" wire:click="mountTableAction('orders', {{ $record->id }})" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left">
                                         {{ $record->name ?? 'Account ID: ' . $record->id }}
                                     </button>
                                 </h3>
@@ -25,7 +25,9 @@
                                 <div class="flex justify-between gap-1">
                                     <div>
                                         <div class="flex items-center gap-1 mt-0.5 text-[9px] lg:text-xs text-gray-500">
-                                            <span class="truncate">ID: {{ $record->act_id ?? $record->id }}</span>
+                                            <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=act_{{ $record->act_id }}" target="_blank" class="truncate hover:underline hover:text-[#ff3b5c] transition-colors">
+                                                ID: {{ $record->act_id ?? $record->id }}
+                                            </a>
                                             <button x-data="{ copy() { navigator.clipboard.writeText('{{ $record->act_id ?? $record->id }}'); $tooltip('Copied!'); } }" x-on:click="copy()" class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 focus:outline-none" title="Copy ID">
                                                 <x-heroicon-o-document-duplicate class="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5" />
                                             </button>

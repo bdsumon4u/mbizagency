@@ -27,6 +27,7 @@ class DepositFundAction
             ->color('success')
             ->button()
             ->modalWidth(Width::Large)
+            ->modalHeading(fn (AdAccount $record): string => 'TopUp - '.$record->name)
             ->extraAttributes(['class' => 'add-fund-button'])
             ->visible(fn (AdAccount $record): bool => $record->user instanceof User)
             ->mountUsing(function (?Schema $schema, AdAccount $record, FacebookAdAccountService $facebookAdAccountService): void {
