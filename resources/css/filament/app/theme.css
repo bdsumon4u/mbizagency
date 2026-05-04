@@ -72,6 +72,9 @@
     @apply line-clamp-1;
 }
 
-.fi-modal-window-ctn, .fi-modal-header, .fi-modal-content, .fi-modal-footer {
+.orders-modal-overlay+.fi-modal-window-ctn,
+.orders-modal-window .fi-modal-header,
+.orders-modal-window .fi-modal-content,
+.orders-modal-window .fi-modal-footer {
     @apply p-2 lg:p-4;
 }

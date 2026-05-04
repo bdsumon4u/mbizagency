@@ -151,8 +151,8 @@ class AdAccounts extends Page implements HasTable
                 Action::make('orders')
                     ->label('Orders')
                     ->modalWidth(Width::SevenExtraLarge)
-                    ->extraModalOverlayAttributes(['class' => 'batash'])
-                    ->extraModalWindowAttributes(['class' => 'hotash'])
+                    ->extraModalOverlayAttributes(['class' => 'orders-modal-overlay'])
+                    ->extraModalWindowAttributes(['class' => 'orders-modal-window'])
                     ->modalContent(fn (AdAccount $record) => view('filament.actions.ad-account-view-orders', [
                         'record' => $record,
                         'table' => 'ad-accounts',

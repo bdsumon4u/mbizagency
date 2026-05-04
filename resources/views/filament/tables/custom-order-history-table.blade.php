@@ -16,8 +16,11 @@
                             </div>
                             
                             <div class="flex flex-col min-w-0 flex-1">
-                                <h3 class="text-[10px] lg:text-sm font-semibold text-gray-900 truncate pr-1">{{ $record->adAccount?->name ?? 'Deleted Account' }}</h3>
-                                
+                                <h3 class="text-[10px] lg:text-sm font-semibold text-gray-900 truncate pr-1">
+                                    <button type="button" wire:click="mountTableAction('orders', '{{ $record->adAccount->id }}')" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left cursor-pointer">
+                                        {{ $record->adAccount?->name ?? 'Deleted Account' }}
+                                    </button>
+                                </h3>                                
                                 <div class="flex justify-between gap-1">
                                     <div>
                                         <div class="flex items-center gap-0.5 mt-0.5 text-[8px] lg:text-xs text-gray-500">
@@ -54,7 +57,7 @@
                                     <!-- Right: Amount & Buttons (MOBILE ONLY) -->
                                     <div class="flex lg:hidden items-center gap-2 flex-shrink-0">
                                         <!-- Amount -->
-                                        <div class="flex flex-col justify-center lg:w-[85px]">
+                                        <div wire:click="mountTableAction('viewProof', {{ $record->id }})" class="flex flex-col justify-center lg:w-[85px]">
                                             <!-- <span class="text-[8px] lg:text-xs text-gray-500 font-medium mt-0.5">Amount</span> -->
                                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5">${{ number_format($record->usd_amount, 2) }}</span>
                                             <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">Tk. {{ number_format($record->bdt_amount, 2) }}</span>
@@ -62,16 +65,16 @@
 
                                         <!-- Buttons -->
                                         <div class="flex flex-col gap-1 w-[55px]">
-                                            <button wire:click="openAccount({{ $record->id }})" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
+                                            <button wire:click="mountTableAction('orders', {{ $record->id }})" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
                                                 <x-heroicon-o-arrow-top-right-on-square class="w-2 h-2 text-gray-500" />
                                                 History
                                             </button>
                                             
                                             <!-- Invoice -->
-                                            <button wire:click="openAccount({{ $record->id }})" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
+                                            <a href="{{ $this->getInvoiceUrl($record) }}" target="_blank" class="inline-flex items-center justify-center gap-0.5 w-full px-0 py-0.5 text-[8px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
                                                 <x-heroicon-o-arrow-top-right-on-square class="w-2 h-2 text-gray-500" />
                                                 Invoice
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -89,7 +92,7 @@
                         </div>
                         
                         <!-- Amount -->
-                        <div class="flex-col justify-center lg:w-[85px] hidden lg:flex">
+                        <div wire:click="mountTableAction('viewProof', {{ $record->id }})" class="flex-col cursor-pointer justify-center lg:w-[85px] hidden lg:flex">
                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Amount</span>
                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format($record->usd_amount, 2) }}</span>
                             <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">Tk. {{ number_format($record->bdt_amount, 2) }}</span>
@@ -99,7 +102,6 @@
                         <div class="flex lg:hidden flex-col justify-center lg:w-[85px]">
                             <span class="text-[8px] lg:text-xs text-gray-500 font-medium">Balance</span>
                             <span class="text-[10px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format($record->adAccount?->balance ?? 0, 2) }}</span>
-                            <span class="text-[8px] lg:text-xs text-gray-400 mt-0.5">Tk. {{ number_format($record->bdt_amount, 2) }}</span>
                         </div>
                         
                         <!-- Dollar Rate -->
@@ -121,7 +123,6 @@
                             <div class="flex flex-col items-end justify-center lg:w-[60px]">
                                 <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
                                 <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format($record->adAccount?->balance ?? 0, 2) }}</span>
-                                <span class="text-[6px] text-gray-400 mt-0.5">BEFORE TOPUP</span>
                             </div>
 
                             <!-- Buttons -->
@@ -130,10 +131,10 @@
                                     <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3 text-gray-500" />
                                     History
                                 </button>
-                                <button wire:click="mountTableAction('orders', {{ $record->id }})" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
+                                <a href="{{ $this->getInvoiceUrl($record) }}" target="_blank" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200">
                                     <x-heroicon-o-arrow-top-right-on-square class="w-3 h-3 text-gray-500" />
                                     Invoice
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>

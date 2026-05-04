@@ -144,12 +144,14 @@ class OrderHistory extends Page implements HasTable
                 Action::make('orders')
                     ->label('Orders')
                     ->modalWidth(Width::SevenExtraLarge)
+                    ->extraModalOverlayAttributes(['class' => 'orders-modal-overlay'])
+                    ->extraModalWindowAttributes(['class' => 'orders-modal-window'])
                     ->modalContent(fn (Order $record) => view('filament.actions.ad-account-view-orders', [
                         'record' => $record->adAccount,
                         'table' => 'order-history',
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
-                    ->modalHeading('')
+                    ->modalHeading(fn (Order $order) => $order->adAccount->name.'- Order History')
                     ->modalCloseButton()
                     ->modalSubmitAction(false)
                     ->modalCancelAction(false)
@@ -174,10 +176,19 @@ class OrderHistory extends Page implements HasTable
                             self::approveOrderAction(),
                             self::rejectOrderAction(),
                         ]),
-                    self::printInvoiceAction(),
+                    // self::printInvoiceAction(),
                 ]),
             ])
             ->recordAction('viewProof');
+    }
+
+    public function getInvoiceUrl(Order $record): string
+    {
+        return URL::temporarySignedRoute(
+            'orders.invoice',
+            now()->addMinutes(30),
+            ['order' => $record->id],
+        );
     }
 
     private static function isAdminPanel(): bool
@@ -188,7 +199,7 @@ class OrderHistory extends Page implements HasTable
     private static function printInvoiceAction(): Action
     {
         return Action::make('printInvoice')
-            ->label('View/Print Invoice')
+            ->label('View/Print')
             ->icon(Heroicon::OutlinedPrinter)
             ->color('gray')
             // ->button()
