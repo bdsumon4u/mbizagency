@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->decimal('balance', 12, 2)->nullable()->after('processing_fee');
+            $table->decimal('balance', 12, 2)->default(0)->after('processing_fee');
         });
     }
 
