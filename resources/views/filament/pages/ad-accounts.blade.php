@@ -18,7 +18,7 @@
         <!-- Stats Widgets -->
         <div class="flex overflow-x-auto gap-2 lg:gap-6 sm:grid sm:grid-cols-3 no-scrollbar pb-1">
             @foreach($this->stats as $stat)
-                <div class="flex items-center gap-3 lg:gap-4 p-3 lg:p-5 bg-white border border-gray-100 rounded-xl shadow-sm min-w-[150px] flex-1">
+                <div class="flex items-center gap-3 lg:gap-4 p-3 lg:p-5 bg-white border border-gray-100 rounded-xl shadow-sm min-w-[180px] flex-1">
                     <div class="flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-lg {{ $stat['icon_bg'] }} {{ $stat['icon_color'] }}">
                         @svg($stat['icon'], 'w-5 h-5 lg:w-6 lg:h-6')
                     </div>
