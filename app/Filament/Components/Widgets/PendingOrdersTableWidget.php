@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Components\Widgets;
 
 use App\Enums\OrderStatus;
 use App\Filament\Actions\DepositFundAction;
@@ -17,7 +17,27 @@ use Illuminate\Support\Facades\URL;
 
 class PendingOrdersTableWidget extends TableWidget
 {
+    protected static bool $isDiscovered = false;
+
     protected int|string|array $columnSpan = 'full';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return Order::query()
+            ->where('status', OrderStatus::PENDING)
+            ->with('adAccount')
+            ->when(
+                Filament::getCurrentPanel()?->getId() !== 'admin',
+                fn (Builder $query): Builder => $query->whereHas('adAccount', function (Builder $adAccountsQuery): Builder {
+                    return $adAccountsQuery->whereBelongsTo(Filament::auth()->user());
+                })
+            );
+    }
+
+    public static function canView(): bool
+    {
+        return static::getEloquentQuery()->exists();
+    }
 
     protected static ?int $sort = -1;
 
@@ -37,17 +57,7 @@ class PendingOrdersTableWidget extends TableWidget
         return OrderHistory::configureTable($table)
             ->heading(null)
             ->extraAttributes(['class' => 'pending-orders-table'])
-            ->query(function (): Builder {
-                return Order::query()
-                    ->where('status', OrderStatus::PENDING)
-                    ->with('adAccount')
-                    ->when(
-                        Filament::getCurrentPanel()?->getId() !== 'admin',
-                        fn (Builder $query): Builder => $query->whereHas('adAccount', function (Builder $adAccountsQuery): Builder {
-                            return $adAccountsQuery->whereBelongsTo(Filament::auth()->user());
-                        })
-                    );
-            })
+            ->query(fn (): Builder => static::getEloquentQuery())
             ->recordAction('orders')
             ->recordActions([
                 Action::make('orders')
