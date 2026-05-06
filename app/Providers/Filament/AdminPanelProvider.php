@@ -4,7 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Admin\Pages\Auth\LoginPage;
 use App\Filament\Pages\OrderHistory;
-use App\Filament\Widgets\PendingOrdersTableWidget;
+use App\Filament\Components\Widgets\PendingOrdersTableWidget;
 use App\Http\Controllers\ApproveOrderController;
 use App\Http\Controllers\RejectOrderController;
 use Filament\Http\Middleware\Authenticate;
