@@ -8,6 +8,7 @@ use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
+use App\Models\Order;
 use App\Services\FacebookAdAccountService;
 use Exception;
 use Filament\Actions\Action;
@@ -32,35 +33,41 @@ class AdAccountsTableWidget extends BaseWidget
     public function stats(): array
     {
         $accounts = AdAccount::query()->whereBelongsTo(Filament::auth()->user())->get();
-        $totalLimit = $accounts->sum('spend_cap');
-        $totalSpent = $accounts->sum('amount_spent');
         $accountsCount = $accounts->count();
         $lastSynced = $accounts->max('synced_at');
 
+        $activeAccountIds = Order::query()
+            ->whereIn('ad_account_id', $accounts->pluck('id'))
+            ->where('created_at', '>=', now()->subMonth())
+            ->pluck('ad_account_id')
+            ->unique();
+
+        $inactiveCount = $accountsCount - $activeAccountIds->count();
+
         return [
             [
-                'label' => 'Total Limit',
-                'value' => '$'.number_format($totalLimit, 2),
-                'subtext' => 'Across '.$accountsCount.' accounts',
-                'icon' => 'heroicon-o-wallet',
-                'icon_color' => 'text-red-500',
-                'icon_bg' => 'bg-red-50',
+                'label' => 'Total Ad Accounts',
+                'value' => $accountsCount,
+                'subtext' => 'Managed by you',
+                'icon' => 'heroicon-o-users',
+                'icon_color' => 'text-blue-500',
+                'icon_bg' => 'bg-blue-50',
             ],
             [
-                'label' => 'Total Spent',
-                'value' => '$'.number_format($totalSpent, 2),
-                'subtext' => 'Across '.$accountsCount.' accounts',
-                'icon' => 'heroicon-o-arrow-trending-up',
-                'icon_color' => 'text-green-500',
-                'icon_bg' => 'bg-green-50',
+                'label' => 'Inactive Accounts',
+                'value' => $inactiveCount,
+                'subtext' => '30 days no orders',
+                'icon' => 'heroicon-o-exclamation-triangle',
+                'icon_color' => 'text-red-500',
+                'icon_bg' => 'bg-red-50',
             ],
             [
                 'label' => 'Last Synced',
                 'value' => $lastSynced ? $lastSynced->format('h:i A') : 'N/A',
                 'subtext' => $lastSynced ? $lastSynced->format('d-M-Y') : 'N/A',
                 'icon' => 'heroicon-o-arrow-path',
-                'icon_color' => 'text-blue-500',
-                'icon_bg' => 'bg-blue-50',
+                'icon_color' => 'text-green-500',
+                'icon_bg' => 'bg-green-50',
             ],
         ];
     }
