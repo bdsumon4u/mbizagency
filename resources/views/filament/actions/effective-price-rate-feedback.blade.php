@@ -83,7 +83,7 @@
             </div>
             <div style="margin-top: 2px;">
                 Total Payable:
-                <strong x-text="`Tk. ${totalPayableBdt.toFixed(2)}`"></strong>
+                <strong style="background: antiquewhite;" x-text="`Tk. ${totalPayableBdt.toFixed(2)}`"></strong>
             </div>
         </div>
     </template>

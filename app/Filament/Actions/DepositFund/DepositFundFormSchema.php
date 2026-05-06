@@ -85,12 +85,6 @@ final class DepositFundFormSchema
                 ->searchable()
                 ->preload()
                 ->required(),
-            View::make('selected_payment_method_details')
-                ->view('filament.actions.selected-payment-method-details')
-                ->viewData([
-                    'paymentMethods' => $paymentMethodsForView,
-                ])
-                ->visibleJs('!! $get(\'payment_method_id\')'),
             Group::make([
                 Radio::make('currency')
                     ->options([
@@ -123,6 +117,12 @@ final class DepositFundFormSchema
                     'paymentMethods' => $paymentMethodsForView,
                 ])
                 ->visibleJs('!! $get(\'payment_method_id\') && !! $get(\'amount\')'),
+            View::make('selected_payment_method_details')
+                ->view('filament.actions.selected-payment-method-details')
+                ->viewData([
+                    'paymentMethods' => $paymentMethodsForView,
+                ])
+                ->visibleJs('!! $get(\'payment_method_id\')'),
             FileUpload::make('screenshots')
                 ->image()
                 ->disk('public')
@@ -137,7 +137,8 @@ final class DepositFundFormSchema
                 ->required(Filament::getCurrentPanel()?->getId() !== 'admin'),
             Textarea::make('note')
                 ->label('Note (optional)')
-                ->maxLength(500),
+                ->maxLength(500)
+                ->visible(Filament::getCurrentPanel()?->getId() === 'admin'),
         ];
     }
 }
