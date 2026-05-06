@@ -36,7 +36,7 @@ class PendingOrdersTableWidget extends TableWidget
 
     public static function canView(): bool
     {
-        return static::getEloquentQuery()->exists();
+        return Filament::getCurrentPanel()?->getId() === 'admin' || static::getEloquentQuery()->exists();
     }
 
     protected static ?int $sort = -1;
