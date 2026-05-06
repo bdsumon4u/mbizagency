@@ -7,11 +7,11 @@ use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Services\PriceRateService;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Callout;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Group;
@@ -123,17 +123,8 @@ final class DepositFundFormSchema
                     'paymentMethods' => $paymentMethodsForView,
                 ])
                 ->visibleJs('!! $get(\'payment_method_id\')'),
-            FileUpload::make('screenshots')
-                ->image()
-                ->disk('public')
-                ->multiple()
-                ->directory('orders/screenshots')
-                ->visibility('public')
-                ->optimize('webp', 75)
-                ->automaticallyResizeImagesMode('contain')
-                ->maxImageWidth('300')
-                ->maxImageHeight('500')
-                ->automaticallyUpscaleImagesWhenResizing(false)
+            ViewField::make('screenshots')
+                ->view('filament.forms.components.custom-file-upload')
                 ->required(Filament::getCurrentPanel()?->getId() !== 'admin'),
             Textarea::make('note')
                 ->label('Note (optional)')

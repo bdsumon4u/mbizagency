@@ -10,7 +10,9 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Services\PriceRateService;
 use Filament\Facades\Filament;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 final class SubmitDepositFundOrderAction
@@ -130,9 +132,63 @@ final class SubmitDepositFundOrderAction
                 'source' => $admin ? OrderSource::ADMIN : OrderSource::USER,
                 'status' => OrderStatus::PENDING,
                 'note' => $data['note'] ?? null,
-                'screenshots' => $data['screenshots'] ?? null,
+                'screenshots' => $this->handleScreenshots($data['screenshots'] ?? []),
             ]);
         });
+    }
+
+    private function handleScreenshots(array $screenshots): ?array
+    {
+        if (empty($screenshots)) {
+            return null;
+        }
+
+        $finalPaths = [];
+        foreach ($screenshots as $screenshot) {
+            // Handle UploadedFile objects (e.g. TemporaryUploadedFile from Livewire)
+            if ($screenshot instanceof UploadedFile) {
+                try {
+                    $path = $screenshot->store('orders/screenshots', 'public');
+                    if ($path) {
+                        $finalPaths[] = $path;
+                    }
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+
+                continue;
+            }
+
+            // Ensure screenshot is a string for further checks
+            if (! is_string($screenshot)) {
+                continue;
+            }
+
+            // If it's already a permanent path, keep it
+            if (! str_starts_with($screenshot, 'livewire-file:')) {
+                $finalPaths[] = $screenshot;
+
+                continue;
+            }
+
+            // Handle Livewire temporary upload from string (if applicable)
+            try {
+                $tempPath = str_replace('livewire-file:', '', $screenshot);
+                $newPath = 'orders/screenshots/'.basename($tempPath);
+
+                if (Storage::disk('local')->exists('livewire-tmp/'.$tempPath)) {
+                    Storage::disk('public')->put(
+                        $newPath,
+                        Storage::disk('local')->get('livewire-tmp/'.$tempPath)
+                    );
+                    $finalPaths[] = $newPath;
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return ! empty($finalPaths) ? $finalPaths : null;
     }
 
     private static function whichAdmin(): ?Admin

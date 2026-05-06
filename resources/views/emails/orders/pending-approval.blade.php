@@ -66,6 +66,9 @@
         <div style="display: flex; flex-wrap: wrap; gap: 12px;">
             @foreach ($order->screenshots as $screenshot)
                 @php
+                    if (!is_string($screenshot)) {
+                        continue;
+                    }
                     $disk = Storage::disk('public');
                     $screenshotPath = $disk->exists($screenshot) ? $disk->path($screenshot) : null;
                     $screenshotSrc = $screenshotPath && isset($message)

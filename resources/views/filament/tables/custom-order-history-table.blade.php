@@ -1,7 +1,24 @@
 <div class="w-full">
     <div class="space-y-2 p-1">
-        <?php use App\Filament\Pages\AdAccounts; ?>
+        <?php
+            use Filament\Facades\Filament;
+            use App\Filament\Pages\AdAccounts;
+            use App\Filament\Resources\AdAccounts\AdAccountResource;
+        ?>
+
         @foreach($records as $record)
+            @php
+                $adAccountUrl = '#';
+                try {
+                    if (Filament::getCurrentPanel()?->getId() === 'admin') {
+                        $adAccountUrl = AdAccountResource::getUrl('index', ['highlight' => $record->ad_account_id]);
+                    } else {
+                        $adAccountUrl = AdAccounts::getUrl(['highlight' => $record->ad_account_id]);
+                    }
+                } catch (\Throwable $e) {
+                    $adAccountUrl = '#';
+                }
+            @endphp
             <div class="@container w-full bg-white border border-gray-100 rounded-lg shadow-sm hover:border-gray-200 transition-colors overflow-hidden px-1">
                 <div class="overflow-x-auto no-scrollbar snap-x snap-mandatory w-full">
                     <div class="flex w-max min-w-full lg:w-full">
@@ -28,9 +45,7 @@
                                 <!-- 3. Ad Account Info -->
                                 <div class="flex flex-col min-w-0 flex-1">
                                     <h3 class="text-[12px] lg:text-sm font-semibold text-gray-900 truncate max-w-full">
-                                        <a href="{{ AdAccounts::getUrl([
-                                            'highlight' => $record->ad_account_id
-                                        ]) }}" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left truncate w-full block">
+                                        <a href="{{ $adAccountUrl }}" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left truncate w-full block">
                                             {{ $record->adAccount?->name ?? 'Deleted Account' }}
                                         </a>
                                     </h3>
