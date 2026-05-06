@@ -31,7 +31,9 @@
             @endforeach
         </div>
 
-        @livewire(\App\Filament\Components\Widgets\PendingOrdersTableWidget::class)
+        @if(App\Filament\Components\Widgets\PendingOrdersTableWidget::canView())
+            @livewire(App\Filament\Components\Widgets\PendingOrdersTableWidget::class)
+        @endif
 
         {{ $this->table }}
     </div>
