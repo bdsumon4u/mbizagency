@@ -30,6 +30,9 @@ class AdAccountsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->query(AdAccount::query()
+                ->when(request()->query('highlight'), fn ($query, $id) => $query->orderByRaw('id = ? desc', [$id]))
+            )
             ->columns([
                 TextColumn::make('#')
                     ->rowIndex()

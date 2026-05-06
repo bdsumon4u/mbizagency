@@ -1,5 +1,6 @@
 <div class="w-full">
     <div class="space-y-2 p-1">
+        <?php use App\Filament\Pages\AdAccounts; ?>
         @foreach($records as $record)
             <div class="@container w-full bg-white border border-gray-100 rounded-lg shadow-sm hover:border-gray-200 transition-colors overflow-hidden px-1">
                 <div class="overflow-x-auto no-scrollbar snap-x snap-mandatory w-full">
@@ -27,9 +28,11 @@
                                 <!-- 3. Ad Account Info -->
                                 <div class="flex flex-col min-w-0 flex-1">
                                     <h3 class="text-[12px] lg:text-sm font-semibold text-gray-900 truncate max-w-full">
-                                        <button type="button" @unless($this->adAccountId)wire:click="mountTableAction('orders', {{ $record->id }})" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left truncate w-full"@endunless>
+                                        <a href="{{ AdAccounts::getUrl([
+                                            'highlight' => $record->ad_account_id
+                                        ]) }}" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left truncate w-full block">
                                             {{ $record->adAccount?->name ?? 'Deleted Account' }}
-                                        </button>
+                                        </a>
                                     </h3>
                                     <div class="flex flex-col gap-0.5">
                                         <div class="flex items-center gap-1 text-[10px] lg:text-xs text-gray-500">

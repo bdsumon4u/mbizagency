@@ -130,7 +130,10 @@ class AdAccounts extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(AdAccount::query()->whereBelongsTo(Filament::auth()->user()))
+            ->query(AdAccount::query()
+                ->whereBelongsTo(Filament::auth()->user())
+                ->when(request()->query('highlight'), fn ($query, $id) => $query->orderByRaw('id = ? desc', [$id]))
+            )
             ->defaultSort('id', 'desc')
             ->content(fn () => view('filament.tables.custom-ad-accounts-table'))
             ->columns([
