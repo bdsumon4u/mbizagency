@@ -37,9 +37,7 @@ class ApproveOrderAction
                 report($exception);
             }
 
-            app(FacebookAdAccountService::class)->syncSingleAdAccount($adAccount);
             $oldSpendCap = $adAccount->spend_cap;
-            $lockedOrder->update(['balance' => $oldSpendCap - $adAccount->amount_spent]);
             $adAccount->increment('spend_cap', $lockedOrder->usd_amount * 100);
             $adAccount->refresh();
 
@@ -49,6 +47,7 @@ class ApproveOrderAction
             $lockedOrder->update([
                 'admin_id' => $admin?->id,
                 'status' => OrderStatus::APPROVED,
+                'balance' => $adAccount->spend_cap - $adAccount->amount_spent,
                 'old_limit' => $oldSpendCap,
                 'new_limit' => $adAccount->spend_cap,
                 'approved_at' => now(),
