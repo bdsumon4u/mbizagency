@@ -360,11 +360,23 @@
                     </div>
                     <div class="row">
                         <div class="key">Total (BDT)</div>
-                        <div class="value">{{ number_format((float) $order->bdt_amount, 2) }} BDT</div>
+                        <div class="value">{{ number_format((float) $order->bdt_amount + (float) $order->processing_fee, 2) }} BDT</div>
                     </div>
                     <div class="row">
                         <div class="key">Spending Limit</div>
-                        <div class="value">{{ $order->new_limit !== null ? number_format((float) $order->new_limit, 2) : 'N/A' }} USD</div>
+                        <div class="value">
+                            <span>{{ $order->new_limit !== null ? number_format((float) $order->new_limit, 2) : 'N/A' }} USD</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="key">Current Balance</div>
+                        <div class="value">
+                            @if($order->adAccount)
+                                {{ number_format((float) ($order->adAccount->spend_cap - $order->adAccount->amount_spent), 2) }} USD
+                            @else
+                                N/A
+                            @endif
+                        </div>
                     </div>
                 </div>
             </section>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\BusinessManagerStatus;
+use App\Exceptions\FacebookApiException;
 use App\Models\BusinessManager;
 use Exception;
 use Illuminate\Support\Facades\Http;
@@ -58,11 +59,17 @@ final readonly class FacebookBusinessManagerSyncService
         ]);
 
         if ($response->failed()) {
-            $errorMessage = $response->json('error.message')
-                ?? $response->json('error_description')
-                ?? 'Failed to fetch business managers from Facebook.';
+            $error = $response->json('error');
+            $errorCode = (int) ($error['code'] ?? 0);
+            $errorSubcode = (int) ($error['error_subcode'] ?? 0);
+            $errorMessage = (string) ($error['message'] ?? $response->json('error_description') ?? 'Failed to fetch business managers from Facebook.');
 
-            throw new Exception($errorMessage);
+            throw new FacebookApiException(
+                $errorMessage,
+                $response,
+                $errorCode,
+                $errorSubcode
+            );
         }
 
         return (array) $response->json('data', []);

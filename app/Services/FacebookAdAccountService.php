@@ -6,9 +6,11 @@ namespace App\Services;
 
 use App\Enums\AdAccountDisableReason;
 use App\Enums\AdAccountStatus;
+use App\Exceptions\FacebookApiException;
 use App\Models\AdAccount;
 use App\Models\BusinessManager;
 use Exception;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 final class FacebookAdAccountService
@@ -68,7 +70,7 @@ final class FacebookAdAccountService
         ]);
 
         if ($response->failed()) {
-            throw new Exception('Failed to fetch ad account details from Facebook.');
+            $this->handleFacebookError($response, $businessManager);
         }
 
         $details = (array) $response->json();
@@ -89,14 +91,32 @@ final class FacebookAdAccountService
         ]);
 
         if ($response->failed()) {
-            $errorMessage = $response->json('error.message')
-                ?? $response->json('error_description')
-                ?? 'Failed to fetch ad accounts from Facebook.';
-
-            throw new Exception($errorMessage);
+            $this->handleFacebookError($response, $businessManager);
         }
 
         return (array) $response->json('data', []);
+    }
+
+    private function handleFacebookError(Response $response, BusinessManager $businessManager): never
+    {
+        $error = $response->json('error');
+        $errorCode = (int) ($error['code'] ?? 0);
+        $errorSubcode = (int) ($error['error_subcode'] ?? 0);
+        $errorMessage = (string) ($error['message'] ?? $response->json('error_description') ?? 'Facebook API error');
+
+        // Error code 190: Access token has expired or been invalidated
+        if ($errorCode === 190) {
+            $businessManager->update([
+                'status' => BusinessManagerStatus::TOKEN_EXPIRED,
+            ]);
+        }
+
+        throw new FacebookApiException(
+            "Facebook API Error: {$errorMessage}",
+            $response,
+            $errorCode,
+            $errorSubcode
+        );
     }
 
     private function mapAdAccountData(array $account): array

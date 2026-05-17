@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\BusinessManagerStatus;
 use App\Jobs\SyncAdAccountDataJob;
 use App\Models\AdAccount;
 use Illuminate\Console\Attributes\Description;
@@ -21,6 +22,7 @@ final class SyncAdAccountsData extends Command
         AdAccount::query()
             ->whereNotNull('business_manager_id')
             ->whereNotNull('user_id')
+            ->whereHas('businessManager', fn ($query) => $query->whereIn('status', [BusinessManagerStatus::ACTIVE->value, BusinessManagerStatus::RESTRICTED->value]))
             ->where(fn ($query) => $query->whereNull('synced_at')->orWhere('synced_at', '<', now()->subMinutes(15)))
             ->chunkById(100, function ($adAccounts) use (&$dispatchedCount): void {
                 foreach ($adAccounts as $adAccount) {

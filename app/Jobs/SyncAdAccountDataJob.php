@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Exceptions\FacebookApiException;
 use App\Models\AdAccount;
 use App\Services\FacebookAdAccountService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,6 +31,20 @@ final class SyncAdAccountDataJob implements ShouldQueue
             return;
         }
 
-        $facebookAdAccountService->syncSingleAdAccount($adAccount);
+        if (! ($adAccount->businessManager?->status->isActive() ?? false)) {
+            return;
+        }
+
+        try {
+            $facebookAdAccountService->syncSingleAdAccount($adAccount);
+        } catch (FacebookApiException $e) {
+            if ($e->isTokenExpired()) {
+                $this->fail($e);
+
+                return;
+            }
+
+            throw $e;
+        }
     }
 }

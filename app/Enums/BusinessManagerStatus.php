@@ -18,6 +18,7 @@ enum BusinessManagerStatus: string implements HasColor, HasIcon, HasLabel
     case RESTRICTED = 'restricted';
     case DISABLED = 'disabled';
     case ARCHIVED = 'archived';
+    case TOKEN_EXPIRED = 'token_expired';
 
     public static function options(): array
     {
@@ -48,6 +49,7 @@ enum BusinessManagerStatus: string implements HasColor, HasIcon, HasLabel
             self::RESTRICTED => 'Restricted',
             self::DISABLED => 'Disabled',
             self::ARCHIVED => 'Archived',
+            self::TOKEN_EXPIRED => 'Token Expired',
         };
     }
 
@@ -62,6 +64,7 @@ enum BusinessManagerStatus: string implements HasColor, HasIcon, HasLabel
             self::RESTRICTED => 'heroicon-o-exclamation-triangle',
             self::DISABLED => 'heroicon-o-x-circle',
             self::ARCHIVED => 'heroicon-o-archive-box',
+            self::TOKEN_EXPIRED => 'heroicon-o-key',
         };
     }
 
@@ -76,6 +79,7 @@ enum BusinessManagerStatus: string implements HasColor, HasIcon, HasLabel
             self::RESTRICTED => 'warning',
             self::DISABLED => 'danger',
             self::ARCHIVED => 'gray',
+            self::TOKEN_EXPIRED => 'danger',
         };
     }
 
@@ -90,6 +94,7 @@ enum BusinessManagerStatus: string implements HasColor, HasIcon, HasLabel
             self::RESTRICTED => 'Business Manager has limited functionality due to restrictions',
             self::DISABLED => 'Business Manager is disabled and cannot be used',
             self::ARCHIVED => 'Business Manager has been archived',
+            self::TOKEN_EXPIRED => 'Facebook access token has expired or been invalidated',
         };
     }
 
@@ -112,6 +117,7 @@ enum BusinessManagerStatus: string implements HasColor, HasIcon, HasLabel
             self::PENDING_VERIFICATION,
             self::SUSPENDED,
             self::RESTRICTED,
+            self::TOKEN_EXPIRED,
         ]);
     }
 

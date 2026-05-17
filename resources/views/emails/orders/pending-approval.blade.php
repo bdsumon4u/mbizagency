@@ -11,9 +11,7 @@
 
     @php
         use Illuminate\Support\Facades\Storage;
-
         $processingFeeBdt = (float) ($order->processing_fee ?? 0);
-        $totalPayableBdt = (float) $order->bdt_amount + $processingFeeBdt;
     @endphp
 
     <table cellpadding="6" cellspacing="0" border="0" style="border-collapse: collapse; margin: 12px 0;">

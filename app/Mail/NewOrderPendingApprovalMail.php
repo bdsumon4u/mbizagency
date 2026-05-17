@@ -13,16 +13,20 @@ class NewOrderPendingApprovalMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public float $totalPayableBdt;
+
     public function __construct(
         public Order $order,
         public string $approveUrl,
         public string $rejectUrl,
-    ) {}
+    ) {
+        $this->totalPayableBdt = (float) $this->order->bdt_amount + (float) ($this->order->processing_fee ?? 0);
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Order Pending Approval',
+            subject: 'New Order Pending Approval - '.number_format($this->totalPayableBdt, 2).' BDT',
         );
     }
 
@@ -34,6 +38,7 @@ class NewOrderPendingApprovalMail extends Mailable
                 'order' => $this->order,
                 'approveUrl' => $this->approveUrl,
                 'rejectUrl' => $this->rejectUrl,
+                'totalPayableBdt' => $this->totalPayableBdt,
             ],
         );
     }
