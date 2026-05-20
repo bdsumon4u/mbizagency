@@ -2,16 +2,25 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\WalletTransactionStatus;
+use App\Enums\WalletTransactionType;
 use App\Filament\Actions\DepositFundAction;
+use App\Filament\Forms\Components\PaymentMethodDetails;
 use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
+use App\Mail\NewWalletDepositPendingApprovalMail;
 use App\Models\AdAccount;
+use App\Models\WalletTransaction;
 use App\Services\FacebookAdAccountService;
 use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -21,7 +30,10 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
-use Livewire\Attributes\Computed;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class AdAccounts extends Page implements HasTable
 {
@@ -33,41 +45,115 @@ class AdAccounts extends Page implements HasTable
 
     protected string $view = 'filament.pages.ad-accounts';
 
-    #[Computed]
-    public function stats(): array
+    public function depositAction(): Action
     {
-        $accounts = AdAccount::query()->whereBelongsTo(Filament::auth()->user())->get();
-        $totalLimit = $accounts->sum('spend_cap');
-        $totalSpent = $accounts->sum('amount_spent');
-        $accountsCount = $accounts->count();
-        $lastSynced = $accounts->max('synced_at');
+        $user = Filament::auth()->user();
 
-        return [
-            [
-                'label' => 'Total Limit',
-                'value' => '$'.number_format($totalLimit, 2),
-                'subtext' => 'Across '.$accountsCount.' accounts',
-                'icon' => 'heroicon-o-wallet',
-                'icon_color' => 'text-red-500',
-                'icon_bg' => 'bg-red-50',
-            ],
-            [
-                'label' => 'Total Spent',
-                'value' => '$'.number_format($totalSpent, 2),
-                'subtext' => 'Across '.$accountsCount.' accounts',
-                'icon' => 'heroicon-o-arrow-trending-up',
-                'icon_color' => 'text-green-500',
-                'icon_bg' => 'bg-green-50',
-            ],
-            [
-                'label' => 'Last Synced',
-                'value' => $lastSynced ? $lastSynced->format('h:i A') : 'N/A',
-                'subtext' => $lastSynced ? $lastSynced->format('d-M-Y') : 'N/A',
-                'icon' => 'heroicon-o-arrow-path',
-                'icon_color' => 'text-blue-500',
-                'icon_bg' => 'bg-blue-50',
-            ],
-        ];
+        return Action::make('deposit')
+            ->label('Add Funds')
+            ->icon('heroicon-o-plus')
+            ->button()
+            ->color('success')
+            ->modalWidth(Width::Large)
+            ->schema([
+                Select::make('payment_method_id')
+                    ->label('Payment Method')
+                    ->options(function () use ($user) {
+                        return $user->paymentMethods()->active()->pluck('name', 'payment_methods.id');
+                    })
+                    ->required()
+                    ->searchable(),
+                PaymentMethodDetails::make('selected_payment_method_details')
+                    ->paymentMethods(PaymentMethodDetails::getPaymentMethodsForView($user))
+                    ->visibleJs('!! $get(\'payment_method_id\')'),
+                TextInput::make('amount')
+                    ->label('Amount (BDT)')
+                    ->numeric()
+                    ->minValue(1)
+                    ->required(),
+                ViewField::make('screenshots')
+                    ->view('filament.forms.components.custom-file-upload')
+                    ->required(),
+                Textarea::make('note')
+                    ->label('Note (optional)')
+                    ->maxLength(500)
+                    ->visible(fn () => Filament::getCurrentPanel()?->getId() === 'admin'),
+            ])
+            ->action(function (array $data) use ($user) {
+                DB::transaction(function () use ($data, $user) {
+                    $transaction = WalletTransaction::create([
+                        'user_id' => $user->id,
+                        'type' => WalletTransactionType::DEPOSIT,
+                        'amount' => $data['amount'],
+                        'payment_method_id' => $data['payment_method_id'],
+                        'status' => WalletTransactionStatus::PENDING,
+                        'note' => $data['note'] ?? null,
+                        'screenshots' => $this->handleScreenshots($data['screenshots'] ?? []),
+                    ]);
+
+                    // Send approval email
+                    $approveUrl = url('/admin/wallet-transactions');
+                    $rejectUrl = url('/admin/wallet-transactions');
+
+                    Mail::to(config('mail.admin_address', 'admin@mbizcrm.test'))
+                        ->send(new NewWalletDepositPendingApprovalMail($transaction, $approveUrl, $rejectUrl));
+                });
+
+                Notification::make()
+                    ->title('Deposit request submitted for approval.')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    private function handleScreenshots(array $screenshots): ?array
+    {
+        if (empty($screenshots)) {
+            return null;
+        }
+
+        $finalPaths = [];
+        foreach ($screenshots as $screenshot) {
+            if ($screenshot instanceof UploadedFile) {
+                try {
+                    $path = $screenshot->store('wallet/screenshots', 'public');
+                    if ($path) {
+                        $finalPaths[] = $path;
+                    }
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+
+                continue;
+            }
+
+            if (! is_string($screenshot)) {
+                continue;
+            }
+
+            if (! str_starts_with($screenshot, 'livewire-file:')) {
+                $finalPaths[] = $screenshot;
+
+                continue;
+            }
+
+            try {
+                $tempPath = str_replace('livewire-file:', '', $screenshot);
+                $newPath = 'wallet/screenshots/'.basename($tempPath);
+
+                if (Storage::disk('local')->exists('livewire-tmp/'.$tempPath)) {
+                    Storage::disk('public')->put(
+                        $newPath,
+                        Storage::disk('local')->get('livewire-tmp/'.$tempPath)
+                    );
+                    $finalPaths[] = $newPath;
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return ! empty($finalPaths) ? $finalPaths : null;
     }
 
     public function syncSingle(int $id): void

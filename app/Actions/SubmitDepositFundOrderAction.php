@@ -10,10 +10,11 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Services\PriceRateService;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
+use Filament\Support\Exceptions\Halt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 
 final class SubmitDepositFundOrderAction
 {
@@ -23,16 +24,33 @@ final class SubmitDepositFundOrderAction
         private SendPendingOrderApprovalEmailsAction $sendPendingOrderApprovalEmailsAction,
     ) {}
 
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array{order: Order, approved: bool}
-     */
     public function __invoke(AdAccount $adAccount, array $data): array
     {
         $admin = self::whichAdmin();
-        $paymentMethod = $this->resolveAssignedPaymentMethod($adAccount, $data);
+        $paymentSource = $data['payment_source'] ?? 'payment_method';
+        $paymentMethod = $paymentSource === 'payment_method'
+            ? $this->resolveAssignedPaymentMethod($adAccount, $data)
+            : null;
+
         $pricing = $this->resolvePricing($adAccount, $paymentMethod, $data);
-        $order = $this->createPendingOrder($adAccount, $data, $admin, $pricing, $paymentMethod);
+
+        if ($paymentSource === 'wallet') {
+            $processingFeePercent = $paymentMethod ? (float) $paymentMethod->processing_fee_percent : 0;
+            $processingFeeAmount = round($pricing['bdt_amount'] * ($processingFeePercent / 100), 2);
+            $totalPayable = $pricing['bdt_amount'] + $processingFeeAmount;
+
+            if ($adAccount->user->wallet_balance < $totalPayable) {
+                Notification::make()
+                    ->title('Insufficient wallet balance.')
+                    ->body('You need '.number_format($totalPayable, 2).' BDT.')
+                    ->danger()
+                    ->send();
+
+                throw new Halt;
+            }
+        }
+
+        $order = $this->createPendingOrder($adAccount, $data, $admin, $pricing, $paymentMethod, $paymentSource);
 
         if ($admin instanceof Admin) {
             $this->approveOrderAction->__invoke($order, $admin);
@@ -65,7 +83,12 @@ final class SubmitDepositFundOrderAction
             ->first();
 
         if (! $paymentMethod instanceof PaymentMethod) {
-            throw new RuntimeException('Please select an assigned payment method.');
+            Notification::make()
+                ->title('Please select an assigned payment method.')
+                ->danger()
+                ->send();
+
+            throw new Halt;
         }
 
         return $paymentMethod;
@@ -75,11 +98,11 @@ final class SubmitDepositFundOrderAction
      * @param  array<string, mixed>  $data
      * @return array{usd_amount: float, bdt_amount: float, dollar_rate: float}
      */
-    private function resolvePricing(AdAccount $adAccount, PaymentMethod $paymentMethod, array $data): array
+    private function resolvePricing(AdAccount $adAccount, ?PaymentMethod $paymentMethod, array $data): array
     {
         $amountCurrency = (string) ($data['currency'] ?? 'usd');
         $amount = (float) ($data['amount'] ?? 0);
-        $processingFeePercent = (float) $paymentMethod->processing_fee_percent;
+        $processingFeePercent = $paymentMethod ? (float) $paymentMethod->processing_fee_percent : 0;
         $processingFeeMultiplier = 1 + ($processingFeePercent / 100);
 
         return match ($amountCurrency) {
@@ -97,7 +120,12 @@ final class SubmitDepositFundOrderAction
         $netBdtAmount = $amount / $processingFeeMultiplier;
 
         if ($minimumBdt !== null && $amount < ($minimumBdt * $processingFeeMultiplier)) {
-            throw new RuntimeException('Minimum deposit amount is '.number_format($minimumBdt * $processingFeeMultiplier, 2).' BDT.');
+            Notification::make()
+                ->title('Minimum deposit amount is '.number_format($minimumBdt * $processingFeeMultiplier, 2).' BDT.')
+                ->danger()
+                ->send();
+
+            throw new Halt;
         }
 
         return $this->priceRateService->convertBdtToUsdForAdAccount($adAccount, $netBdtAmount);
@@ -112,12 +140,13 @@ final class SubmitDepositFundOrderAction
         array $data,
         ?Admin $admin,
         array $pricing,
-        PaymentMethod $paymentMethod,
+        ?PaymentMethod $paymentMethod,
+        string $paymentSource,
     ): Order {
-        return DB::transaction(function () use ($adAccount, $data, $admin, $pricing, $paymentMethod): Order {
+        return DB::transaction(function () use ($adAccount, $data, $admin, $pricing, $paymentMethod, $paymentSource): Order {
             $amountUsd = (float) $pricing['usd_amount'];
             $amountBdt = (float) $pricing['bdt_amount'];
-            $processingFeePercent = (float) $paymentMethod->processing_fee_percent;
+            $processingFeePercent = $paymentMethod ? (float) $paymentMethod->processing_fee_percent : 0;
             $processingFeeAmount = round($amountBdt * ($processingFeePercent / 100), 2);
 
             return Order::query()->create([
@@ -128,6 +157,7 @@ final class SubmitDepositFundOrderAction
                 'dollar_rate' => $pricing['dollar_rate'],
                 'bdt_amount' => $amountBdt,
                 'processing_fee' => $processingFeeAmount,
+                'payment_source' => $paymentSource,
                 'balance' => $adAccount->spend_cap - $adAccount->amount_spent,
                 'source' => $admin ? OrderSource::ADMIN : OrderSource::USER,
                 'status' => OrderStatus::PENDING,

@@ -16,23 +16,43 @@
         </div>
 
         <!-- Stats Widgets -->
-        <div class="flex overflow-x-auto gap-2 lg:gap-6 sm:grid sm:grid-cols-3 no-scrollbar pb-1">
-            @foreach($this->stats as $stat)
-                <div class="flex items-center gap-3 lg:gap-4 p-3 lg:p-5 bg-white border border-gray-100 rounded-xl shadow-sm min-w-[180px] flex-1">
-                    <div class="flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-lg {{ $stat['icon_bg'] }} {{ $stat['icon_color'] }}">
-                        @svg($stat['icon'], 'w-5 h-5 lg:w-6 lg:h-6')
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-6 pb-1">
+            <!-- Wallet Balance Card -->
+            <div class="flex items-center justify-between p-3 lg:p-5 bg-white border border-gray-100 rounded-xl shadow-sm w-full">
+                <div class="flex items-center gap-3 lg:gap-4 min-w-0">
+                    <div class="flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-lg bg-green-50 text-green-500">
+                        <x-heroicon-o-wallet class="w-5 h-5 lg:w-6 lg:h-6" />
                     </div>
                     <div class="flex flex-col min-w-0">
-                        <span class="text-[12px] lg:text-xs font-medium text-gray-500 tracking-wider truncate">{{ $stat['label'] }}</span>
-                        <span class="text-sm lg:text-2xl font-bold {{ $stat['icon_color'] === 'text-blue-500' ? 'text-blue-600' : ($stat['icon_color'] === 'text-green-500' ? 'text-green-600' : 'text-red-600') }} leading-tight lg:mt-1 lg:mb-0.5">{{ $stat['value'] }}</span>
-                        <span class="text-[11px] lg:text-xs text-gray-400">{{ $stat['subtext'] }}</span>
+                        <span class="text-[12px] lg:text-xs font-medium text-gray-500 tracking-wider truncate">Wallet Balance</span>
+                        <span class="text-sm lg:text-2xl font-bold text-green-600 leading-tight lg:mt-1 lg:mb-0.5">Tk. {{ number_format(auth()->user()->wallet_balance ?? 0, 2) }}</span>
+                        <span class="text-[11px] lg:text-xs text-gray-400">Available balance</span>
                     </div>
                 </div>
-            @endforeach
+                <div class="flex-shrink-0">
+                    {{ $this->depositAction }}
+                </div>
+            </div>
+
+            <!-- Total Ad Accounts Card -->
+            <div class="flex items-center gap-3 lg:gap-4 p-3 lg:p-5 bg-white border border-gray-100 rounded-xl shadow-sm w-full">
+                <div class="flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500">
+                    <x-heroicon-o-rectangle-stack class="w-5 h-5 lg:w-6 lg:h-6" />
+                </div>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-[12px] lg:text-xs font-medium text-gray-500 tracking-wider truncate">Total Ad Accounts</span>
+                    <span class="text-sm lg:text-2xl font-bold text-blue-600 leading-tight lg:mt-1 lg:mb-0.5">
+                        {{ \App\Models\AdAccount::query()->whereBelongsTo(auth()->user())->count() }}
+                    </span>
+                    <span class="text-[11px] lg:text-xs text-gray-400">Associated accounts</span>
+                </div>
+            </div>
         </div>
 
         {{ $this->table }}
     </div>
+
+    <x-filament-actions::modals />
 
     <style>
         .no-scrollbar::-webkit-scrollbar {

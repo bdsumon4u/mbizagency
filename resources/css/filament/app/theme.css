@@ -27,6 +27,7 @@
     color: var(--gray-950);
     white-space: nowrap;
 }
+
 .pending-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
     content: 'Pending Orders';
     display: inline-flex;
@@ -89,4 +90,42 @@
 .orders-modal-window .fi-modal-content,
 .orders-modal-window .fi-modal-footer {
     @apply p-2 lg:p-4;
+}
+.latest-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    content: 'Latest Orders';
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+    --tw-font-weight: var(--font-weight-semibold);
+    color: var(--gray-950);
+    white-space: nowrap;
+}
+
+.latest-orders-table {
+    position: relative !important;
+}
+
+.latest-orders-table .fi-ta-header {
+    position: absolute !important;
+    right: 3.5rem !important;
+    top: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    z-index: 20 !important;
+    pointer-events: none !important;
+}
+
+.latest-orders-table .fi-ta-header > * {
+    pointer-events: auto !important;
+}
+
+.latest-orders-table .fi-ta-header-toolbar {
+    border-top: none !important;
 }

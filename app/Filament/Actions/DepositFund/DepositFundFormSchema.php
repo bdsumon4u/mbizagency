@@ -2,8 +2,8 @@
 
 namespace App\Filament\Actions\DepositFund;
 
+use App\Filament\Forms\Components\PaymentMethodDetails;
 use App\Models\AdAccount;
-use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Services\PriceRateService;
 use Filament\Facades\Filament;
@@ -15,6 +15,7 @@ use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Callout;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\View;
 use Illuminate\Support\HtmlString;
 
@@ -38,20 +39,7 @@ final class DepositFundFormSchema
             ->pluck('name', 'id')
             ->toArray();
 
-        $paymentMethodsForView = $assignedPaymentMethods
-            ->map(fn (PaymentMethod $paymentMethod): array => [
-                'id' => $paymentMethod->id,
-                'name' => $paymentMethod->name,
-                'type' => $paymentMethod->type,
-                'processing_fee_percent' => number_format((float) $paymentMethod->processing_fee_percent, 2),
-                'processing_fee_percent_raw' => (float) $paymentMethod->processing_fee_percent,
-                'account_name' => $paymentMethod->account_name,
-                'account_number' => $paymentMethod->account_number,
-                'branch' => $paymentMethod->branch,
-                'instructions' => $paymentMethod->instructions,
-            ])
-            ->values()
-            ->all();
+        $paymentMethodsForView = PaymentMethodDetails::getPaymentMethodsForView($adAccount->user);
 
         return [
             Callout::make('Ad Account ID: '.$adAccount->act_id)
@@ -78,13 +66,28 @@ final class DepositFundFormSchema
                 ->viewData([
                     'rates' => $effectiveRates,
                 ]),
+            Radio::make('payment_source')
+                ->label('Payment Source')
+                ->options(function () use ($adAccount) {
+                    $balance = $adAccount->user?->wallet_balance ?? 0;
+
+                    return [
+                        'payment_method' => 'Saved Payment Method',
+                        'wallet' => 'My Wallet (Tk. '.$balance.')',
+                    ];
+                })
+                ->default('payment_method')
+                ->inline()
+                ->live()
+                ->required(),
             Select::make('payment_method_id')
                 ->label('Payment Method')
                 ->placeholder('Select a payment method')
                 ->options($paymentMethodOptions)
                 ->searchable()
                 ->preload()
-                ->required(),
+                ->required(fn (Get $get) => $get('payment_source') === 'payment_method')
+                ->visibleJs('$get(\'payment_source\') === \'payment_method\''),
             Group::make([
                 Radio::make('currency')
                     ->options([
@@ -109,27 +112,25 @@ final class DepositFundFormSchema
                     ->columnSpan(2),
             ])
                 ->columns(3)
-                ->visibleJs('!! $get(\'payment_method_id\')'),
+                ->visibleJs('!! $get(\'payment_method_id\') || $get(\'payment_source\') === \'wallet\''),
             View::make('effective_price_rate_feedback')
                 ->view('filament.actions.effective-price-rate-feedback')
                 ->viewData([
                     'rates' => $effectiveRates,
                     'paymentMethods' => $paymentMethodsForView,
                 ])
-                ->visibleJs('!! $get(\'payment_method_id\') && !! $get(\'amount\')'),
-            View::make('selected_payment_method_details')
-                ->view('filament.actions.selected-payment-method-details')
-                ->viewData([
-                    'paymentMethods' => $paymentMethodsForView,
-                ])
-                ->visibleJs('!! $get(\'payment_method_id\')'),
+                ->visibleJs('(!! $get(\'payment_method_id\') || $get(\'payment_source\') === \'wallet\') && !! $get(\'amount\')'),
+            PaymentMethodDetails::make('selected_payment_method_details')
+                ->paymentMethods($paymentMethodsForView)
+                ->visibleJs('!! $get(\'payment_method_id\') && $get(\'payment_source\') === \'payment_method\''),
             ViewField::make('screenshots')
                 ->view('filament.forms.components.custom-file-upload')
-                ->required(Filament::getCurrentPanel()?->getId() !== 'admin'),
+                ->required(fn (Get $get) => Filament::getCurrentPanel()?->getId() !== 'admin' && $get('payment_source') === 'payment_method')
+                ->visibleJs('$get(\'payment_source\') === \'payment_method\''),
             Textarea::make('note')
                 ->label('Note (optional)')
                 ->maxLength(500)
-                ->visible(Filament::getCurrentPanel()?->getId() === 'admin'),
+                ->visible(fn () => Filament::getCurrentPanel()?->getId() === 'admin'),
         ];
     }
 }

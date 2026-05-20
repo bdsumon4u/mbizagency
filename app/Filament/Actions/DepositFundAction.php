@@ -12,8 +12,8 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
+use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\HtmlString;
-use RuntimeException;
 use Throwable;
 
 class DepositFundAction
@@ -58,17 +58,16 @@ class DepositFundAction
                             : 'Order submitted and sent to admins for confirmation.')
                         ->success()
                         ->send();
-                } catch (RuntimeException $exception) {
-                    Notification::make()
-                        ->title($exception->getMessage())
-                        ->danger()
-                        ->send();
+                } catch (Halt $exception) {
+                    throw $exception;
                 } catch (Throwable $exception) {
                     Notification::make()
                         ->title('Failed to submit order.')
                         ->body($exception->getMessage())
                         ->danger()
                         ->send();
+
+                    throw new Halt;
                 }
             })
             ->successRedirectUrl(fn (): string => OrderHistory::getUrl());

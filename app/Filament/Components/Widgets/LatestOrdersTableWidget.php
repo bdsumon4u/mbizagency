@@ -2,7 +2,6 @@
 
 namespace App\Filament\Components\Widgets;
 
-use App\Enums\OrderStatus;
 use App\Filament\Actions\DepositFundAction;
 use App\Filament\Pages\OrderHistory;
 use App\Models\Order;
@@ -12,36 +11,13 @@ use Filament\Support\Enums\Width;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\URL;
 
-class PendingOrdersTableWidget extends TableWidget
+class LatestOrdersTableWidget extends TableWidget
 {
-    protected static bool $isDiscovered = false;
-
     protected int|string|array $columnSpan = 'full';
 
-    public static function getEloquentQuery(): Builder
-    {
-        return Order::query()
-            ->where('status', OrderStatus::PENDING)
-            ->with('adAccount')
-            ->when(
-                Filament::getCurrentPanel()?->getId() !== 'admin',
-                fn (Builder $query): Builder => $query->whereHas('adAccount', function (Builder $adAccountsQuery): Builder {
-                    return $adAccountsQuery->whereBelongsTo(Filament::auth()->user());
-                })
-            );
-    }
-
-    public static function canView(): bool
-    {
-        return Filament::getCurrentPanel()?->getId() === 'admin' || static::getEloquentQuery()->exists();
-    }
-
-    protected static ?int $sort = -1;
-
-    public ?int $adAccountId = null;
+    protected static ?int $sort = 2;
 
     public function getInvoiceUrl(Order $record): string
     {
@@ -54,10 +30,16 @@ class PendingOrdersTableWidget extends TableWidget
 
     public function table(Table $table): Table
     {
-        return OrderHistory::configureTable($table)
+        $table = OrderHistory::configureTable($table)
             ->heading(null)
-            ->extraAttributes(['class' => 'pending-orders-table'])
-            ->query(fn (): Builder => static::getEloquentQuery())
+            ->extraAttributes(['class' => 'latest-orders-table'])
+            ->query(
+                Order::query()
+                    ->with('adAccount')
+                    ->whereBelongsTo(Filament::auth()->user())
+                    ->latest()
+                    ->limit(3)
+            )
             ->recordAction('orders')
             ->recordActions([
                 Action::make('orders')
@@ -92,6 +74,23 @@ class PendingOrdersTableWidget extends TableWidget
                     ->extraAttributes(['class' => 'hidden']),
                 DepositFundAction::make()->button(),
             ], RecordActionsPosition::BeforeCells)
-            ->content(fn () => view('filament.tables.custom-order-history-table'));
+            ->content(fn () => view('filament.tables.custom-order-history-table'))
+            ->paginated(false)
+            ->headerActions([
+                Action::make('viewAll')
+                    ->label('View All')
+                    ->url(fn () => OrderHistory::getUrl())
+                    ->button()
+                    ->color('primary')
+                    ->size('sm'),
+            ]);
+
+        $table->filters([]);
+
+        foreach ($table->getColumns() as $column) {
+            $column->searchable(false);
+        }
+
+        return $table;
     }
 }

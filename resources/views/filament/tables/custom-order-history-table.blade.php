@@ -3,7 +3,7 @@
         <?php
             use Filament\Facades\Filament;
             use App\Filament\Pages\AdAccounts;
-            use App\Filament\Resources\AdAccounts\AdAccountResource;
+            use App\Filament\Admin\Resources\AdAccounts\AdAccountResource;
         ?>
 
         @foreach($records as $record)
@@ -89,7 +89,9 @@
                                                         default => 'bg-gray-50 text-gray-600 border-gray-200',
                                                     };
                                                 @endphp
-                                                <span class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-sm text-[10px] lg:text-[11px] font-bold {{ $sourceClasses }} border">
+                                                <span class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-sm text-[10px] lg:text-[11px] font-bold {{ $sourceClasses }} border cursor-pointer"
+                                                    wire:click="mountTableAction('userOrders', '{{ $record->getKey() }}')"
+                                                >
                                                     @svg($sourceIcon, 'w-2.5 h-2.5 lg:w-3 lg:h-3')
                                                 </span>
                                             @endif

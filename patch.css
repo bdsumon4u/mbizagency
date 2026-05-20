@@ -1,0 +1,26 @@
+.latest-orders-table {
+    position: relative !important;
+}
+
+.latest-orders-table .fi-ta-header {
+    position: absolute !important;
+    right: 3rem !important;
+    top: 0 !important;
+    height: 3.5rem !important; /* Approx toolbar height */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    z-index: 20 !important;
+    pointer-events: none !important;
+}
+
+.latest-orders-table .fi-ta-header > * {
+    pointer-events: auto !important;
+}
+
+.latest-orders-table .fi-ta-header-toolbar {
+    border-top: none !important;
+}

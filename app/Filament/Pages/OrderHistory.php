@@ -24,6 +24,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Number;
@@ -34,6 +35,8 @@ class OrderHistory extends Page implements HasTable
     use InteractsWithTable;
 
     public ?int $adAccountId = null;
+
+    public ?int $userId = null;
 
     protected ?string $heading = '';
 
@@ -107,6 +110,8 @@ class OrderHistory extends Page implements HasTable
                     return $query->with('user');
                 })->when($this->adAccountId, function ($query) {
                     return $query->where('ad_account_id', $this->adAccountId);
+                })->when($this->userId, function ($query) {
+                    return $query->where('user_id', $this->userId);
                 })->with('adAccount')
             )
             ->content(fn () => view('filament.tables.custom-order-history-table'));
@@ -117,6 +122,9 @@ class OrderHistory extends Page implements HasTable
         return $table
             ->defaultSort('id', 'desc')
             ->columns([
+                TextColumn::make('id')
+                    ->label('Order ID')
+                    ->searchable(),
                 DateTimeColumn::make('created_at')
                     ->label('Date-Time'),
                 AdAccountColumn::make('adAccount.name')
@@ -125,6 +133,10 @@ class OrderHistory extends Page implements HasTable
                     ->label('Amount')
                     ->description(function (Order $order) {
                         return Number::currency($order->bdt_amount, 'BDT');
+                    })
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->where('orders.usd_amount', 'like', "%{$search}%")
+                            ->orWhere('orders.bdt_amount', 'like', "%{$search}%");
                     }),
                 CurrencyColumn::make('dollar_rate', 'BDT')
                     ->label('Dollar Rate'),
@@ -164,6 +176,21 @@ class OrderHistory extends Page implements HasTable
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
                     ->modalHeading(fn (Order $order) => $order->adAccount->name.'- Order History')
+                    ->modalCloseButton()
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
+                    ->extraAttributes(['class' => 'hidden']),
+                Action::make('userOrders')
+                    ->label('User Orders')
+                    ->modalWidth(Width::SevenExtraLarge)
+                    ->extraModalOverlayAttributes(['class' => 'orders-modal-overlay'])
+                    ->extraModalWindowAttributes(['class' => 'orders-modal-window'])
+                    ->modalContent(fn (Order $record) => view('filament.actions.user-view-orders', [
+                        'record' => $record->user,
+                        'table' => 'order-history',
+                        'orderHistoryClass' => OrderHistory::class,
+                    ]))
+                    ->modalHeading(fn (Order $order) => $order->user->name.' - Order History')
                     ->modalCloseButton()
                     ->modalSubmitAction(false)
                     ->modalCancelAction(false)

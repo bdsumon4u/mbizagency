@@ -31,8 +31,8 @@
             @endforeach
         </div>
 
-        @if(App\Filament\Components\Widgets\PendingOrdersTableWidget::canView())
-            @livewire(App\Filament\Components\Widgets\PendingOrdersTableWidget::class)
+        @if(App\Filament\Components\Widgets\LatestOrdersTableWidget::canView())
+            @livewire(App\Filament\Components\Widgets\LatestOrdersTableWidget::class)
         @endif
 
         {{ $this->table }}
