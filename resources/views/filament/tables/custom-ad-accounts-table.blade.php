@@ -79,14 +79,14 @@
                     </div>
                     
                     <!-- Extended Content: Additional Data (Visible on Horizontal Scroll on Mobile, Always Visible on Desktop) -->
-                    <div class="snap-start flex justify-around items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50 dark:bg-gray-800/50/50 lg:border-none lg:bg-transparent w-[100cqw] lg:w-auto">
+                    <div class="snap-start flex justify-around items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-gray-800/50 lg:border-none lg:bg-transparent w-[100cqw] lg:w-auto">
                         
                         <!-- Limit -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
                             <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium">Limit</span>
                             <span class="text-[12px] lg:text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5 lg:mt-1">${{ number_format((float) ($record->spend_cap ?? 0), 2) }}</span>
-                            <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
-                                <div class="bg-gray-400 h-1 rounded-full" style="width: 100%"></div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 mt-1 lg:mt-1.5">
+                                <div class="bg-gray-400 dark:bg-gray-500 h-1 rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                         
@@ -99,7 +99,7 @@
                                 $spent = (float) ($record->amount_spent ?? 0);
                                 $percent = $cap > 0 ? min(100, ($spent / $cap) * 100) : ($spent > 0 ? 100 : 0);
                             @endphp
-                            <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 mt-1 lg:mt-1.5">
                                 <div class="bg-red-500 h-1 rounded-full" style="width: {{ $percent }}%"></div>
                             </div>
                         </div>
