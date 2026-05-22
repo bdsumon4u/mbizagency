@@ -69,6 +69,14 @@
         height: 36px;
     }
 }
+
+.dark .pending-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
+.dark .orders-modal-window .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
+.dark .ad-accounts-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
+.dark .latest-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    color: white;
+}
+
 .order-status-badge .fi-badge-label {
     overflow: visible;
 }

@@ -40,24 +40,24 @@
     }" class="custom-file-upload-container">
         <div class="flex items-center justify-center w-full">
             <label
-                class="flex flex-col items-center justify-center w-full min-h-[110px] border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-[#ff3b5c]/50 transition-all group relative overflow-hidden"
+                class="flex flex-col items-center justify-center w-full min-h-[110px] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-[#ff3b5c]/50 transition-all group relative overflow-hidden"
                 :class="isUploading ? 'opacity-50 pointer-events-none' : ''">
                 <div class="flex flex-col items-center justify-center pt-4 pb-5 px-4 text-center">
                     <div
-                        class="w-10 h-10 mb-2 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                        class="w-10 h-10 mb-2 rounded-full bg-white dark:bg-gray-900 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
                         <x-heroicon-o-camera class="w-5 h-5 text-gray-400 group-hover:text-[#ff3b5c]" />
                     </div>
-                    <p class="mb-1 text-sm text-gray-600 font-medium">
+                    <p class="mb-1 text-sm text-gray-600 dark:text-gray-300 font-medium">
                         <span class="text-[#ff3b5c]">Click to upload screenshots</span>
                     </p>
-                    <p class="text-xs text-gray-400">PNG, JPG, WEBP (Multiple allowed)</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500">PNG, JPG, WEBP (Multiple allowed)</p>
                 </div>
                 <input type="file" class="hidden" multiple accept="image/*" x-on:change="handleFiles" />
 
                 <!-- Uploading Overlay -->
                 <template x-if="isUploading">
-                    <div class="absolute inset-0 bg-white/80 flex flex-col items-center justify-center p-4">
-                        <div class="w-full max-w-[150px] bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div class="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex flex-col items-center justify-center p-4">
+                        <div class="w-full max-w-[150px] bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                             <div class="bg-[#ff3b5c] h-full transition-all duration-300"
                                 :style="'width: ' + progress + '%'">
                             </div>
@@ -73,7 +73,7 @@
             <!-- Persistent Previews (from state) -->
             <template x-for="(file, index) in state" :key="index">
                 <div
-                    class="relative group aspect-square rounded-lg overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
+                    class="relative group aspect-square rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow-sm">
                     <img :src="file.startsWith('livewire-file:') ? previews[index] : '/storage/' + file"
                         class="w-full h-full object-cover">
                     <div

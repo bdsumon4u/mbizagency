@@ -1,6 +1,6 @@
 <div class="space-y-2 p-1">
     @foreach($records as $record)
-        <div class="@container w-full bg-white border border-gray-100 rounded-lg shadow-sm hover:border-gray-200 transition-colors overflow-hidden px-1">
+        <div class="@container w-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/10 rounded-lg shadow-sm hover:border-gray-200 dark:hover:border-gray-700 dark:border-gray-700 transition-colors overflow-hidden px-1">
             <div class="overflow-x-auto no-scrollbar snap-x snap-mandatory w-full">
                 <div class="flex w-max min-w-full lg:w-full">
                     
@@ -16,7 +16,7 @@
                             </div>
                             
                             <div class="flex flex-col min-w-0 flex-1">
-                                <h3 class="text-[12px] lg:text-sm font-semibold text-gray-900 truncate pr-1">
+                                <h3 class="text-[12px] lg:text-sm font-semibold text-gray-900 dark:text-gray-100 truncate pr-1">
                                     <button type="button" wire:click="mountTableAction('orders', {{ $record->id }})" class="hover:text-[#ff3b5c] hover:underline transition-colors text-left">
                                         {{ $record->name ?? 'Account ID: ' . $record->id }}
                                     </button>
@@ -24,11 +24,11 @@
                                 
                                 <div class="flex justify-between gap-1">
                                     <div>
-                                        <div class="flex items-center gap-1 mt-0.5 text-[11px] lg:text-xs text-gray-500">
+                                        <div class="flex items-center gap-1 mt-0.5 text-[11px] lg:text-xs text-gray-500 dark:text-gray-400">
                                             <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=act_{{ $record->act_id }}" target="_blank" class="truncate hover:underline hover:text-[#ff3b5c] transition-colors">
                                                 ID: {{ $record->act_id ?? $record->id }}
                                             </a>
-                                            <button x-data="{ copy() { navigator.clipboard.writeText('{{ $record->act_id ?? $record->id }}'); $tooltip('Copied!'); } }" x-on:click="copy()" class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 focus:outline-none" title="Copy ID">
+                                            <button x-data="{ copy() { navigator.clipboard.writeText('{{ $record->act_id ?? $record->id }}'); $tooltip('Copied!'); } }" x-on:click="copy()" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 transition-colors flex-shrink-0 focus:outline-none" title="Copy ID">
                                                 <x-heroicon-o-document-duplicate class="w-2.5 h-2.5 lg:w-3.5 lg:h-3.5" />
                                             </button>
                                         </div>
@@ -40,7 +40,7 @@
                                                     'danger' => 'bg-red-50 text-red-600 border-red-200',
                                                     'warning' => 'bg-orange-50 text-orange-600 border-orange-200',
                                                     'info' => 'bg-blue-50 text-blue-600 border-blue-200',
-                                                    default => 'bg-gray-50 text-gray-600 border-gray-200',
+                                                    default => 'bg-gray-50 dark:bg-gray-800/50 text-gray-600 border-gray-200 dark:border-gray-700',
                                                 };
                                                 $statusIcon = $record->status->getIcon();
                                             @endphp
@@ -55,7 +55,7 @@
                                     <div class="flex lg:hidden items-center gap-2 flex-shrink-0">
                                         <!-- Balance -->
                                         <div class="flex flex-col items-end justify-center">
-                                            <span class="text-[10px] text-gray-500 tracking-wider font-medium">Balance</span>
+                                            <span class="text-[10px] text-gray-500 dark:text-gray-400 tracking-wider font-medium">Balance</span>
                                             <span class="text-[12px] font-bold text-green-600">${{ number_format((float) ($record->spend_cap - $record->amount_spent ?? 0), 2) }}</span>
                                         </div>
 
@@ -66,9 +66,9 @@
                                                 <x-heroicon-o-arrow-path class="w-2.5 h-2.5 animate-spin" wire:loading wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
                                                 TopUp
                                             </button>
-                                            <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-around gap-[1px] w-full px-1 py-0.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
-                                                <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500" wire:loading.remove wire:target="syncSingle({{ $record->id }})" />
-                                                <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500 animate-spin" wire:loading wire:target="syncSingle({{ $record->id }})" />
+                                            <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-around gap-[1px] w-full px-1 py-0.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-800/50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
+                                                <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500 dark:text-gray-400" wire:loading.remove wire:target="syncSingle({{ $record->id }})" />
+                                                <x-heroicon-o-arrow-path class="w-2 h-2 text-gray-500 dark:text-gray-400 animate-spin" wire:loading wire:target="syncSingle({{ $record->id }})" />
                                                 Sync
                                             </button>
                                         </div>
@@ -79,12 +79,12 @@
                     </div>
                     
                     <!-- Extended Content: Additional Data (Visible on Horizontal Scroll on Mobile, Always Visible on Desktop) -->
-                    <div class="snap-start flex justify-around items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50/50 lg:border-none lg:bg-transparent w-[100cqw] lg:w-auto">
+                    <div class="snap-start flex justify-around items-center gap-3 lg:gap-6 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-l border-gray-100 bg-gray-50 dark:bg-gray-800/50/50 lg:border-none lg:bg-transparent w-[100cqw] lg:w-auto">
                         
                         <!-- Limit -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
-                            <span class="text-[10px] lg:text-xs text-gray-500 font-medium">Limit</span>
-                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->spend_cap ?? 0), 2) }}</span>
+                            <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium">Limit</span>
+                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5 lg:mt-1">${{ number_format((float) ($record->spend_cap ?? 0), 2) }}</span>
                             <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
                                 <div class="bg-gray-400 h-1 rounded-full" style="width: 100%"></div>
                             </div>
@@ -92,8 +92,8 @@
                         
                         <!-- Spent -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
-                            <span class="text-[10px] lg:text-xs text-gray-500 font-medium">Spent</span>
-                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">${{ number_format((float) ($record->amount_spent ?? 0), 2) }}</span>
+                            <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium">Spent</span>
+                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5 lg:mt-1">${{ number_format((float) ($record->amount_spent ?? 0), 2) }}</span>
                             @php
                                 $cap = (float) ($record->spend_cap ?? 0);
                                 $spent = (float) ($record->amount_spent ?? 0);
@@ -106,10 +106,10 @@
 
                         <!-- Synced At -->
                         <div class="flex flex-col justify-center w-[60px] lg:w-[80px]">
-                            <span class="text-[10px] lg:text-xs text-gray-500 font-medium">Synced At</span>
-                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 mt-0.5 lg:mt-1">{{ $record->synced_at ? $record->synced_at->format('d/m/y') : 'N/A' }}</span>
+                            <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium">Synced At</span>
+                            <span class="text-[12px] lg:text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5 lg:mt-1">{{ $record->synced_at ? $record->synced_at->format('d/m/y') : 'N/A' }}</span>
                             <div class="flex items-center gap-1 mt-0.5">
-                                <span class="text-[10px] lg:text-xs text-gray-400">{{ $record->synced_at ? $record->synced_at->format('h:i A') : '' }}</span>
+                                <span class="text-[10px] lg:text-xs text-gray-400 dark:text-gray-500">{{ $record->synced_at ? $record->synced_at->format('h:i A') : '' }}</span>
                                 @if($record->synced_at)
                                     <span class="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-green-500"></span>
                                 @endif
@@ -117,10 +117,10 @@
                         </div>
 
                         <!-- Desktop Balance & Buttons -->
-                        <div class="hidden lg:flex items-center gap-3 flex-shrink-0 ml-2 pl-4 border-l border-gray-200">
+                        <div class="hidden lg:flex items-center gap-3 flex-shrink-0 ml-2 pl-4 border-l border-gray-200 dark:border-gray-700">
                             <!-- Balance -->
                             <div class="flex flex-col items-end justify-center lg:w-[80px]">
-                                <span class="text-xs text-gray-500 tracking-wider font-medium">Balance</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 tracking-wider font-medium">Balance</span>
                                 <span class="text-sm font-bold text-green-600 mt-0.5">${{ number_format((float) ($record->spend_cap - $record->amount_spent ?? 0), 2) }}</span>
                             </div>
 
@@ -131,9 +131,9 @@
                                     <x-heroicon-o-arrow-path class="w-3 h-3 animate-spin" wire:loading wire:target="mountTableAction('add_fund', '{{ $record->id }}')" />
                                     TopUp
                                 </button>
-                                <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
-                                    <x-heroicon-o-arrow-path class="w-3 h-3 text-gray-500" wire:loading.remove wire:target="syncSingle({{ $record->id }})" />
-                                    <x-heroicon-o-arrow-path class="w-3 h-3 text-gray-500 animate-spin" wire:loading wire:target="syncSingle({{ $record->id }})" />
+                                <button type="button" wire:click="syncSingle({{ $record->id }})" wire:target="syncSingle({{ $record->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center gap-1 w-full px-0 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-800/50 rounded transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 disabled:opacity-70">
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 text-gray-500 dark:text-gray-400" wire:loading.remove wire:target="syncSingle({{ $record->id }})" />
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 text-gray-500 dark:text-gray-400 animate-spin" wire:loading wire:target="syncSingle({{ $record->id }})" />
                                     Sync
                                 </button>
                             </div>
