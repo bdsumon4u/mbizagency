@@ -44,7 +44,7 @@
                                                 };
                                                 $statusIcon = $record->status->getIcon();
                                             @endphp
-                                            <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-full text-[10px] lg:text-[12px] font-medium border {{ $statusColor }}">
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 lg:px-2 py-0.5 rounded-sm text-[10px] lg:text-[12px] font-medium border {{ $statusColor }}">
                                                 @svg($statusIcon, 'w-2 h-2 lg:w-3 lg:h-3')
                                                 {{ $record->status->getLabel() }}
                                             </span>
