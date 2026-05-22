@@ -24,6 +24,8 @@ class PricingPage extends Page implements HasTable
 
     protected string $view = 'filament.pages.pricing-page';
 
+    protected static ?string $navigationLabel = 'Dollar Rates';
+
     public function table(Table $table): Table
     {
         return $table

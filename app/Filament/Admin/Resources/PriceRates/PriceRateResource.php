@@ -22,6 +22,8 @@ class PriceRateResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'min_usd';
 
+    protected static ?string $navigationLabel = 'Dollar Rates';
+
     public static function getNavigationGroup(): ?string
     {
         return 'Pricing';
