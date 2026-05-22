@@ -26,7 +26,7 @@
                         <!-- Front: Icon & Info (100% of container width on mobile) -->
                         <div class="w-[100cqw] lg:w-auto lg:flex-1 lg:min-w-0 snap-start flex items-center justify-between gap-2 p-2 lg:p-3 shrink-0">
                             <!-- Left Columns: Icon, Date, Info -->
-                            <div class="flex items-center lg:items-start gap-2 lg:gap-3 flex-1 min-w-0">
+                            <div class="flex items-center lg:items-start gap-1 lg:gap-2 flex-1 min-w-0">
                                 <!-- 1. Icon -->
                                 <div class="flex-shrink-0 w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center rounded-lg bg-red-50 text-[#ff3b5c] border border-red-100/50">
                                     <svg class="w-4 h-4 lg:w-5 lg:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -57,7 +57,7 @@
                                             </button>
                                         </div>
                                         
-                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                        <div class="flex items-center gap-1 mt-0.5">
                                             <span class="text-[10px] lg:text-xs text-gray-400 dark:text-gray-500 font-medium tracking-tight">#<a href="{{ $this->getInvoiceUrl($record) }}" target="_blank" class="hover:text-[#ff3b5c] hover:underline transition-colors">{{ $record->id }}</a></span>
                                             @php
                                                 $statusLabel = $record->status->getLabel();
