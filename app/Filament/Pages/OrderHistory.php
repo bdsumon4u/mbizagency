@@ -135,8 +135,8 @@ class OrderHistory extends Page implements HasTable
                         return Number::currency($order->bdt_amount, 'BDT');
                     })
                     ->searchable(query: function (Builder $query, string $search): Builder {
-                        return $query->where('orders.usd_amount', 'like', "%{$search}%")
-                            ->orWhere('orders.bdt_amount', 'like', "%{$search}%");
+                        return $query->where('orders.usd_amount', $search)
+                            ->orWhere('orders.bdt_amount', $search);
                     }),
                 CurrencyColumn::make('dollar_rate', 'BDT')
                     ->label('Dollar Rate'),
