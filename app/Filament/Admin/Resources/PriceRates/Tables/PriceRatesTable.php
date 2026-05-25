@@ -4,13 +4,16 @@ namespace App\Filament\Admin\Resources\PriceRates\Tables;
 
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class PriceRatesTable
 {
@@ -58,9 +61,40 @@ class PriceRatesTable
             ->recordActions([
                 EditAction::make(),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    BulkAction::make('bulk_edit')
+                        ->label('Bulk Edit')
+                        ->icon('heroicon-o-pencil-square')
+                        ->form([
+                            TextInput::make('min_usd')
+                                ->label('Min USD')
+                                ->numeric()
+                                ->minValue(1),
+                            TextInput::make('dollar_rate')
+                                ->label('Dollar Rate (BDT per USD)')
+                                ->numeric()
+                                ->minValue(1),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $updateData = [];
+
+                            if (isset($data['min_usd']) && $data['min_usd'] !== '') {
+                                $updateData['min_usd'] = $data['min_usd'];
+                            }
+
+                            if (isset($data['dollar_rate']) && $data['dollar_rate'] !== '') {
+                                $updateData['dollar_rate'] = $data['dollar_rate'];
+                            }
+
+                            if (! empty($updateData)) {
+                                foreach ($records as $record) {
+                                    $record->update($updateData);
+                                }
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }
