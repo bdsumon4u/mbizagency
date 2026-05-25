@@ -27,6 +27,14 @@
             <td>{{ number_format((float) $transaction->amount, 2) }}</td>
         </tr>
         <tr>
+            <td><strong>Processing Fee (BDT)</strong></td>
+            <td>{{ number_format((float) $processingFee, 2) }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total Payable (BDT)</strong></td>
+            <td>{{ number_format((float) $totalPayableBdt, 2) }}</td>
+        </tr>
+        <tr>
             <td><strong>Note</strong></td>
             <td>{{ $transaction->note ?: 'No note provided.' }}</td>
         </tr>

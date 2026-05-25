@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\FacebookDollar;
 use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,8 @@ class Order extends Model
             'bdt_amount' => 'decimal:2',
             'processing_fee' => 'decimal:2',
             'dollar_rate' => 'decimal:2',
-            'spend_cap' => 'integer',
+            'old_limit' => FacebookDollar::class,
+            'new_limit' => FacebookDollar::class,
             'source' => OrderSource::class,
             'status' => OrderStatus::class,
             'screenshots' => 'array',

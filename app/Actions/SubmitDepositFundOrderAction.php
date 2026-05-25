@@ -52,7 +52,7 @@ final class SubmitDepositFundOrderAction
 
         $order = $this->createPendingOrder($adAccount, $data, $admin, $pricing, $paymentMethod, $paymentSource);
 
-        if ($admin instanceof Admin) {
+        if ($paymentSource === 'wallet' || $admin instanceof Admin) {
             $this->approveOrderAction->__invoke($order, $admin);
 
             return [

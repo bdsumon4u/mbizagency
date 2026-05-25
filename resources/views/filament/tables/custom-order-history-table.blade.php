@@ -119,9 +119,9 @@
                             </div>
 
                             <!-- 1. Dollar Rate -->
-                            <div class="flex flex-col justify-center w-[70px]">
+                            <div class="flex flex-col justify-center w-[75px]">
                                 <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">$ Rate</span>
-                                <span class="text-[12px] lg:text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 lg:mt-1.5">Tk. {{ number_format($record->dollar_rate, 0) }}</span>
+                                <span class="text-[12px] lg:text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 lg:mt-1.5">Tk. {{ number_format($record->dollar_rate, 2) }}</span>
                             </div>
 
                             @php
@@ -136,7 +136,7 @@
                             <!-- 2. Old Limit -->
                             <div class="flex flex-col justify-center w-[65px] lg:w-[85px]">
                                 <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Old Limit</span>
-                                <span class="text-[12px] lg:text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 lg:mt-1.5">${{ number_format($oldLimit, 0) }}</span>
+                                <span class="text-[12px] lg:text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 lg:mt-1.5">${{ number_format($oldLimit, 2) }}</span>
                                 <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
                                     <div class="bg-gray-400 h-1 rounded-full" style="width: {{ $oldLimitPercent }}%"></div>
                                 </div>
@@ -145,7 +145,7 @@
                             <!-- 3. New Limit -->
                             <div class="flex flex-col justify-center w-[65px] lg:w-[85px]">
                                 <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">New Limit</span>
-                                <span class="text-[12px] lg:text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 lg:mt-1.5">${{ number_format($newLimit, 0) }}</span>
+                                <span class="text-[12px] lg:text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 lg:mt-1.5">${{ number_format($newLimit, 2) }}</span>
                                 <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
                                     <div class="bg-green-500 h-1 rounded-full" style="width: 100%"></div>
                                 </div>
@@ -154,7 +154,7 @@
                             <!-- 4. Balance -->
                             <div class="flex flex-col justify-center w-[65px] lg:w-[85px]">
                                 <span class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Balance</span>
-                                <span class="text-[12px] lg:text-sm font-bold text-green-600 mt-1 lg:mt-1.5">${{ number_format($balance, 0) }}</span>
+                                <span class="text-[12px] lg:text-sm font-bold text-green-600 mt-1 lg:mt-1.5">${{ number_format($balance, 2) }}</span>
                                 <div class="w-full bg-gray-200 rounded-full h-1 mt-1 lg:mt-1.5">
                                     <div class="bg-blue-500 h-1 rounded-full" style="width: {{ $balancePercent }}%"></div>
                                 </div>

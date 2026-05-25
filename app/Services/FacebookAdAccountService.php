@@ -74,6 +74,7 @@ final class FacebookAdAccountService
         }
 
         $details = (array) $response->json();
+        info('AdAccount details: ', $details);
         $adAccount->update($this->mapAdAccountData($details));
     }
 
@@ -125,9 +126,9 @@ final class FacebookAdAccountService
             'name' => (string) ($account['name'] ?? $account['id'] ?? ''),
             'status' => (int) ($account['account_status'] ?? AdAccountStatus::ACTIVE->value),
             'currency' => (string) ($account['currency'] ?? 'USD'),
-            'spend_cap' => (int) ($account['spend_cap'] ?? 0),
-            'amount_spent' => (int) ($account['amount_spent'] ?? 0),
-            'balance' => (int) ($account['balance'] ?? 0),
+            'spend_cap' => (float) ($account['spend_cap'] ?? 0),
+            'amount_spent' => (float) ($account['amount_spent'] ?? 0),
+            'balance' => (float) ($account['balance'] ?? 0),
             'payment_method' => (string) ($account['funding_source_details']['display_string'] ?? ''),
             'timezone' => (string) ($account['timezone_name'] ?? ''),
             'disable_reason' => AdAccountDisableReason::tryFrom((int) ($account['disable_reason'] ?? 0)),

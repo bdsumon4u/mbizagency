@@ -10,12 +10,14 @@ enum WalletTransactionType: string implements HasColor, HasIcon, HasLabel
 {
     case DEPOSIT = 'deposit';
     case AD_ACCOUNT_DEPOSIT = 'ad_account_deposit';
+    case REFUND = 'refund';
 
     public function getLabel(): string
     {
         return match ($this) {
             self::DEPOSIT => 'Wallet Deposit',
             self::AD_ACCOUNT_DEPOSIT => 'Ad Account Deposit',
+            self::REFUND => 'Refund',
         };
     }
 
@@ -24,6 +26,7 @@ enum WalletTransactionType: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::DEPOSIT => 'heroicon-o-arrow-down-tray',
             self::AD_ACCOUNT_DEPOSIT => 'heroicon-o-arrow-up-right',
+            self::REFUND => 'heroicon-o-arrow-uturn-left',
         };
     }
 
@@ -32,6 +35,7 @@ enum WalletTransactionType: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::DEPOSIT => 'success',
             self::AD_ACCOUNT_DEPOSIT => 'warning',
+            self::REFUND => 'info',
         };
     }
 }

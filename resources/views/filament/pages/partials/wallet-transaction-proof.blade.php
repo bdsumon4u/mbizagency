@@ -3,9 +3,12 @@
 @endphp
 
 <div class="space-y-4">
-    <div class="text-sm">
+    <div class="text-sm space-y-1">
+        <p><strong>User:</strong> {{ $record->user?->name ?? 'N/A' }}</p>
         <p><strong>Payment Method:</strong> {{ $record->paymentMethod?->name ?? 'N/A' }}</p>
         <p><strong>Amount:</strong> {{ number_format((float) $record->amount, 2) }} BDT</p>
+        <p><strong>Processing Fee:</strong> {{ number_format((float) $record->processing_fee, 2) }} BDT</p>
+        <p><strong>Payable Amount:</strong> {{ number_format((float) $record->payable_amount, 2) }} BDT</p>
         @if($record->note)
             <p><strong>Note:</strong> {{ $record->note }}</p>
         @endif

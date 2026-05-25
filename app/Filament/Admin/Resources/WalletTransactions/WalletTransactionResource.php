@@ -43,8 +43,8 @@ class WalletTransactionResource extends Resource
     {
         return [
             'index' => ListWalletTransactions::route('/'),
-            'create' => CreateWalletTransaction::route('/create'),
-            'edit' => EditWalletTransaction::route('/{record}/edit'),
+            // 'create' => CreateWalletTransaction::route('/create'),
+            // 'edit' => EditWalletTransaction::route('/{record}/edit'),
         ];
     }
 }

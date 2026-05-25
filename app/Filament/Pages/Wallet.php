@@ -2,10 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\SendPendingWalletDepositApprovalEmailsAction;
 use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
 use App\Filament\Forms\Components\PaymentMethodDetails;
-use App\Mail\NewWalletDepositPendingApprovalMail;
 use App\Models\WalletTransaction;
 use DB;
 use Filament\Actions\Action;
@@ -21,8 +21,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
-use Mail;
 
 class Wallet extends Page implements HasTable
 {
@@ -55,14 +56,18 @@ class Wallet extends Page implements HasTable
                             })
                             ->required()
                             ->searchable(),
-                        PaymentMethodDetails::make('selected_payment_method_details')
-                            ->paymentMethods(PaymentMethodDetails::getPaymentMethodsForView($user))
-                            ->visibleJs('!! $get(\'payment_method_id\')'),
                         TextInput::make('amount')
                             ->label('Amount (BDT)')
                             ->numeric()
                             ->minValue(1)
-                            ->required(),
+                            ->required()
+                            ->live(),
+                        ViewField::make('deposit_summary')
+                            ->view('filament.forms.components.deposit-summary')
+                            ->visibleJs('!! $get(\'amount\') && !! $get(\'payment_method_id\')'),
+                        PaymentMethodDetails::make('selected_payment_method_details')
+                            ->paymentMethods(PaymentMethodDetails::getPaymentMethodsForView($user))
+                            ->visibleJs('!! $get(\'payment_method_id\')'),
                         ViewField::make('screenshots')
                             ->view('filament.forms.components.custom-file-upload')
                             ->required(),
@@ -83,12 +88,7 @@ class Wallet extends Page implements HasTable
                                 'screenshots' => $this->handleScreenshots($data['screenshots'] ?? []),
                             ]);
 
-                            // Send approval email
-                            $approveUrl = url('/admin/wallet-transactions');
-                            $rejectUrl = url('/admin/wallet-transactions');
-
-                            Mail::to(config('mail.admin_address', 'admin@mbizcrm.test'))
-                                ->send(new NewWalletDepositPendingApprovalMail($transaction, $approveUrl, $rejectUrl));
+                            app(SendPendingWalletDepositApprovalEmailsAction::class)($transaction);
                         });
 
                         Notification::make()
@@ -109,6 +109,15 @@ class Wallet extends Page implements HasTable
                 TextColumn::make('amount')
                     ->money('BDT')
                     ->sortable(),
+                TextColumn::make('paymentMethod.name')
+                    ->label('Payment Method')
+                    ->searchable(),
+                TextColumn::make('processing_fee')
+                    ->money('BDT')
+                    ->sortable(),
+                TextColumn::make('payable_amount')
+                    ->money('BDT')
+                    ->sortable(),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable(),
@@ -116,6 +125,21 @@ class Wallet extends Page implements HasTable
                     ->label('Balance')
                     ->money('BDT')
                     ->sortable(),
+            ])
+            ->recordAction('viewProof')
+            ->recordActions([
+                Action::make('viewProof')
+                    ->label('Proof of Payment')
+                    ->icon('heroicon-o-photo')
+                    ->color('info')
+                    ->slideOver()
+                    ->modalWidth(Width::Medium)
+                    ->modalHeading('Proof of Payment')
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
+                    ->modalContent(fn (WalletTransaction $record) => view('filament.pages.partials.wallet-transaction-proof', [
+                        'record' => $record,
+                    ])),
             ]);
     }
 
@@ -127,6 +151,7 @@ class Wallet extends Page implements HasTable
 
         $finalPaths = [];
         foreach ($screenshots as $screenshot) {
+            // Handle UploadedFile objects (e.g. TemporaryUploadedFile from Livewire)
             if ($screenshot instanceof UploadedFile) {
                 try {
                     $path = $screenshot->store('wallet/screenshots', 'public');
@@ -140,16 +165,19 @@ class Wallet extends Page implements HasTable
                 continue;
             }
 
+            // Ensure screenshot is a string for further checks
             if (! is_string($screenshot)) {
                 continue;
             }
 
+            // If it's already a permanent path, keep it
             if (! str_starts_with($screenshot, 'livewire-file:')) {
                 $finalPaths[] = $screenshot;
 
                 continue;
             }
 
+            // Handle Livewire temporary upload from string (if applicable)
             try {
                 $tempPath = str_replace('livewire-file:', '', $screenshot);
                 $newPath = 'wallet/screenshots/'.basename($tempPath);

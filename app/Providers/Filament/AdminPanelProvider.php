@@ -6,7 +6,9 @@ use App\Filament\Admin\Pages\Auth\LoginPage;
 use App\Filament\Components\Widgets\PendingOrdersTableWidget;
 use App\Filament\Pages\OrderHistory;
 use App\Http\Controllers\ApproveOrderController;
+use App\Http\Controllers\ApproveWalletTransactionController;
 use App\Http\Controllers\RejectOrderController;
+use App\Http\Controllers\RejectWalletTransactionController;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -71,6 +73,12 @@ class AdminPanelProvider extends PanelProvider
                 Route::get('/orders/{order}/reject', RejectOrderController::class)
                     ->middleware('signed')
                     ->name('orders.reject');
+                Route::get('/wallet-transactions/{transaction}/approve', ApproveWalletTransactionController::class)
+                    ->middleware('signed')
+                    ->name('wallet-transactions.approve');
+                Route::get('/wallet-transactions/{transaction}/reject', RejectWalletTransactionController::class)
+                    ->middleware('signed')
+                    ->name('wallet-transactions.reject');
             })
             ->authGuard('admin')
             ->spa();

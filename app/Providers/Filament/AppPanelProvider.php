@@ -31,6 +31,7 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
+            ->darkMode(false)
             ->viteTheme('resources/css/filament/app/theme.css')
             ->login(LoginPage::class)
             ->passwordReset()

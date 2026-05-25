@@ -19,7 +19,8 @@ class UserForm
                     ->required(),
                 TextInput::make('page_name')
                     ->label('Company Name')
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->required(),
                 TextInput::make('email')
                     ->label('Email address')
                     ->email()

@@ -19,7 +19,7 @@ class AdAccountSpendCapService
             throw new RuntimeException('Business manager not found for this ad account.');
         }
 
-        $validation = $this->validateSpendLimit($adAccount->spend_cap, (string) $adAccount->currency);
+        $validation = $this->validateSpendLimit((float) $adAccount->spend_cap, (string) $adAccount->currency);
 
         if (! $validation['valid']) {
             throw new RuntimeException(implode("\n", $validation['errors']));
@@ -28,7 +28,7 @@ class AdAccountSpendCapService
         $response = $this->setSpendLimit(
             $businessManager,
             (string) $adAccount->act_id,
-            $adAccount->spend_cap,
+            (float) $adAccount->spend_cap,
         );
 
         if (! ($response['success'] ?? false)) {
@@ -65,11 +65,10 @@ class AdAccountSpendCapService
     private function setSpendLimit(BusinessManager $businessManager, string $actId, float $targetSpendLimit): array
     {
         $adAccountId = str_starts_with($actId, 'act_') ? $actId : 'act_'.$actId;
-        $spendCap = (int) round($targetSpendLimit);
 
         $response = Http::post('https://graph.facebook.com/'.self::GRAPH_API_VERSION."/{$adAccountId}", $data = [
             'access_token' => $businessManager->access_token,
-            'spend_cap' => $spendCap,
+            'spend_cap' => $targetSpendLimit,
         ]);
 
         info('setSpendLimit response: '.json_encode($response->json()), $data);
@@ -83,7 +82,7 @@ class AdAccountSpendCapService
 
         return [
             'success' => true,
-            'spend_limit' => $spendCap,
+            'spend_limit' => $targetSpendLimit,
         ];
     }
 }

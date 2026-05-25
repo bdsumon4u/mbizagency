@@ -44,4 +44,17 @@ class WalletTransaction extends Model
     {
         return $this->belongsTo(AdAccount::class);
     }
+
+    public function getProcessingFeeAttribute(): float
+    {
+        $paymentMethod = $this->paymentMethod;
+        $feePercent = $paymentMethod ? (float) $paymentMethod->processing_fee_percent : 0.0;
+
+        return round(((float) $this->amount) * ($feePercent / 100), 2);
+    }
+
+    public function getPayableAmountAttribute(): float
+    {
+        return ((float) $this->amount) + $this->processing_fee;
+    }
 }
