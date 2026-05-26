@@ -22,6 +22,7 @@ class BankAccountsRelationManager extends RelationManager
         return PaymentMethodsTable::configure($table)
             ->headerActions([
                 AttachAction::make()
+                    ->multiple()
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns(['name', 'account_name', 'account_number'])
                     ->recordTitle(function (PaymentMethod $record): string {
