@@ -81,8 +81,8 @@ class ApproveOrderAction
                 'admin_id' => $admin?->id,
                 'status' => OrderStatus::APPROVED,
                 'balance' => $adAccount->spend_cap - $adAccount->amount_spent,
-                'old_limit' => $oldSpendCap,
-                'new_limit' => $adAccount->spend_cap,
+                'old_limit' => $oldSpendCap * 100,
+                'new_limit' => $adAccount->spend_cap * 100,
                 'approved_at' => now(),
             ]);
 

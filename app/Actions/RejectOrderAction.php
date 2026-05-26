@@ -77,8 +77,8 @@ class RejectOrderAction
                 'admin_id' => $admin?->id,
                 'status' => OrderStatus::REJECTED,
                 'balance' => $adAccount->spend_cap - $adAccount->amount_spent,
-                'old_limit' => $oldSpendCap,
-                'new_limit' => $adAccount->spend_cap,
+                'old_limit' => $oldSpendCap * 100,
+                'new_limit' => $adAccount->spend_cap * 100,
             ]);
 
             return $lockedOrder->refresh();
