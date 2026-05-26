@@ -8,13 +8,16 @@
 .fi-topbar-start {
     @apply block;
 }
+
 .fi-sidebar-header {
     @apply border-b border-gray-200 dark:border-gray-800;
 }
+
 .fi-ta-text:not(.fi-inline) {
     padding-inline: calc(var(--spacing) * 1);
     padding-block: calc(var(--spacing) * 1);
 }
+
 .ad-accounts-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
     content: 'Ad Accounts';
     display: inline-flex;
@@ -40,6 +43,30 @@
     color: var(--gray-950);
     white-space: nowrap;
 }
+
+.pending-wallet-transactions-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    content: 'Pending Wallet Transactions';
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+    --tw-font-weight: var(--font-weight-semibold);
+    color: var(--gray-950);
+    white-space: nowrap;
+}
+
+.wallet-transactions-table .fi-ta-content {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overflow-y: hidden;
+}
+
+.wallet-transactions-table .fi-ta-content::-webkit-scrollbar {
+    display: none;
+}
+
 .orders-modal-window .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
     content: 'Order History';
     display: inline-flex;
@@ -52,13 +79,16 @@
     color: var(--gray-950);
     white-space: nowrap;
 }
+
 .fi-ta-cell:has(.fi-ta-actions) {
     padding-inline: calc(var(--spacing) * 1);
     padding-block: calc(var(--spacing) * 1);
 }
+
 .fi-ta-cell:has(.fi-ta-actions):first-of-type {
     padding-inline-start: calc(var(--spacing) * 2);
 }
+
 .add-fund-button {
     padding: 0;
     box-shadow: none;
@@ -71,9 +101,11 @@
 }
 
 .dark .pending-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
+.dark .pending-wallet-transactions-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
 .dark .orders-modal-window .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
 .dark .ad-accounts-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
-.dark .latest-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+.dark .latest-orders-table .fi-ta-header-toolbar::before,
+.dark .latest-wallet-transactions-table .fi-ta-header-toolbar::before {
     color: white;
 }
 
@@ -99,8 +131,9 @@
 .orders-modal-window .fi-modal-footer {
     @apply p-2 lg:p-4;
 }
-.latest-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
-    content: 'Latest Orders';
+
+.latest-orders-table .fi-ta-header-toolbar::before {
+    content: 'Recent Orders';
     display: inline-flex;
     align-items: center;
     font-size: var(--text-base);
@@ -112,11 +145,26 @@
     white-space: nowrap;
 }
 
-.latest-orders-table {
+.latest-wallet-transactions-table .fi-ta-header-toolbar::before {
+    content: 'Recent Wallet Transactions';
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+    --tw-font-weight: var(--font-weight-semibold);
+    color: var(--gray-950);
+    white-space: nowrap;
+}
+
+.latest-orders-table,
+.latest-wallet-transactions-table {
     position: relative !important;
 }
 
-.latest-orders-table .fi-ta-header {
+.latest-orders-table .fi-ta-header,
+.latest-wallet-transactions-table .fi-ta-header {
     position: absolute !important;
     right: 3.5rem !important;
     top: 8px !important;
@@ -130,10 +178,12 @@
     pointer-events: none !important;
 }
 
-.latest-orders-table .fi-ta-header > * {
+.latest-orders-table .fi-ta-header>*,
+.latest-wallet-transactions-table .fi-ta-header>* {
     pointer-events: auto !important;
 }
 
-.latest-orders-table .fi-ta-header-toolbar {
+.latest-orders-table .fi-ta-header-toolbar,
+.latest-wallet-transactions-table .fi-ta-header-toolbar {
     border-top: none !important;
 }

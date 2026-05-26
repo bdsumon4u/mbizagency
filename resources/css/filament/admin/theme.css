@@ -28,6 +28,28 @@
     white-space: nowrap;
 }
 
+.pending-wallet-transactions-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
+    content: 'Pending Wallet Transactions';
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+    --tw-font-weight: var(--font-weight-semibold);
+    color: var(--gray-950);
+    white-space: nowrap;
+}
+
+.wallet-transactions-table .fi-ta-content {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overflow-y: hidden;
+}
+.wallet-transactions-table .fi-ta-content::-webkit-scrollbar {
+    display: none;
+}
+
 .orders-modal-window .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
     content: 'Order History';
     display: inline-flex;
@@ -52,6 +74,7 @@
 }
 
 .dark .pending-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
+.dark .pending-wallet-transactions-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
 .dark .orders-modal-window .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
 .dark .ad-accounts-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before,
 .dark .latest-orders-table .fi-ta-header-toolbar>.fi-ta-actions.fi-align-start::before {
