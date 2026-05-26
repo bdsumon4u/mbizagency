@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Admin\Pages\Auth\LoginPage;
 use App\Filament\Components\Widgets\PendingOrdersTableWidget;
 use App\Filament\Pages\OrderHistory;
+use App\Filament\Widgets\OrderHistoryStatsWidget;
 use App\Http\Controllers\ApproveOrderController;
 use App\Http\Controllers\ApproveWalletTransactionController;
 use App\Http\Controllers\RejectOrderController;
@@ -51,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\Filament\Admin\Widgets')
             ->widgets([
                 PendingOrdersTableWidget::class,
+                OrderHistoryStatsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

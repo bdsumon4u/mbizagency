@@ -55,7 +55,6 @@ class OrderHistory extends Page implements HasTable
                 return $query->whereBelongsTo($user);
             });
 
-        $totalDeposit = (clone $query)->sum('usd_amount');
         $pendingDeposit = (clone $query)->where('status', OrderStatus::PENDING)->sum('usd_amount');
         $approvedDeposit = (clone $query)->where('status', OrderStatus::APPROVED)->sum('usd_amount');
         $thisMonthDeposit = (clone $query)
@@ -63,15 +62,19 @@ class OrderHistory extends Page implements HasTable
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('usd_amount');
+        $todayDeposit = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereDate('created_at', now()->toDateString())
+            ->sum('usd_amount');
 
         return [
             [
-                'label' => 'Total Deposit',
-                'value' => '$'.number_format($totalDeposit, 2),
-                'subtext' => 'All Orders',
-                'icon' => 'heroicon-o-banknotes',
-                'icon_color' => 'text-indigo-500',
-                'icon_bg' => 'bg-indigo-50',
+                'label' => 'Approved Deposit',
+                'value' => '$'.number_format($approvedDeposit, 2),
+                'subtext' => 'Ready to Use',
+                'icon' => 'heroicon-o-check-circle',
+                'icon_color' => 'text-green-500',
+                'icon_bg' => 'bg-green-50',
             ],
             [
                 'label' => 'Pending Deposit',
@@ -82,20 +85,20 @@ class OrderHistory extends Page implements HasTable
                 'icon_bg' => 'bg-orange-50',
             ],
             [
-                'label' => 'Approved Deposit',
-                'value' => '$'.number_format($approvedDeposit, 2),
-                'subtext' => 'Ready to Use',
-                'icon' => 'heroicon-o-check-circle',
-                'icon_color' => 'text-green-500',
-                'icon_bg' => 'bg-green-50',
-            ],
-            [
                 'label' => 'This Month',
                 'value' => '$'.number_format($thisMonthDeposit, 2),
                 'subtext' => now()->format('F Y'),
                 'icon' => 'heroicon-o-calendar',
                 'icon_color' => 'text-blue-500',
                 'icon_bg' => 'bg-blue-50',
+            ],
+            [
+                'label' => 'Today',
+                'value' => '$'.number_format($todayDeposit, 2),
+                'subtext' => now()->format('M d, Y'),
+                'icon' => 'heroicon-o-bolt',
+                'icon_color' => 'text-indigo-500',
+                'icon_bg' => 'bg-indigo-50',
             ],
         ];
     }
