@@ -27,7 +27,7 @@ jobs:
         run: |
           echo "Deploying to Server"
           ssh -vvv -o "IdentitiesOnly=yes" -i /tmp/private_key -p 22 cybejryn@agency.cyber32.com \
-          cd agency.cyber32.com && git pull origin main && ./php artisan migrate --force && ./php artisan optimize
+            "cd agency.cyber32.com && git pull origin main && ./php artisan migrate --force && ./php artisan optimize"
 
       - name: Cleanup
         run: rm /tmp/private_key
