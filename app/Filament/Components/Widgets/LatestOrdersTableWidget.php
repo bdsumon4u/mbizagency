@@ -93,4 +93,9 @@ class LatestOrdersTableWidget extends TableWidget
 
         return $table;
     }
+
+    public static function canView(): bool
+    {
+        return Filament::getCurrentPanel()?->getId() !== 'admin' && static::getEloquentQuery()->exists();
+    }
 }
