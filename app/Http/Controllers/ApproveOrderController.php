@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ApproveOrderAction;
+use App\Filament\Pages\OrderHistory;
 use App\Models\Admin;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
@@ -33,16 +34,16 @@ class ApproveOrderController extends Controller
             app(ApproveOrderAction::class)($order, $authenticatedAdmin);
         } catch (RuntimeException $exception) {
             return redirect()
-                ->route('filament.admin.pages.order-history')
+                ->to(OrderHistory::getUrl(panel: 'admin'))
                 ->with('error', $exception->getMessage());
         } catch (Throwable $exception) {
             return redirect()
-                ->route('filament.admin.pages.order-history')
+                ->to(OrderHistory::getUrl(panel: 'admin'))
                 ->with('error', 'Order approval failed: '.$exception->getMessage());
         }
 
         return redirect()
-            ->route('filament.admin.pages.order-history')
+            ->to(OrderHistory::getUrl(panel: 'admin'))
             ->with('success', 'Order approved successfully.');
     }
 }

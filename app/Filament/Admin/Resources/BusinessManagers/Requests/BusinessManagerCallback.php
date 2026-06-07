@@ -84,6 +84,6 @@ class BusinessManagerCallback
 
     private function getAdminBusinessManagersUrl(): string
     {
-        return route('filament.admin.resources.business-managers.index');
+        return BusinessManagerResource::getUrl(panel: 'admin');
     }
 }

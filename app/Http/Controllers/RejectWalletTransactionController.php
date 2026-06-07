@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\WalletTransactionStatus;
+use App\Filament\Pages\Wallet;
 use App\Models\Admin;
 use App\Models\WalletTransaction;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,7 @@ class RejectWalletTransactionController extends Controller
 
         if ($transaction->status !== WalletTransactionStatus::PENDING) {
             return redirect()
-                ->route('filament.admin.resources.wallet-transactions.index')
+                ->to(Wallet::getUrl(panel: 'admin'))
                 ->with('error', 'This transaction has already been processed.');
         }
 
@@ -41,12 +42,12 @@ class RejectWalletTransactionController extends Controller
             ]);
         } catch (Throwable $exception) {
             return redirect()
-                ->route('filament.admin.resources.wallet-transactions.index')
+                ->to(Wallet::getUrl(panel: 'admin'))
                 ->with('error', 'Wallet transaction rejection failed: '.$exception->getMessage());
         }
 
         return redirect()
-            ->route('filament.admin.resources.wallet-transactions.index')
+            ->to(Wallet::getUrl(panel: 'admin'))
             ->with('success', 'Wallet transaction rejected successfully.');
     }
 }

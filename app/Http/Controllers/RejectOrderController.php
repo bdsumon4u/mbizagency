@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\RejectOrderAction;
+use App\Filament\Pages\OrderHistory;
 use App\Models\Admin;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
@@ -32,12 +33,12 @@ class RejectOrderController extends Controller
             app(RejectOrderAction::class)($order, $authenticatedAdmin);
         } catch (Throwable $exception) {
             return redirect()
-                ->route('filament.admin.pages.order-history')
+                ->to(OrderHistory::getUrl(panel: 'admin'))
                 ->with('error', 'Order rejection failed: '.$exception->getMessage());
         }
 
         return redirect()
-            ->route('filament.admin.pages.order-history')
+            ->to(OrderHistory::getUrl(panel: 'admin'))
             ->with('success', 'Order rejected successfully.');
     }
 }
