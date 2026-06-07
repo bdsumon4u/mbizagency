@@ -44,15 +44,7 @@ class Wallet extends Page implements HasTable
 
     protected static ?int $navigationSort = 2;
 
-    public static function getNavigationLabel(): string
-    {
-        return self::isAdminPanel() ? 'Wallet Transactions' : 'My Wallet';
-    }
-
-    public function getHeading(): string|Htmlable
-    {
-        return self::isAdminPanel() ? 'Wallet Transactions' : 'My Wallet';
-    }
+    protected static ?string $navigationLabel = 'Wallet Transactions';
 
     public static function isAdminPanel(): bool
     {
@@ -207,62 +199,9 @@ class Wallet extends Page implements HasTable
         $user = Filament::auth()->user();
 
         return self::configureTable($table)
-            ->query(WalletTransaction::query()->when(! self::isAdminPanel(), fn ($q) => $q->whereBelongsTo($user))->when(self::isAdminPanel(), fn ($q) => $q->with('user')))
-            ->heading('Wallet Transactions')
-            ->description(self::isAdminPanel() ? null : new HtmlString('Balance: <strong class="text-primary-600 dark:text-primary-400 font-bold" style="font-size: 1.1em;">'.number_format($user->wallet_balance ?? 0, 2).' BDT</strong>'))
-            ->headerActions(self::isAdminPanel() ? [] : [
-                Action::make('deposit')
-                    ->label('Add Funds')
-                    ->icon('heroicon-o-plus')
-                    ->modalWidth(Width::Large)
-                    ->schema(fn () => [
-                        Select::make('payment_method_id')
-                            ->label('Payment Method')
-                            ->options(function () use ($user) {
-                                return $user->paymentMethods()->active()->pluck('name', 'payment_methods.id');
-                            })
-                            ->required()
-                            ->searchable(),
-                        TextInput::make('amount')
-                            ->label('Amount (BDT)')
-                            ->numeric()
-                            ->minValue(1)
-                            ->required()
-                            ->live(),
-                        ViewField::make('deposit_summary')
-                            ->view('filament.forms.components.deposit-summary')
-                            ->visibleJs('!! $get(\'amount\') && !! $get(\'payment_method_id\')'),
-                        PaymentMethodDetails::make('selected_payment_method_details')
-                            ->paymentMethods(PaymentMethodDetails::getPaymentMethodsForView($user))
-                            ->visibleJs('!! $get(\'payment_method_id\')'),
-                        ViewField::make('screenshots')
-                            ->view('filament.forms.components.custom-file-upload')
-                            ->required(),
-                        Textarea::make('note')
-                            ->label('Note (optional)')
-                            ->maxLength(500),
-                    ])
-                    ->action(function (array $data) use ($user) {
-                        DB::transaction(function () use ($data, $user) {
-                            $transaction = WalletTransaction::create([
-                                'user_id' => $user->id,
-                                'type' => WalletTransactionType::DEPOSIT,
-                                'amount' => $data['amount'],
-                                'payment_method_id' => $data['payment_method_id'],
-                                'status' => WalletTransactionStatus::PENDING,
-                                'note' => $data['note'] ?? null,
-                                'screenshots' => $this->handleScreenshots($data['screenshots'] ?? []),
-                            ]);
-
-                            app(SendPendingWalletDepositApprovalEmailsAction::class)($transaction);
-                        });
-
-                        Notification::make()
-                            ->title('Deposit request submitted for approval.')
-                            ->success()
-                            ->send();
-                    }), // hide deposit button on admin panel
-            ]);
+            ->query(WalletTransaction::query()->when(!self::isAdminPanel(), fn($q) => $q->whereBelongsTo($user))->when(self::isAdminPanel(), fn($q) => $q->with('user')))
+            ->heading(null)
+            ->extraAttributes(['data-balance' => number_format($user->wallet_balance ?? 0, 2)]);
     }
 
     private function handleScreenshots(array $screenshots): ?array

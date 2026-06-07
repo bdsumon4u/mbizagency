@@ -48,12 +48,12 @@
             </div>
         </div>
 
-        @if(App\Filament\Components\Widgets\LatestWalletTransactionsTableWidget::canView())
-            @livewire(App\Filament\Components\Widgets\LatestWalletTransactionsTableWidget::class)
-        @endif
-
         @if(App\Filament\Components\Widgets\LatestOrdersTableWidget::canView())
             @livewire(App\Filament\Components\Widgets\LatestOrdersTableWidget::class)
+        @endif
+
+        @if(App\Filament\Components\Widgets\LatestWalletTransactionsTableWidget::canView())
+            @livewire(App\Filament\Components\Widgets\LatestWalletTransactionsTableWidget::class)
         @endif
 
         {{ $this->table }}

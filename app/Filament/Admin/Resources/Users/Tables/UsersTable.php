@@ -31,6 +31,10 @@ class UsersTable
                     ->label('Accounts')
                     ->badge()
                     ->sortable(),
+                TextColumn::make('wallet_balance')
+                    ->label('Wallet Balance')
+                    ->money('BDT')
+                    ->sortable(),
                 DateTimeColumn::make('email_verified_at')
                     ->sortable(),
                 DateTimeColumn::make('created_at')
