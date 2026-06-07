@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\URL;
 
 class PendingOrdersTableWidget extends TableWidget
 {
+    protected static ?int $sort = 1;
+
     protected static bool $isDiscovered = false;
 
     protected int|string|array $columnSpan = 'full';
@@ -38,8 +40,6 @@ class PendingOrdersTableWidget extends TableWidget
     {
         return Filament::getCurrentPanel()?->getId() === 'admin' || static::getEloquentQuery()->exists();
     }
-
-    protected static ?int $sort = -1;
 
     public ?int $adAccountId = null;
 

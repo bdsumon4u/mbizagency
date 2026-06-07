@@ -12,11 +12,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PendingWalletTransactionsTableWidget extends TableWidget
 {
+    protected static ?int $sort = 2;
+
     protected static bool $isDiscovered = false;
 
     protected int|string|array $columnSpan = 'full';
-
-    protected static ?int $sort = -2;
 
     public static function getEloquentQuery(): Builder
     {
