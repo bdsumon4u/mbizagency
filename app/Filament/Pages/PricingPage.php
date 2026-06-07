@@ -26,6 +26,8 @@ class PricingPage extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Dollar Rates';
 
+    protected static ?int $navigationSort = 4;
+
     public function table(Table $table): Table
     {
         return $table

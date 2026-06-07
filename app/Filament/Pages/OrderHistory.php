@@ -40,6 +40,8 @@ class OrderHistory extends Page implements HasTable
 
     protected ?string $heading = '';
 
+    protected static ?int $navigationSort = 1;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected string $view = 'filament.pages.order-history';

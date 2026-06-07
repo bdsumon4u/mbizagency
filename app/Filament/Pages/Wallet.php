@@ -42,6 +42,8 @@ class Wallet extends Page implements HasTable
 
     protected ?string $heading = 'Wallet';
 
+    protected static ?int $navigationSort = 2;
+
     public static function getNavigationLabel(): string
     {
         return self::isAdminPanel() ? 'Wallet Transactions' : 'My Wallet';

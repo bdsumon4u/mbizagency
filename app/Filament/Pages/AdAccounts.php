@@ -45,6 +45,8 @@ class AdAccounts extends Page implements HasTable
 
     protected string $view = 'filament.pages.ad-accounts';
 
+    protected static ?int $navigationSort = 3;
+
     public function depositAction(): Action
     {
         $user = Filament::auth()->user();
