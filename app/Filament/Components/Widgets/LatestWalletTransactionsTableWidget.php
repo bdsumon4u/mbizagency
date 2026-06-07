@@ -28,7 +28,7 @@ class LatestWalletTransactionsTableWidget extends TableWidget
 
     public static function canView(): bool
     {
-        return Filament::getCurrentPanel()?->getId() !== 'admin' && static::getEloquentQuery()->exists();
+        return false; // Filament::getCurrentPanel()?->getId() !== 'admin' && static::getEloquentQuery()->exists();
     }
 
     public function table(Table $table): Table

@@ -11,6 +11,7 @@ use Filament\Support\Enums\Width;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\URL;
 
 class LatestOrdersTableWidget extends TableWidget
@@ -28,18 +29,21 @@ class LatestOrdersTableWidget extends TableWidget
         );
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return Order::query()
+            ->with('adAccount')
+            ->whereBelongsTo(Filament::auth()->user())
+            ->latest()
+            ->limit(3);
+    }
+
     public function table(Table $table): Table
     {
         $table = OrderHistory::configureTable($table)
             ->heading(null)
             ->extraAttributes(['class' => 'latest-orders-table'])
-            ->query(
-                Order::query()
-                    ->with('adAccount')
-                    ->whereBelongsTo(Filament::auth()->user())
-                    ->latest()
-                    ->limit(3)
-            )
+            ->query(self::getEloquentQuery())
             ->recordAction('orders')
             ->recordActions([
                 Action::make('orders')
@@ -96,6 +100,6 @@ class LatestOrdersTableWidget extends TableWidget
 
     public static function canView(): bool
     {
-        return Filament::getCurrentPanel()?->getId() !== 'admin' && static::getEloquentQuery()->exists();
+        return false; // Filament::getCurrentPanel()?->getId() !== 'admin' && static::getEloquentQuery()->exists();
     }
 }
