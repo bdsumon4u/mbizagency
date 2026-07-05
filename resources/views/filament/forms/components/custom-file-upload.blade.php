@@ -18,6 +18,7 @@
                     this.isUploading = false;
                     this.progress = 0;
                     this.previews = [...this.previews, ...newPreviews];
+                    this.state = [...(this.state ?? []), ...uploadedFiles];
                 },
                 (error) => {
                     this.isUploading = false;
@@ -34,8 +35,8 @@
             if (this.previews[index]) {
                 URL.revokeObjectURL(this.previews[index]);
             }
-            this.state.splice(index, 1);
-            this.previews.splice(index, 1);
+            (this.state ?? []).splice(index, 1);
+            (this.previews ?? []).splice(index, 1);
         }
     }" class="custom-file-upload-container">
         <div class="flex items-center justify-center w-full">
