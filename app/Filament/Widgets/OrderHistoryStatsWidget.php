@@ -25,22 +25,58 @@ class OrderHistoryStatsWidget extends Widget
                 return $query->whereBelongsTo($user);
             });
 
-        $pendingDeposit = (clone $query)->where('status', OrderStatus::PENDING)->sum('usd_amount');
-        $approvedDeposit = (clone $query)->where('status', OrderStatus::APPROVED)->sum('usd_amount');
-        $thisMonthDeposit = (clone $query)
+        $pendingDepositUsd = (clone $query)->where('status', OrderStatus::PENDING)->sum('usd_amount');
+        $pendingDepositBdt = (clone $query)->where('status', OrderStatus::PENDING)->sum('bdt_amount');
+
+        $approvedDepositUsd = (clone $query)->where('status', OrderStatus::APPROVED)->sum('usd_amount');
+        $approvedDepositBdt = (clone $query)->where('status', OrderStatus::APPROVED)->sum('bdt_amount');
+
+        $thisMonthDepositUsd = (clone $query)
             ->where('status', OrderStatus::APPROVED)
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('usd_amount');
-        $todayDeposit = (clone $query)
+        $thisMonthDepositBdt = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('bdt_amount');
+
+        $lastMonth = now()->startOfMonth()->subMonth();
+        $lastMonthDepositUsd = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereMonth('created_at', $lastMonth->month)
+            ->whereYear('created_at', $lastMonth->year)
+            ->sum('usd_amount');
+        $lastMonthDepositBdt = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereMonth('created_at', $lastMonth->month)
+            ->whereYear('created_at', $lastMonth->year)
+            ->sum('bdt_amount');
+
+        $todayDepositUsd = (clone $query)
             ->where('status', OrderStatus::APPROVED)
             ->whereDate('created_at', now()->toDateString())
             ->sum('usd_amount');
+        $todayDepositBdt = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereDate('created_at', now()->toDateString())
+            ->sum('bdt_amount');
+
+        $thisWeekDepositUsd = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('usd_amount');
+        $thisWeekDepositBdt = (clone $query)
+            ->where('status', OrderStatus::APPROVED)
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('bdt_amount');
 
         return [
             [
                 'label' => 'Approved Deposit',
-                'value' => '$'.number_format($approvedDeposit, 2),
+                'value' => '$'.number_format($approvedDepositUsd, 2),
+                'bdt_value' => '৳'.number_format($approvedDepositBdt, 2),
                 'subtext' => 'Ready to Use',
                 'icon' => 'heroicon-o-check-circle',
                 'icon_color' => 'text-green-500',
@@ -48,23 +84,44 @@ class OrderHistoryStatsWidget extends Widget
             ],
             [
                 'label' => 'Pending Deposit',
-                'value' => '$'.number_format($pendingDeposit, 2),
+                'value' => '$'.number_format($pendingDepositUsd, 2),
+                'bdt_value' => '৳'.number_format($pendingDepositBdt, 2),
                 'subtext' => 'Awaiting Approval',
                 'icon' => 'heroicon-o-clock',
                 'icon_color' => 'text-orange-500',
                 'icon_bg' => 'bg-orange-50',
             ],
             [
+                'label' => 'Last Month',
+                'value' => '$'.number_format($lastMonthDepositUsd, 2),
+                'bdt_value' => '৳'.number_format($lastMonthDepositBdt, 2),
+                'subtext' => $lastMonth->format('F Y'),
+                'icon' => 'heroicon-o-calendar',
+                'icon_color' => 'text-purple-500',
+                'icon_bg' => 'bg-purple-50',
+            ],
+            [
                 'label' => 'This Month',
-                'value' => '$'.number_format($thisMonthDeposit, 2),
+                'value' => '$'.number_format($thisMonthDepositUsd, 2),
+                'bdt_value' => '৳'.number_format($thisMonthDepositBdt, 2),
                 'subtext' => now()->format('F Y'),
                 'icon' => 'heroicon-o-calendar',
                 'icon_color' => 'text-blue-500',
                 'icon_bg' => 'bg-blue-50',
             ],
             [
+                'label' => 'This Week',
+                'value' => '$'.number_format($thisWeekDepositUsd, 2),
+                'bdt_value' => '৳'.number_format($thisWeekDepositBdt, 2),
+                'subtext' => now()->startOfWeek()->format('M d').' - '.now()->endOfWeek()->format('M d, Y'),
+                'icon' => 'heroicon-o-calendar',
+                'icon_color' => 'text-amber-500',
+                'icon_bg' => 'bg-amber-50',
+            ],
+            [
                 'label' => 'Today',
-                'value' => '$'.number_format($todayDeposit, 2),
+                'value' => '$'.number_format($todayDepositUsd, 2),
+                'bdt_value' => '৳'.number_format($todayDepositBdt, 2),
                 'subtext' => now()->format('M d, Y'),
                 'icon' => 'heroicon-o-bolt',
                 'icon_color' => 'text-indigo-500',
