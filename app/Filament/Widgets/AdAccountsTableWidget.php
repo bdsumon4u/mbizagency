@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Actions\SendPendingWalletDepositApprovalEmailsAction;
 use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
 use App\Filament\Actions\DepositFundAction;
@@ -10,7 +11,6 @@ use App\Filament\Pages\OrderHistory;
 use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
-use App\Mail\NewWalletDepositPendingApprovalMail;
 use App\Models\AdAccount;
 use App\Models\Order;
 use App\Models\WalletTransaction;
@@ -30,7 +30,6 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 
@@ -132,11 +131,7 @@ class AdAccountsTableWidget extends BaseWidget
                     ]);
 
                     // Send approval email
-                    $approveUrl = url('/admin/wallet-transactions');
-                    $rejectUrl = url('/admin/wallet-transactions');
-
-                    Mail::to(config('mail.admin_address', 'admin@mbizcrm.test'))
-                        ->send(new NewWalletDepositPendingApprovalMail($transaction, $approveUrl, $rejectUrl));
+                    app(SendPendingWalletDepositApprovalEmailsAction::class)->__invoke($transaction);
                 });
 
                 Notification::make()

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\SendPendingWalletDepositApprovalEmailsAction;
 use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
 use App\Filament\Actions\DepositFundAction;
@@ -9,7 +10,6 @@ use App\Filament\Forms\Components\PaymentMethodDetails;
 use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
-use App\Mail\NewWalletDepositPendingApprovalMail;
 use App\Models\AdAccount;
 use App\Models\WalletTransaction;
 use App\Services\FacebookAdAccountService;
@@ -32,7 +32,6 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class AdAccounts extends Page implements HasTable
@@ -94,11 +93,7 @@ class AdAccounts extends Page implements HasTable
                     ]);
 
                     // Send approval email
-                    $approveUrl = url('/admin/wallet-transactions');
-                    $rejectUrl = url('/admin/wallet-transactions');
-
-                    Mail::to(config('mail.admin_address', 'admin@mbizcrm.test'))
-                        ->send(new NewWalletDepositPendingApprovalMail($transaction, $approveUrl, $rejectUrl));
+                    app(SendPendingWalletDepositApprovalEmailsAction::class)->__invoke($transaction);
                 });
 
                 Notification::make()

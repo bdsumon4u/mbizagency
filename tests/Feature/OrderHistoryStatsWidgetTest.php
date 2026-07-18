@@ -121,17 +121,17 @@ test('widget returns correct stats for admin and user', function () {
     expect($stats[1]['value'])->toBe('$50.00');
     expect($stats[1]['bdt_value'])->toBe('৳5,500.00');
 
-    // 3. This Month: sum of all approved in this month (user1: 100+200, user2: 500) = $800.00
-    // BDT: user1: 11000+22000, user2: 60000 = 93000.00
-    expect($stats[2]['label'])->toBe('This Month');
-    expect($stats[2]['value'])->toBe('$800.00');
-    expect($stats[2]['bdt_value'])->toBe('৳93,000.00');
-
-    // 4. Last Month: sum of all approved in last month (user1: 300) = $300.00
+    // 3. Last Month: sum of all approved in last month (user1: 300) = $300.00
     // BDT: user1: 33000 = 33000.00
-    expect($stats[3]['label'])->toBe('Last Month');
-    expect($stats[3]['value'])->toBe('$300.00');
-    expect($stats[3]['bdt_value'])->toBe('৳33,000.00');
+    expect($stats[2]['label'])->toBe('Last Month');
+    expect($stats[2]['value'])->toBe('$300.00');
+    expect($stats[2]['bdt_value'])->toBe('৳33,000.00');
+
+    // 4. This Month: sum of all approved in this month (user1: 100+200, user2: 500) = $800.00
+    // BDT: user1: 11000+22000, user2: 60000 = 93000.00
+    expect($stats[3]['label'])->toBe('This Month');
+    expect($stats[3]['value'])->toBe('$800.00');
+    expect($stats[3]['bdt_value'])->toBe('৳93,000.00');
 
     // 5. This Week: sum of all approved in this week (user1: 100, user2: 500) = $600.00
     // BDT: user1: 11000, user2: 60000 = 71000.00
@@ -163,11 +163,11 @@ test('widget returns correct stats for admin and user', function () {
     expect($statsUser1[1]['value'])->toBe('$50.00');
     expect($statsUser1[1]['bdt_value'])->toBe('৳5,500.00');
 
-    // 3. This Month: sum of user1 approved in this month (100+200) = $300.00
+    // 3. Last Month: sum of user1 approved in last month (300) = $300.00
     expect($statsUser1[2]['value'])->toBe('$300.00');
     expect($statsUser1[2]['bdt_value'])->toBe('৳33,000.00');
 
-    // 4. Last Month: sum of user1 approved in last month (300) = $300.00
+    // 4. This Month: sum of user1 approved in this month (100+200) = $300.00
     expect($statsUser1[3]['value'])->toBe('$300.00');
     expect($statsUser1[3]['bdt_value'])->toBe('৳33,000.00');
 
