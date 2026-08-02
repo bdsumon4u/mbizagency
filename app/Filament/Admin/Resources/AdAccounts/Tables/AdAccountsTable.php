@@ -12,6 +12,7 @@ use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
+use App\Models\User;
 use App\Services\FacebookAdAccountService;
 use Exception;
 use Filament\Actions\Action;
@@ -30,16 +31,20 @@ class AdAccountsTable
 {
     public static function configure(Table $table): Table
     {
-        return $table
-            ->groups([
-                Group::make('user.name')
-                    ->label('User')
-                    ->getTitleFromRecordUsing(fn (AdAccount $record): string => $record->user ? ($record->user->name.'_'.$record->user->page_name) : 'No User'),
-            ])
+        return static::configure($table)
             ->query(AdAccount::query()
                 ->with(['user'])
                 ->when(request()->query('highlight'), fn ($query, $id) => $query->orderByRaw('id = ? desc', [$id]))
-            )
+        );
+    }
+    
+    public static function configureWithoutQuery(Table $table): Table
+    {
+        return $table
+            ->groups([
+                Group::make('user.name')
+                    ->getTitleFromRecordUsing(fn (User $user): string => $user?->name . '_' . $user?->page_name),
+            ])
             ->columns([
                 TextColumn::make('#')
                     ->rowIndex()

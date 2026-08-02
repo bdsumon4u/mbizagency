@@ -14,6 +14,6 @@ class AdAccountsRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
-        return AdAccountsTable::configure($table);
+        return AdAccountsTable::configureWithoutQuery($table);
     }
 }
