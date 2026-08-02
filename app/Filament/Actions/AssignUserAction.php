@@ -27,8 +27,7 @@ class AssignUserAction
                         return $record->name.'_'.$record->page_name.' ('.$record->email.')';
                     })
                     ->searchable(['name', 'page_name', 'email'])
-                    ->preload()
-                    ->required(),
+                    ->preload(),
             ])
             ->fillForm(fn (AdAccount $record): array => [
                 'user_id' => $record->user_id,

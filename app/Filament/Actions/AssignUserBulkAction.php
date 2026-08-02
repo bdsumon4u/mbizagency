@@ -27,8 +27,7 @@ class AssignUserBulkAction
                         return $record->name.'_'.$record->page_name.' ('.$record->email.')';
                     })
                     ->searchable(['name', 'page_name', 'email'])
-                    ->preload()
-                    ->required(),
+                    ->preload(),
             ])
             ->action(function (Collection $records, array $data): void {
                 $updatedCount = AdAccount::query()
