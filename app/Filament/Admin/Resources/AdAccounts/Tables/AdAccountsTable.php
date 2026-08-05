@@ -12,6 +12,7 @@ use App\Filament\Tables\Columns\AdAccountsTable\AdAccountColumn;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Models\AdAccount;
+use App\Models\User;
 use App\Services\FacebookAdAccountService;
 use Exception;
 use Filament\Actions\Action;
@@ -25,6 +26,7 @@ use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdAccountsTable
 {
@@ -99,19 +101,63 @@ class AdAccountsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('user_id')
+                    ->label('User')
+                    ->multiple()
+                    ->options(function (): array {
+                        $users = User::query()
+                            ->get()
+                            ->mapWithKeys(fn (User $user): array => [
+                                $user->id => $user->name.'_'.$user->page_name.' ('.$user->email.')',
+                            ])
+                            ->toArray();
+
+                        return [
+                            'assigned' => 'Assigned',
+                            'unassigned' => 'Unassigned',
+                        ] + $users;
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        $values = array_filter((array) ($data['values'] ?? []), fn ($v) => $v !== null && $v !== '');
+
+                        if (empty($values)) {
+                            return $query;
+                        }
+
+                        $hasAssigned = in_array('assigned', $values, true);
+                        $hasUnassigned = in_array('unassigned', $values, true);
+                        $userIds = array_diff($values, ['assigned', 'unassigned']);
+
+                        if ($hasAssigned && $hasUnassigned && empty($userIds)) {
+                            return $query;
+                        }
+
+                        return $query->where(function (Builder $query) use ($hasAssigned, $hasUnassigned, $userIds): void {
+                            if ($hasAssigned) {
+                                $query->orWhereNotNull('user_id');
+                            }
+
+                            if ($hasUnassigned) {
+                                $query->orWhereNull('user_id');
+                            }
+
+                            if (! empty($userIds)) {
+                                $query->orWhereIn('user_id', $userIds);
+                            }
+                        });
+                    })
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('business_manager_id')
                     ->label('BM')
                     ->relationship('businessManager', 'name')
                     ->searchable()
-                    ->preload(),
-                SelectFilter::make('user_id')
-                    ->label('User')
-                    ->relationship('user', 'email')
-                    ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->multiple(),
                 SelectFilter::make('status')
                     ->options(AdAccountStatus::class)
-                    ->searchable(),
+                    ->searchable()
+                    ->multiple(),
                 SelectFilter::make('currency')
                     ->options(fn (): array => AdAccount::query()
                         ->select('currency')
