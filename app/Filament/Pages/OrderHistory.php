@@ -212,6 +212,7 @@ class OrderHistory extends Page implements HasTable
                         ->modalSubmitAction(false)
                         ->modalCancelAction(false)
                         ->modalHeading('Proof of Payment')
+                        ->modalSubheading(fn (Order $record) => $record->adAccount?->name ?? 'Unknown Ad Account')
                         ->modalContent(fn (Order $record) => view('filament.pages.partials.order-history-details', [
                             'record' => $record,
                         ]))
