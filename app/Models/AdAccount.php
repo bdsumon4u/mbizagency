@@ -45,6 +45,13 @@ class AdAccount extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::deleting(function (AdAccount $adAccount): void {
+            $adAccount->priceRates()->delete();
+        });
+    }
+
     public function priceRates(): HasMany
     {
         return $this->hasMany(PriceRate::class);
