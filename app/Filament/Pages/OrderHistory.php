@@ -195,7 +195,7 @@ class OrderHistory extends Page implements HasTable
                         'table' => 'order-history',
                         'orderHistoryClass' => OrderHistory::class,
                     ]))
-                    ->modalHeading(fn (Order $order) => $order->user->name.' - Order History')
+                    ->modalHeading(fn (Order $order) => $order->user->name.'_'.$order->user->page_name)
                     ->modalCloseButton()
                     ->modalSubmitAction(false)
                     ->modalCancelAction(false)
