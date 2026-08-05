@@ -110,7 +110,7 @@
         ঠিক আছে
     </button>
 
-    <button class="mt-5 w-full text-center text-sm text-slate-400">
+    <button type="button" x-on:click="close" class="mt-5 w-full text-center text-sm text-slate-400 hover:text-slate-600 transition cursor-pointer">
         ধন্যবাদ
     </button>
 
