@@ -17,6 +17,17 @@ class OrderHistoryStatsWidget extends Widget
 
     public bool $showOtherStats = false;
 
+    public bool $isToggleable = true;
+
+    public function mount(bool $isToggleable = true): void
+    {
+        $this->isToggleable = $isToggleable;
+
+        if (! $this->isToggleable) {
+            $this->showOtherStats = true;
+        }
+    }
+
     public function getStats(): array
     {
         $user = Filament::auth()->user();

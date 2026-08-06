@@ -1,24 +1,26 @@
 <x-filament-widgets::widget>
     <div x-data="{ showOtherStats: $wire.entangle('showOtherStats') }" class="space-y-3">
-        <div class="flex items-center justify-between">
-            <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Deposit Stats
+        @if($isToggleable)
+            <div class="flex items-center justify-between">
+                <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Deposit Stats
+                </div>
+                <button
+                    type="button"
+                    @click="showOtherStats = !showOtherStats"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
+                >
+                    <x-heroicon-o-eye class="w-4 h-4 text-gray-500" x-show="!showOtherStats" />
+                    <x-heroicon-o-eye-slash class="w-4 h-4 text-gray-500" x-show="showOtherStats" x-cloak />
+                    <span x-text="showOtherStats ? 'Hide Stats' : 'Show Stats'">Show Stats</span>
+                </button>
             </div>
-            <button
-                type="button"
-                @click="showOtherStats = !showOtherStats"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
-            >
-                <x-heroicon-o-eye class="w-4 h-4 text-gray-500" x-show="!showOtherStats" />
-                <x-heroicon-o-eye-slash class="w-4 h-4 text-gray-500" x-show="showOtherStats" x-cloak />
-                <span x-text="showOtherStats ? 'Hide Stats' : 'Show Stats'">Show Stats</span>
-            </button>
-        </div>
+        @endif
 
         <div class="flex overflow-x-auto gap-2 lg:gap-6 sm:grid sm:grid-cols-6 no-scrollbar pb-1">
             @foreach($this->getStats() as $stat)
                 <div
-                    @if(($stat['key'] ?? '') !== 'pending')
+                    @if($isToggleable && ($stat['key'] ?? '') !== 'pending')
                         x-show="showOtherStats"
                         x-cloak
                     @endif
