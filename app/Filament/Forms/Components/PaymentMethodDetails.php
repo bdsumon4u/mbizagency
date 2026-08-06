@@ -33,6 +33,7 @@ class PaymentMethodDetails extends ViewField
             ->map(fn (PaymentMethod $paymentMethod): array => [
                 'id' => $paymentMethod->id,
                 'name' => $paymentMethod->name,
+                'logo_url' => $paymentMethod->getLogoUrl(),
                 'type' => $paymentMethod->type,
                 'processing_fee_percent' => number_format((float) $paymentMethod->processing_fee_percent, 2),
                 'processing_fee_percent_raw' => (float) $paymentMethod->processing_fee_percent,

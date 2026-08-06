@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\PaymentMethods\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -52,9 +53,16 @@ class PaymentMethodForm
                 TextInput::make('branch')
                     ->maxLength(255)
                     ->hiddenJs('$get(\'type\') === \'MFS\''),
+                
+                FileUpload::make('logo')
+                    ->label('Logo / Icon')
+                    ->image()
+                    ->disk('public')
+                    ->directory('payment-methods')
+                    ->maxSize(2048)
+                    ->nullable(),
                 Textarea::make('instructions')
-                    ->rows(4)
-                    ->columnSpanFull(),
+                    ->rows(4),
             ]);
     }
 }

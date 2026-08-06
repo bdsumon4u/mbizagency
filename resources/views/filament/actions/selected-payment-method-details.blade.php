@@ -24,7 +24,12 @@
 >
     <template x-if="selectedPaymentMethod">
         <div style="margin-top: 4px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px;">
-            <div style="font-weight: 600;" x-text="selectedPaymentMethod.name"></div>
+            <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <template x-if="selectedPaymentMethod.logo_url">
+                    <img :src="selectedPaymentMethod.logo_url" alt="" style="width: 22px; height: 22px; object-fit: contain;" />
+                </template>
+                <span x-text="selectedPaymentMethod.name"></span>
+            </div>
             <div style="margin-top: 2px; color: #6b7280;">
                 Type: <span x-text="selectedPaymentMethod.type"></span>
                 | <span style="font-weight: bold; color: #dc2626;">Fee: <span x-text="Number(selectedPaymentMethod.processing_fee_percent_raw || 0).toFixed(2)"></span>%</span>

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
     'name',
+    'logo',
     'type',
     'processing_fee_percent',
     'account_name',
@@ -35,5 +36,25 @@ class PaymentMethod extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    public function getLogoUrl(): ?string
+    {
+        if (! $this->logo) {
+            return null;
+        }
+
+        return '/storage/'.ltrim($this->logo, '/');
+    }
+
+    public function getFormattedNameAttribute(): string
+    {
+        $logoUrl = $this->getLogoUrl();
+
+        if ($logoUrl) {
+            return '<img src="'.e($logoUrl).'" style="display:inline-block; width:20px; height:20px; margin-right:8px; object-fit:contain; vertical-align:middle;" alt="" />'.e($this->name);
+        }
+
+        return e($this->name);
     }
 }

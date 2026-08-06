@@ -98,8 +98,11 @@ class AdAccountsTableWidget extends BaseWidget
                 Select::make('payment_method_id')
                     ->label('Payment Method')
                     ->options(function () use ($user) {
-                        return $user->paymentMethods()->active()->pluck('name', 'payment_methods.id');
+                        return $user->paymentMethods()->active()->orderBy('name')->get()->mapWithKeys(fn ($method) => [
+                            $method->id => $method->formatted_name,
+                        ]);
                     })
+                    ->allowHtml()
                     ->required()
                     ->searchable(),
                 PaymentMethodDetails::make('selected_payment_method_details')

@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -17,6 +18,9 @@ class PaymentMethodsTable
     {
         return $table
             ->columns([
+                ImageColumn::make('logo')
+                    ->disk('public')
+                    ->height(30),
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),

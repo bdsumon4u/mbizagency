@@ -4,6 +4,7 @@ namespace App\Filament\Actions\DepositFund;
 
 use App\Filament\Forms\Components\PaymentMethodDetails;
 use App\Models\AdAccount;
+use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Services\PriceRateService;
 use Filament\Facades\Filament;
@@ -36,7 +37,9 @@ final class DepositFundFormSchema
         $assignedPaymentMethods = $adAccount->user->paymentMethods()->active()->orderBy('name')->get();
 
         $paymentMethodOptions = $assignedPaymentMethods
-            ->pluck('name', 'id')
+            ->mapWithKeys(fn (PaymentMethod $method) => [
+                $method->id => $method->formatted_name,
+            ])
             ->toArray();
 
         $paymentMethodsForView = PaymentMethodDetails::getPaymentMethodsForView($adAccount->user);
@@ -84,6 +87,7 @@ final class DepositFundFormSchema
                 ->label('Payment Method')
                 ->placeholder('Select a payment method')
                 ->options($paymentMethodOptions)
+                ->allowHtml()
                 ->searchable()
                 ->preload()
                 ->required(fn (Get $get) => $get('payment_source') === 'payment_method')
