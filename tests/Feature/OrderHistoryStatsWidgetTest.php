@@ -43,7 +43,18 @@ test('widget returns correct stats for admin and user', function () {
         'name' => 'Account 2',
     ]);
 
-    // Create Orders for user 1 (Approved, Today)
+    // Create Order for user 1 (Approved, Yesterday)
+    Order::query()->create([
+        'user_id' => $user1->id,
+        'ad_account_id' => $adAccount1->id,
+        'usd_amount' => 150.00,
+        'dollar_rate' => 110.00,
+        'bdt_amount' => 16500.00,
+        'status' => OrderStatus::APPROVED,
+        'created_at' => now()->subDay(),
+    ]);
+
+    // Create Order for user 1 (Approved, Today)
     Order::query()->create([
         'user_id' => $user1->id,
         'ad_account_id' => $adAccount1->id,
@@ -54,7 +65,7 @@ test('widget returns correct stats for admin and user', function () {
         'created_at' => now(),
     ]);
 
-    // Create Order for user 1 (Approved, This Month but not today)
+    // Create Order for user 1 (Approved, This Month but not today/yesterday)
     Order::query()->create([
         'user_id' => $user1->id,
         'ad_account_id' => $adAccount1->id,
@@ -106,44 +117,33 @@ test('widget returns correct stats for admin and user', function () {
     $widget = new OrderHistoryStatsWidget;
     $stats = $widget->getStats();
 
-    // Verify stats return exactly 6 items
-    expect($stats)->toHaveCount(6);
+    // Verify stats return exactly 5 items
+    expect($stats)->toHaveCount(5);
 
-    // 1. Approved Deposit: sum of all approved (user1: 100+200+300, user2: 500) = $1100.00
-    // BDT: user1: 11000+22000+33000, user2: 60000 = 126000.00
-    expect($stats[0]['label'])->toBe('Approved Deposit');
-    expect($stats[0]['value'])->toBe('$1,100.00');
-    expect($stats[0]['bdt_value'])->toBe('৳126,000.00');
+    // 1. Pending Deposit: sum of all pending (user1: 50) = $50.00
+    expect($stats[0]['label'])->toBe('Pending Deposit');
+    expect($stats[0]['value'])->toBe('$50.00');
+    expect($stats[0]['bdt_value'])->toBe('৳5,500.00');
 
-    // 2. Pending Deposit: sum of all pending (user1: 50) = $50.00
-    // BDT: user1: 5500 = 5500.00
-    expect($stats[1]['label'])->toBe('Pending Deposit');
-    expect($stats[1]['value'])->toBe('$50.00');
-    expect($stats[1]['bdt_value'])->toBe('৳5,500.00');
+    // 2. Today: sum of all approved today (user1: 100, user2: 500) = $600.00
+    expect($stats[1]['label'])->toBe('Today');
+    expect($stats[1]['value'])->toBe('$600.00');
+    expect($stats[1]['bdt_value'])->toBe('৳71,000.00');
 
-    // 3. Last Month: sum of all approved in last month (user1: 300) = $300.00
-    // BDT: user1: 33000 = 33000.00
-    expect($stats[2]['label'])->toBe('Last Month');
-    expect($stats[2]['value'])->toBe('$300.00');
-    expect($stats[2]['bdt_value'])->toBe('৳33,000.00');
+    // 3. Yesterday: sum of all approved yesterday (user1: 150) = $150.00
+    expect($stats[2]['label'])->toBe('Yesterday');
+    expect($stats[2]['value'])->toBe('$150.00');
+    expect($stats[2]['bdt_value'])->toBe('৳16,500.00');
 
-    // 4. This Month: sum of all approved in this month (user1: 100+200, user2: 500) = $800.00
-    // BDT: user1: 11000+22000, user2: 60000 = 93000.00
+    // 4. This Month: sum of all approved in this month (user1: 150+100+200, user2: 500) = $950.00
     expect($stats[3]['label'])->toBe('This Month');
-    expect($stats[3]['value'])->toBe('$800.00');
-    expect($stats[3]['bdt_value'])->toBe('৳93,000.00');
+    expect($stats[3]['value'])->toBe('$950.00');
+    expect($stats[3]['bdt_value'])->toBe('৳109,500.00');
 
-    // 5. This Week: sum of all approved in this week (user1: 100, user2: 500) = $600.00
-    // BDT: user1: 11000, user2: 60000 = 71000.00
-    expect($stats[4]['label'])->toBe('This Week');
-    expect($stats[4]['value'])->toBe('$600.00');
-    expect($stats[4]['bdt_value'])->toBe('৳71,000.00');
-
-    // 6. Today: sum of all approved today (user1: 100, user2: 500) = $600.00
-    // BDT: user1: 11000, user2: 60000 = 71000.00
-    expect($stats[5]['label'])->toBe('Today');
-    expect($stats[5]['value'])->toBe('$600.00');
-    expect($stats[5]['bdt_value'])->toBe('৳71,000.00');
+    // 5. Last Month: sum of all approved in last month (user1: 300) = $300.00
+    expect($stats[4]['label'])->toBe('Last Month');
+    expect($stats[4]['value'])->toBe('$300.00');
+    expect($stats[4]['bdt_value'])->toBe('৳33,000.00');
 
     // --- TEST USER 1 ROLE ---
     $this->actingAs($user1, 'web');
@@ -151,31 +151,26 @@ test('widget returns correct stats for admin and user', function () {
 
     $statsUser1 = $widget->getStats();
 
-    // Verify stats return exactly 6 items
-    expect($statsUser1)->toHaveCount(6);
+    // Verify stats return exactly 5 items
+    expect($statsUser1)->toHaveCount(5);
 
-    // 1. Approved Deposit: sum of user1 approved (100+200+300) = $600.00
-    // BDT: 11000+22000+33000 = 66000.00
-    expect($statsUser1[0]['value'])->toBe('$600.00');
-    expect($statsUser1[0]['bdt_value'])->toBe('৳66,000.00');
+    // 1. Pending Deposit: sum of user1 pending (50) = $50.00
+    expect($statsUser1[0]['label'])->toBe('Pending Deposit');
+    expect($statsUser1[0]['value'])->toBe('$50.00');
 
-    // 2. Pending Deposit: sum of user1 pending (50) = $50.00
-    expect($statsUser1[1]['value'])->toBe('$50.00');
-    expect($statsUser1[1]['bdt_value'])->toBe('৳5,500.00');
+    // 2. Today: sum of user1 approved today (100) = $100.00
+    expect($statsUser1[1]['label'])->toBe('Today');
+    expect($statsUser1[1]['value'])->toBe('$100.00');
 
-    // 3. Last Month: sum of user1 approved in last month (300) = $300.00
-    expect($statsUser1[2]['value'])->toBe('$300.00');
-    expect($statsUser1[2]['bdt_value'])->toBe('৳33,000.00');
+    // 3. Yesterday: sum of user1 approved yesterday (150) = $150.00
+    expect($statsUser1[2]['label'])->toBe('Yesterday');
+    expect($statsUser1[2]['value'])->toBe('$150.00');
 
-    // 4. This Month: sum of user1 approved in this month (100+200) = $300.00
-    expect($statsUser1[3]['value'])->toBe('$300.00');
-    expect($statsUser1[3]['bdt_value'])->toBe('৳33,000.00');
+    // 4. This Month: sum of user1 approved in this month (150+100+200) = $450.00
+    expect($statsUser1[3]['label'])->toBe('This Month');
+    expect($statsUser1[3]['value'])->toBe('$450.00');
 
-    // 5. This Week: sum of user1 approved in this week (100) = $100.00
-    expect($statsUser1[4]['value'])->toBe('$100.00');
-    expect($statsUser1[4]['bdt_value'])->toBe('৳11,000.00');
-
-    // 6. Today: sum of user1 approved today (100) = $100.00
-    expect($statsUser1[5]['value'])->toBe('$100.00');
-    expect($statsUser1[5]['bdt_value'])->toBe('৳11,000.00');
+    // 5. Last Month: sum of user1 approved in last month (300) = $300.00
+    expect($statsUser1[4]['label'])->toBe('Last Month');
+    expect($statsUser1[4]['value'])->toBe('$300.00');
 });
