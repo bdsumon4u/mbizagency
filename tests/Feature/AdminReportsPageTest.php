@@ -4,8 +4,6 @@ use App\Enums\OrderStatus;
 use App\Filament\Admin\Pages\Reports\DepositReport;
 use App\Filament\Admin\Pages\Reports\TopCustomersReport;
 use App\Filament\Admin\Pages\Reports\UnusedAdAccountsReport;
-use App\Filament\Admin\Widgets\TopCustomersTableWidget;
-use App\Filament\Admin\Widgets\UnusedAdAccountsTableWidget;
 use App\Models\AdAccount;
 use App\Models\Admin;
 use App\Models\BusinessManager;
@@ -98,11 +96,11 @@ test('top customers table widget aggregates monthly deposits', function () {
     $this->actingAs($admin, 'admin');
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
-    Livewire::test(TopCustomersTableWidget::class)
+    Livewire::test(TopCustomersReport::class)
         ->assertCanSeeTableRecords([$user1, $user2]);
 });
 
-test('unused ad accounts table widget identifies inactive accounts', function () {
+test('unused ad accounts table identifies inactive accounts', function () {
     $admin = Admin::query()->create([
         'name' => 'Admin User',
         'email' => 'admin3@reports.com',
@@ -156,7 +154,7 @@ test('unused ad accounts table widget identifies inactive accounts', function ()
     $this->actingAs($admin, 'admin');
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
-    Livewire::test(UnusedAdAccountsTableWidget::class)
+    Livewire::test(UnusedAdAccountsReport::class)
         ->assertCanSeeTableRecords([$inactiveAdAccount])
         ->assertCanNotSeeTableRecords([$activeAdAccount]);
 });

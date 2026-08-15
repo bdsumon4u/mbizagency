@@ -1,5 +1,5 @@
 <x-filament-panels::page>
     <div class="w-full">
-        @livewire(\App\Filament\Admin\Widgets\TopCustomersTableWidget::class)
+        {{ $this->table }}
     </div>
 </x-filament-panels::page>
