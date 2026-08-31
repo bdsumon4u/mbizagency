@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber 32 Agency - Dollar Support</title>
+  <title>{{ config('app.name') }} Agency - Dollar Support</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     * {margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif;}
@@ -112,7 +112,7 @@
 <body>
 
 <header>
-  <h1>Cyber 32</h1>
+  <h1>{{ config('app.name') }}</h1>
   <nav>
     <a href="#">হোম</a>
     <a href="#services">সার্ভিস</a>
@@ -150,12 +150,12 @@
 </section>
 
 <section id="about" class="about">
-  <h2>Cyber 32 Agency সম্পর্কে</h2>
-  <p>Cyber 32 Agency শুধুমাত্র Meta Authorized Ad Account এবং সেই অ্যাকাউন্টে ডলার সাপোর্ট প্রদান করে। আমরা নিরাপদ ট্রানজেকশন, স্বচ্ছতা এবং ক্লায়েন্টের সম্পূর্ণ বিশ্বাস নিশ্চিত করি।</p>
+  <h2>{{ config('app.name') }} Agency সম্পর্কে</h2>
+  <p>{{ config('app.name') }} Agency শুধুমাত্র Meta Authorized Ad Account এবং সেই অ্যাকাউন্টে ডলার সাপোর্ট প্রদান করে। আমরা নিরাপদ ট্রানজেকশন, স্বচ্ছতা এবং ক্লায়েন্টের সম্পূর্ণ বিশ্বাস নিশ্চিত করি।</p>
 </section>
 
 <div class="footer">
-  <p>© ২০২৬ Cyber 32 Agency. সর্বস্বত্ব সংরক্ষিত।</p>
+  <p>© ২০২৬ {{ config('app.name') }} Agency. সর্বস্বত্ব সংরক্ষিত।</p>
 </div>
 
 </body>
