@@ -41,13 +41,15 @@ class BusinessManagerCallback
             return redirect($this->getAdminBusinessManagersUrl());
         }
 
-        $response = Http::get('https://graph.facebook.com/v21.0/oauth/access_token', [
-            'client_id' => config('services.facebook.app_id'),
-            'client_secret' => config('services.facebook.app_secret'),
-            'grant_type' => 'authorization_code',
-            'code' => $code,
-            'redirect_uri' => route('facebook.oauth.callback'),
-        ]);
+        $response = Http::timeout(30)
+            ->connectTimeout(10)
+            ->get('https://graph.facebook.com/v21.0/oauth/access_token', [
+                'client_id' => config('services.facebook.app_id'),
+                'client_secret' => config('services.facebook.app_secret'),
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'redirect_uri' => route('facebook.oauth.callback'),
+            ]);
 
         $data = $response->json();
         if ($data['error'] ?? false) {

@@ -52,11 +52,13 @@ final readonly class FacebookBusinessManagerSyncService
      */
     private function fetchAccessibleBusinessManagers(string $accessToken): array
     {
-        $response = Http::get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/me/businesses', [
-            'access_token' => $accessToken,
-            'fields' => 'id,name,about',
-            'limit' => 200,
-        ]);
+        $response = Http::timeout(30)
+            ->connectTimeout(10)
+            ->get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/me/businesses', [
+                'access_token' => $accessToken,
+                'fields' => 'id,name,about',
+                'limit' => 200,
+            ]);
 
         if ($response->failed()) {
             $error = $response->json('error');

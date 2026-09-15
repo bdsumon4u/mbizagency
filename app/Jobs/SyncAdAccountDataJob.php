@@ -16,6 +16,8 @@ final class SyncAdAccountDataJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public int $timeout = 120;
+
     public function __construct(public int $adAccountId) {}
 
     public function backoff(): array
@@ -31,7 +33,7 @@ final class SyncAdAccountDataJob implements ShouldQueue
             return;
         }
 
-        if (! ($adAccount->businessManager?->status->isActive() ?? false)) {
+        if (! ($adAccount->businessManager?->status->canManageAdAccounts() ?? false)) {
             return;
         }
 

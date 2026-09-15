@@ -10,11 +10,11 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:sync-ad-accounts-data')
     ->everyFifteenMinutes()
-    ->runInBackground()
-    ->withoutOverlapping();
+    ->withoutOverlapping(10)
+    ->appendOutputTo(storage_path('logs/sync-ad-accounts-'.date('Y-m-d').'.log'));
 
 Schedule::command('queue:work --queue=high,default,low --tries=3 --delay=60 --timeout=600 --stop-when-empty')
     ->everyMinute()
     ->runInBackground()
-    ->withoutOverlapping()
+    ->withoutOverlapping(10)
     ->appendOutputTo(storage_path('logs/queue-'.date('Y-m-d').'.log'));

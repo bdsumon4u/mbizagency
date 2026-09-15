@@ -64,10 +64,12 @@ final class FacebookAdAccountService
             throw new Exception('Business manager not found for this ad account.');
         }
 
-        $response = Http::get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/act_'.$adAccount->act_id, [
-            'access_token' => $businessManager->access_token,
-            'fields' => self::AD_ACCOUNT_FIELDS,
-        ]);
+        $response = Http::timeout(30)
+            ->connectTimeout(10)
+            ->get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/act_'.$adAccount->act_id, [
+                'access_token' => $businessManager->access_token,
+                'fields' => self::AD_ACCOUNT_FIELDS,
+            ]);
 
         if ($response->failed()) {
             $this->handleFacebookError($response, $businessManager);
@@ -85,11 +87,13 @@ final class FacebookAdAccountService
      */
     private function fetchBusinessManagerAdAccounts(BusinessManager $businessManager): array
     {
-        $response = Http::get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/'.$businessManager->bm_id.'/owned_ad_accounts', [
-            'access_token' => $businessManager->access_token,
-            'fields' => self::AD_ACCOUNT_FIELDS,
-            'limit' => 500,
-        ]);
+        $response = Http::timeout(30)
+            ->connectTimeout(10)
+            ->get('https://graph.facebook.com/'.self::GRAPH_API_VERSION.'/'.$businessManager->bm_id.'/owned_ad_accounts', [
+                'access_token' => $businessManager->access_token,
+                'fields' => self::AD_ACCOUNT_FIELDS,
+                'limit' => 500,
+            ]);
 
         if ($response->failed()) {
             $this->handleFacebookError($response, $businessManager);

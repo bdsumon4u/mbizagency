@@ -66,10 +66,12 @@ class AdAccountSpendCapService
     {
         $adAccountId = str_starts_with($actId, 'act_') ? $actId : 'act_'.$actId;
 
-        $response = Http::post('https://graph.facebook.com/'.self::GRAPH_API_VERSION."/{$adAccountId}", $data = [
-            'access_token' => $businessManager->access_token,
-            'spend_cap' => $targetSpendLimit,
-        ]);
+        $response = Http::timeout(30)
+            ->connectTimeout(10)
+            ->post('https://graph.facebook.com/'.self::GRAPH_API_VERSION."/{$adAccountId}", $data = [
+                'access_token' => $businessManager->access_token,
+                'spend_cap' => $targetSpendLimit,
+            ]);
 
         info('setSpendLimit response: '.json_encode($response->json()), $data);
 
