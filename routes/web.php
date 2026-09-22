@@ -9,6 +9,4 @@ Route::get('/orders/{order}/invoice', OrderInvoiceController::class)
     ->middleware('signed')
     ->name('orders.invoice');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::redirect('/', '/app');
