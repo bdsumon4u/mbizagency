@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ApproveWalletTransactionAction;
 use App\Enums\WalletTransactionStatus;
 use App\Filament\Pages\Wallet;
 use App\Models\Admin;
@@ -9,7 +10,6 @@ use App\Models\WalletTransaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class ApproveWalletTransactionController extends Controller
@@ -37,17 +37,7 @@ class ApproveWalletTransactionController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($transaction, $authenticatedAdmin) {
-                $transaction->user->wallet_balance += $transaction->amount;
-                $transaction->user->save();
-
-                $transaction->update([
-                    'status' => WalletTransactionStatus::APPROVED,
-                    'admin_id' => $authenticatedAdmin->id,
-                    'approved_at' => now(),
-                    'balance_after' => $transaction->user->wallet_balance,
-                ]);
-            });
+            app(ApproveWalletTransactionAction::class)($transaction, $authenticatedAdmin);
         } catch (Throwable $exception) {
             return redirect()
                 ->to(Wallet::getUrl(panel: 'admin'))

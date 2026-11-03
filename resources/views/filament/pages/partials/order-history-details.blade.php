@@ -50,6 +50,8 @@
         </p>
     </div>
 
+    @include('filament.pages.partials.ai-verification-badge', ['record' => $record])
+
     <div>
         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Screenshot</h3>
         @if ($record->screenshots)

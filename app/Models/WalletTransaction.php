@@ -6,6 +6,8 @@ use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class WalletTransaction extends Model
 {
@@ -43,6 +45,16 @@ class WalletTransaction extends Model
     public function adAccount(): BelongsTo
     {
         return $this->belongsTo(AdAccount::class);
+    }
+
+    public function paymentVerification(): MorphOne
+    {
+        return $this->morphOne(PaymentVerification::class, 'verifiable')->latestOfMany();
+    }
+
+    public function paymentVerifications(): MorphMany
+    {
+        return $this->morphMany(PaymentVerification::class, 'verifiable');
     }
 
     public function getProcessingFeeAttribute(): float

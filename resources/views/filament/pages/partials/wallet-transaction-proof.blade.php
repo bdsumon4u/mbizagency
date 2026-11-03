@@ -14,6 +14,8 @@
         @endif
     </div>
 
+    @include('filament.pages.partials.ai-verification-badge', ['record' => $record])
+
     @if($record->screenshots)
         <div class="space-y-4 mt-4">
             @foreach($record->screenshots as $screenshot)

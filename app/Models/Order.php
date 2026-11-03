@@ -7,6 +7,8 @@ use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Order extends Model
 {
@@ -39,5 +41,15 @@ class Order extends Model
     public function adAccount(): BelongsTo
     {
         return $this->belongsTo(AdAccount::class);
+    }
+
+    public function paymentVerification(): MorphOne
+    {
+        return $this->morphOne(PaymentVerification::class, 'verifiable')->latestOfMany();
+    }
+
+    public function paymentVerifications(): MorphMany
+    {
+        return $this->morphMany(PaymentVerification::class, 'verifiable');
     }
 }

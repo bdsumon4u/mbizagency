@@ -2,23 +2,16 @@
 
 namespace App\Filament\Pages;
 
-use App\Actions\SendPendingWalletDepositApprovalEmailsAction;
+use App\Actions\ApproveWalletTransactionAction;
 use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
-use App\Filament\Forms\Components\PaymentMethodDetails;
 use App\Models\WalletTransaction;
 use DB;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\ViewField;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
@@ -26,10 +19,8 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\HtmlString;
 use Number;
 
 class Wallet extends Page implements HasTable
@@ -153,17 +144,7 @@ class Wallet extends Page implements HasTable
                                 ->cancelParentActions()
                                 ->visible(fn (WalletTransaction $record): bool => self::isAdminPanel() && $record->type === WalletTransactionType::DEPOSIT && $record->status === WalletTransactionStatus::PENDING)
                                 ->action(function (WalletTransaction $record) {
-                                    DB::transaction(function () use ($record) {
-                                        $record->user->wallet_balance += $record->amount;
-                                        $record->user->save();
-
-                                        $record->update([
-                                            'status' => WalletTransactionStatus::APPROVED,
-                                            'admin_id' => Filament::auth()->id(),
-                                            'approved_at' => now(),
-                                            'balance_after' => $record->user->wallet_balance,
-                                        ]);
-                                    });
+                                    app(ApproveWalletTransactionAction::class)($record, Filament::auth()->user());
                                 }),
                             Action::make('reject')
                                 ->label('Reject')
@@ -187,7 +168,7 @@ class Wallet extends Page implements HasTable
                                 }),
                         ]),
                 ])
-                ->extraAttributes(['class' => 'hidden']),
+                    ->extraAttributes(['class' => 'hidden']),
             ])
             ->bulkActions([
                 //
@@ -199,7 +180,7 @@ class Wallet extends Page implements HasTable
         $user = Filament::auth()->user();
 
         return self::configureTable($table)
-            ->query(WalletTransaction::query()->when(!self::isAdminPanel(), fn($q) => $q->whereBelongsTo($user))->when(self::isAdminPanel(), fn($q) => $q->with('user')))
+            ->query(WalletTransaction::query()->when(! self::isAdminPanel(), fn ($q) => $q->whereBelongsTo($user))->when(self::isAdminPanel(), fn ($q) => $q->with('user')))
             ->heading(null)
             ->extraAttributes(['data-balance' => number_format($user->wallet_balance ?? 0, 2)]);
     }
