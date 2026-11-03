@@ -22,11 +22,11 @@ class IncomingSmsWebhookController extends Controller
             ], 401);
         }
 
-        $incomingSms = $this->webhookService->handlePayload($request->all());
+        $incomingSms = $this->webhookService->handleRequest($request);
 
         if (! $incomingSms) {
             return response()->json([
-                'error' => 'Invalid payload. Message text is required.',
+                'error' => 'Invalid payload. Message text is required. Ensure your JSON body format has valid quotes: {"from": "{sender}", "text": "{msg}"}',
             ], 422);
         }
 

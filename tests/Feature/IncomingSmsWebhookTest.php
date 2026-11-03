@@ -51,6 +51,40 @@ test('http webhook accepts incoming sms json and stores it with parsed fields', 
     Queue::assertPushed(ProcessPendingPaymentVerificationsJob::class);
 });
 
+test('http webhook auto-recovers from malformed json with missing quote around text placeholder', function () {
+    Queue::fake();
+    Config::set('payment_verification.webhook.secret_key', 'test-secret');
+
+    // Simulate the user's forwarder sending `"text": Hello world"` (missing opening quote before text)
+    $malformedJson = "{\n\"from\": \"bKash\",\n\"text\": You have received Tk 1,500.00 from 01712345678. Fee Tk 0.00. Balance Tk 15,250.00. TrxID 9K83XJ8KL2 at 28/10/2026 15:42\"\n}";
+
+    $response = $this->call(
+        'POST',
+        '/api/webhooks/sms',
+        [],
+        [],
+        [],
+        [
+            'HTTP_X_API_KEY' => 'test-secret',
+            'CONTENT_TYPE' => 'application/json',
+        ],
+        $malformedJson
+    );
+
+    $response->assertSuccessful();
+    $response->assertJsonPath('ok', true)
+        ->assertJsonPath('provider', 'bkash')
+        ->assertJsonPath('trx_id', '9K83XJ8KL2')
+        ->assertJsonPath('amount', 1500);
+
+    $this->assertDatabaseHas('incoming_sms', [
+        'source' => 'http_webhook',
+        'provider' => 'bkash',
+        'trx_id' => '9K83XJ8KL2',
+        'amount' => 1500.00,
+    ]);
+});
+
 test('http webhook accepts authorization via bearer token and webhook-secret header', function () {
     Queue::fake();
     Config::set('payment_verification.webhook.secret_key', 'secret-abc');

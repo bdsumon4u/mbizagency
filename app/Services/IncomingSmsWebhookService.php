@@ -37,6 +37,72 @@ class IncomingSmsWebhookService
     }
 
     /**
+     * Resolve payload from Request, with fallback for malformed JSON from mobile forwarders.
+     *
+     * @return array<string, mixed>
+     */
+    public function resolvePayload(Request $request): array
+    {
+        $payload = $request->all();
+
+        $text = $payload['message']
+            ?? $payload['text']
+            ?? $payload['body']
+            ?? $payload['content']
+            ?? $payload['msg']
+            ?? $payload['sms']
+            ?? null;
+
+        if (! empty($text)) {
+            return $payload;
+        }
+
+        $rawContent = trim((string) $request->getContent());
+        if ($rawContent === '') {
+            return $payload;
+        }
+
+        // Try json_decode in case request->all() was not populated
+        $decoded = json_decode($rawContent, true);
+        if (is_array($decoded)) {
+            $merged = array_merge($payload, $decoded);
+            $text = $merged['message'] ?? $merged['text'] ?? $merged['body'] ?? $merged['content'] ?? $merged['msg'] ?? null;
+            if (! empty($text)) {
+                return $merged;
+            }
+        }
+
+        // Fallback for malformed JSON templates (e.g. missing quote: `"text": {msg}"` or unescaped newlines)
+        if (preg_match('/"(?:from|sender|phone|sender_title)"\s*:\s*"([^"]*)"/i', $rawContent, $senderMatch)) {
+            $payload['from'] = $senderMatch[1];
+        }
+
+        if (preg_match('/"(?:text|message|body|content|msg|sms)"\s*:\s*"?([\s\S]*)/i', $rawContent, $textMatch)) {
+            $rawExtracted = $textMatch[1];
+            // Remove trailing `"}` or `}` or `"`
+            $rawExtracted = preg_replace('/"??\s*\}\s*$/', '', $rawExtracted);
+            $rawExtracted = trim((string) $rawExtracted, " \t\n\r\0\x0B\"");
+            if ($rawExtracted !== '') {
+                $payload['text'] = $rawExtracted;
+            }
+        }
+
+        // Fallback for raw/plain text body
+        if (empty($payload['text']) && empty($payload['message']) && ! str_starts_with($rawContent, '{')) {
+            $payload['text'] = $rawContent;
+        }
+
+        return $payload;
+    }
+
+    public function handleRequest(Request $request): ?IncomingSms
+    {
+        $payload = $this->resolvePayload($request);
+
+        return $this->handlePayload($payload);
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      */
     public function handlePayload(array $payload): ?IncomingSms
