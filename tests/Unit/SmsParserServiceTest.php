@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\SmsParserService;
+use Carbon\Carbon;
 
 test('parses bkash personal received money sms correctly', function () {
     $parser = new SmsParserService;
@@ -14,6 +15,21 @@ test('parses bkash personal received money sms correctly', function () {
         ->and($result['fee'])->toBe(0.0)
         ->and($result['sender_account'])->toBe('01712345678')
         ->and($result['transaction_time'])->not->toBeNull();
+});
+
+test('uses the date printed in an sms and the server clock only when the sms time is absent', function () {
+    Carbon::setTestNow(Carbon::parse('2026-11-04 15:30:00'));
+
+    try {
+        $parser = new SmsParserService;
+        $dateOnly = $parser->extractTransactionTime('Credited on 03-11-26');
+        $dateAndTime = $parser->extractTransactionTime('Transaction at 03/11/2026 14:15');
+
+        expect($dateOnly?->format('Y-m-d H:i:s'))->toBe('2026-11-03 15:30:00')
+            ->and($dateAndTime?->format('Y-m-d H:i:s'))->toBe('2026-11-03 14:15:00');
+    } finally {
+        Carbon::setTestNow();
+    }
 });
 
 test('parses nagad money received sms correctly', function () {

@@ -16,8 +16,15 @@ class GeminiVisionService
      *     amount: ?float,
      *     fee: ?float,
      *     total_amount: ?float,
+     *     balance: ?float,
+     *     txn_type: ?string,
+     *     beneficiary_bank: ?string,
+     *     sender_account: ?string,
      *     sender_number: ?string,
+     *     sender_name: ?string,
+     *     receiver_account: ?string,
      *     receiver_number: ?string,
+     *     receiver_name: ?string,
      *     reference: ?string,
      *     transaction_time: ?string,
      *     status_in_screenshot: string,
@@ -30,7 +37,7 @@ class GeminiVisionService
     public function analyzeScreenshot(string $screenshotPath): array
     {
         $apiKey = config('payment_verification.gemini.api_key');
-        $model = config('payment_verification.gemini.model', 'gemini-2.5-flash');
+        $model = config('payment_verification.gemini.model', 'gemini-3.5-flash-lite');
         $baseUrl = config('payment_verification.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta');
 
         if (empty($apiKey)) {
@@ -50,17 +57,39 @@ You are an expert financial verification auditor analyzing transaction confirmat
 - Internet Banking Apps (City Bank "citytouch", Dutch-Bangla Bank "NexusPay", BRAC Bank "Astha" / আস্থা, Eastern Bank "EBL")
 - Physical ATM / CRM / CDM Cash Deposit Printed Slips (e.g. Dutch-Bangla Bank / DBBL CRM receipts)
 
-Inspect the image thoroughly and extract all transaction details.
+Inspect the entire image carefully. Extract every visible transaction field; do not omit a field that is clearly printed.
+Never infer, invent, or replace a printed value with the current date/time or the image upload/server receipt time.
+Preserve account numbers exactly as displayed, including masking characters such as *, x, or X.
+
+Map account labels exactly:
+- "From", "From Account", "Sender", or "Source Account" -> sender_account and sender_name.
+- "To", "To Account", "Transferred to", "Beneficiary", or "Recipient" -> receiver_account and receiver_name.
+- Do not swap sender and receiver, and do not put account numbers only in notes.
+
+Reference mapping for these receipt layouts:
+- City Bank / Citytouch "Reference No" is the transaction identifier: set both trx_id and reference to that exact value.
+- BRAC Bank / Astha "Reference Number" is the transaction identifier: set both trx_id and reference to that exact value.
+- EBL "REF:" is a reference number: set reference, and set trx_id only if a separate transaction ID is explicitly shown.
+- For other providers, put explicitly labeled TrxID/TxnID/Transaction ID/TXN NO in trx_id; keep a separately labeled reference in reference.
+
+For transaction_time, use the date and time printed on the receipt (Bangladesh local time, Asia/Dhaka), normalized to "YYYY-MM-DD HH:mm:ss". All example receipts include a time. Do not use the phone status-bar time, file metadata, upload time, or current server time.
+For amount, use the transfer/deposit amount. Put any service charge and VAT in fee, and the full debit/grand total in total_amount when shown.
 
 Return a STRICT JSON object with these fields:
 - "provider": string ("city_bank", "dbbl", "brac_bank", "ebl", "bkash", "nagad", "rocket", "upay", or "other")
-- "trx_id": string or null (Primary Transaction ID, e.g. "LID02226212657", "9K83XJ8KL2", "00906359")
+- "trx_id": string or null (Primary Transaction ID, e.g. "LID02226212657", "9K83XJ8KL2", "00906359"; for City Bank "Reference No" and BRAC Bank "Reference Number", copy the same value here)
 - "reference": string or null (Reference Number, e.g. "100019139250", "550100626")
 - "amount": decimal number (The transfer or deposit amount in BDT, e.g. 6400.00, 8320.00, 44100.00, 8000.00)
 - "fee": decimal number (Service charge / fee, otherwise 0.0)
 - "total_amount": decimal number (Total including fee)
-- "sender_number": string or null (Sender account number, phone, card number, or NexusPay ID)
-- "receiver_number": string or null (Beneficiary / To Account / Recipient account number, e.g. "1503915274001", "1641100042219", "2053944080001")
+- "balance": decimal number or null (Account balance shown on the receipt, otherwise null)
+- "txn_type": string or null (Transaction type, transfer channel, or deposit type as printed)
+- "beneficiary_bank": string or null (Beneficiary bank name if shown)
+- "sender_account": string or null (From/Sender account identifier exactly as displayed)
+- "sender_number": string or null (Compatibility alias for sender_account; return the same value)
+- "sender_name": string or null (Name explicitly shown for the From/Sender account)
+- "receiver_account": string or null (To/Transferred to/Beneficiary account identifier exactly as displayed)
+- "receiver_number": string or null (Compatibility alias for receiver_account; return the same value)
 - "receiver_name": string or null (Beneficiary name, e.g. "CYBER 32", "SHAHIN VAI DOLLAR")
 - "transaction_time": string or null ("YYYY-MM-DD HH:mm:ss" or null)
 - "status_in_screenshot": string ("successful", "completed", "pending", "failed", "unknown")
@@ -70,35 +99,38 @@ Return a STRICT JSON object with these fields:
 PROMPT;
 
         try {
-            $endpoint = "{$baseUrl}/models/{$model}:generateContent?key={$apiKey}";
+            $endpoint = "{$baseUrl}/models/{$model}:generateContent";
 
-            $response = Http::timeout(30)->post($endpoint, [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt],
-                            [
-                                'inline_data' => [
-                                    'mime_type' => $imageDetails['mime_type'],
-                                    'data' => base64_encode($imageDetails['bytes']),
+            $response = Http::withHeader('x-goog-api-key', $apiKey)
+                ->connectTimeout(10)
+                ->timeout(30)
+                ->retry(2, 500, null, false)
+                ->post($endpoint, [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt],
+                                [
+                                    'inline_data' => [
+                                        'mime_type' => $imageDetails['mime_type'],
+                                        'data' => base64_encode($imageDetails['bytes']),
+                                    ],
                                 ],
                             ],
                         ],
                     ],
-                ],
-                'generationConfig' => [
-                    'response_mime_type' => 'application/json',
-                    'temperature' => 0.1,
-                ],
-            ]);
+                    'generationConfig' => [
+                        'response_mime_type' => 'application/json',
+                        'temperature' => 0.1,
+                    ],
+                ]);
 
             if (! $response->successful()) {
                 Log::error('Gemini API call failed', [
                     'status' => $response->status(),
-                    'body' => $response->body(),
                 ]);
 
-                return $this->fallbackResponse('Gemini API error: '.$response->status());
+                return $this->fallbackResponse('Gemini API returned HTTP '.$response->status().'.');
             }
 
             $responseData = $response->json();
@@ -111,20 +143,38 @@ PROMPT;
                 return $this->fallbackResponse('Invalid JSON returned by Gemini');
             }
 
-            $trxId = isset($decoded['trx_id']) ? strtoupper(trim((string) $decoded['trx_id'])) : null;
+            $provider = $decoded['provider'] ?? null;
+            $reference = $decoded['reference'] ?? $decoded['ref'] ?? null;
+            $rawTrxId = $decoded['trx_id'] ?? $decoded['transaction_id'] ?? null;
+
+            if ($rawTrxId === null && $reference !== null && in_array($provider, ['city_bank', 'brac_bank'], true)) {
+                $rawTrxId = $reference;
+            }
+
+            $trxId = $rawTrxId !== null ? strtoupper(trim((string) $rawTrxId)) : null;
             if ($trxId !== null) {
                 $trxId = preg_replace('/[^A-Z0-9]/', '', $trxId);
             }
 
+            $senderAccount = $this->normalizeAccount($decoded['sender_account'] ?? $decoded['from_account'] ?? $decoded['sender_number'] ?? null);
+            $receiverAccount = $this->normalizeAccount($decoded['receiver_account'] ?? $decoded['to_account'] ?? $decoded['receiver_number'] ?? null);
+
             return [
-                'provider' => $decoded['provider'] ?? null,
+                'provider' => $provider,
                 'trx_id' => $trxId,
                 'amount' => isset($decoded['amount']) ? (float) $decoded['amount'] : null,
                 'fee' => isset($decoded['fee']) ? (float) $decoded['fee'] : 0.0,
                 'total_amount' => isset($decoded['total_amount']) ? (float) $decoded['total_amount'] : null,
-                'sender_number' => $decoded['sender_number'] ?? null,
-                'receiver_number' => $decoded['receiver_number'] ?? null,
-                'reference' => $decoded['reference'] ?? null,
+                'balance' => isset($decoded['balance']) ? (float) $decoded['balance'] : null,
+                'txn_type' => $decoded['txn_type'] ?? $decoded['transaction_type'] ?? null,
+                'beneficiary_bank' => $decoded['beneficiary_bank'] ?? null,
+                'sender_account' => $senderAccount,
+                'sender_number' => $senderAccount,
+                'sender_name' => $decoded['sender_name'] ?? $decoded['from_name'] ?? null,
+                'receiver_account' => $receiverAccount,
+                'receiver_number' => $receiverAccount,
+                'receiver_name' => $decoded['receiver_name'] ?? $decoded['to_name'] ?? $decoded['beneficiary_name'] ?? null,
+                'reference' => $reference,
                 'transaction_time' => $decoded['transaction_time'] ?? null,
                 'status_in_screenshot' => $decoded['status_in_screenshot'] ?? 'unknown',
                 'is_suspicious_or_edited' => (bool) ($decoded['is_suspicious_or_edited'] ?? false),
@@ -133,9 +183,11 @@ PROMPT;
                 'raw_response' => $decoded,
             ];
         } catch (Exception $e) {
-            Log::error('Exception in GeminiVisionService: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('GeminiVisionService could not contact the Gemini API.', [
+                'exception' => $e::class,
+            ]);
 
-            return $this->fallbackResponse('Exception: '.$e->getMessage());
+            return $this->fallbackResponse('Gemini API request failed before a response was received.');
         }
     }
 
@@ -171,6 +223,17 @@ PROMPT;
         return null;
     }
 
+    private function normalizeAccount(mixed $account): ?string
+    {
+        if (! is_string($account) && ! is_numeric($account)) {
+            return null;
+        }
+
+        $normalizedAccount = trim((string) preg_replace('/^(?:account|a\/c|acc|ac)\s*[:#-]?\s*/i', '', trim((string) $account)));
+
+        return $normalizedAccount !== '' ? $normalizedAccount : null;
+    }
+
     /**
      * @return array{
      *     provider: null,
@@ -178,7 +241,13 @@ PROMPT;
      *     amount: null,
      *     fee: null,
      *     total_amount: null,
+     *     balance: null,
+     *     txn_type: null,
+     *     beneficiary_bank: null,
+     *     sender_account: null,
      *     sender_number: null,
+     *     sender_name: null,
+     *     receiver_account: null,
      *     receiver_number: null,
      *     reference: null,
      *     transaction_time: null,
@@ -196,8 +265,15 @@ PROMPT;
             'amount' => null,
             'fee' => null,
             'total_amount' => null,
+            'balance' => null,
+            'txn_type' => null,
+            'beneficiary_bank' => null,
+            'sender_account' => null,
             'sender_number' => null,
+            'sender_name' => null,
+            'receiver_account' => null,
             'receiver_number' => null,
+            'receiver_name' => null,
             'reference' => null,
             'transaction_time' => null,
             'status_in_screenshot' => 'unknown',

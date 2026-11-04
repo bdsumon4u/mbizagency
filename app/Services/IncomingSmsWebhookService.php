@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\IncomingSmsStatus;
 use App\Models\IncomingSms;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class IncomingSmsWebhookService
@@ -18,7 +17,7 @@ class IncomingSmsWebhookService
         $configuredKey = config('payment_verification.webhook.secret_key');
 
         if (empty($configuredKey)) {
-            return true;
+            return in_array((string) config('app.env'), ['local', 'testing'], true);
         }
 
         $provided = $request->header('X-API-Key')
@@ -162,26 +161,17 @@ class IncomingSmsWebhookService
         // Parse message
         $parsed = $this->smsParser->parse($rawMessage);
 
-        // Resolve transaction time
-        $transactionTime = null;
-        $timestamp = $payload['timestamp'] ?? $payload['sent_stamp'] ?? $payload['date'] ?? $payload['time'] ?? null;
-        if (! empty($timestamp)) {
-            try {
-                if (is_numeric($timestamp)) {
-                    // Handle millisecond or second Unix timestamp
-                    $numericTimestamp = (int) $timestamp;
-                    $transactionTime = $numericTimestamp > 9999999999
-                        ? Carbon::createFromTimestampMs($numericTimestamp)
-                        : Carbon::createFromTimestamp($numericTimestamp);
-                } else {
-                    $transactionTime = Carbon::parse((string) $timestamp);
-                }
-            } catch (\Throwable) {
-                // Ignore parse errors, fallback to parsed time or now
-            }
-        }
+        $finalTransactionTime = $parsed['transaction_time'] ?? now();
 
-        $finalTransactionTime = $transactionTime ?? $parsed['transaction_time'] ?? now();
+        $metadataPayload = array_filter(
+            $payload,
+            static fn (mixed $value, string|int $key): bool => ! in_array(
+                mb_strtolower((string) $key),
+                ['secret', 'api_key', 'password', 'token', 'webhook_secret', 'authorization'],
+                true,
+            ),
+            ARRAY_FILTER_USE_BOTH,
+        );
 
         return IncomingSms::create([
             'source' => 'http_webhook',
@@ -200,8 +190,11 @@ class IncomingSmsWebhookService
             'txn_type' => $payload['txn_type'] ?? $parsed['txn_type'],
             'transaction_time' => $finalTransactionTime,
             'metadata' => [
-                'headers' => request()?->headers->all() ?? [],
-                'payload' => $payload,
+                'headers' => [
+                    'user_agent' => request()?->userAgent(),
+                    'content_type' => request()?->header('Content-Type'),
+                ],
+                'payload' => $metadataPayload,
             ],
         ]);
     }

@@ -21,8 +21,16 @@
             <span class="font-bold text-gray-900 dark:text-gray-100 ml-1">{{ number_format((float) $record->amount, 2) }} BDT</span>
         </div>
         <div>
-            <span class="text-gray-500 dark:text-gray-400">Sender:</span>
-            <span class="font-semibold text-gray-900 dark:text-gray-100 ml-1">{{ $record->sender_account ?: 'N/A' }}</span>
+            <span class="text-gray-500 dark:text-gray-400">Receiver A/C:</span>
+            <span class="font-mono font-bold text-gray-900 dark:text-gray-100 ml-1">{{ $record->receiver_account ?: 'N/A' }}</span>
+        </div>
+        <div>
+            <span class="text-gray-500 dark:text-gray-400">Sender A/C:</span>
+            <span class="font-semibold text-gray-900 dark:text-gray-100 ml-1">{{ $record->sender_account ?: 'N/A (Not in SMS)' }}</span>
+        </div>
+        <div>
+            <span class="text-gray-500 dark:text-gray-400">Balance:</span>
+            <span class="font-semibold text-gray-900 dark:text-gray-100 ml-1">{{ $record->balance ? number_format((float) $record->balance, 2) . ' BDT' : 'N/A' }}</span>
         </div>
         <div>
             <span class="text-gray-500 dark:text-gray-400">Fee:</span>

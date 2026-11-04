@@ -41,11 +41,24 @@ class IncomingSmsTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('provider')
                     ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'bkash' => 'bKash',
+                        'nagad' => 'Nagad',
+                        'rocket' => 'Rocket',
+                        'upay' => 'Upay',
+                        'brac_bank' => 'BRAC Bank',
+                        'city_bank' => 'City Bank',
+                        'dbbl' => 'DBBL',
+                        'ebl' => 'EBL',
+                        'bank' => 'Bank',
+                        default => ucfirst((string) ($state ?: 'Unknown')),
+                    })
                     ->colors([
                         'pink' => 'bkash',
                         'danger' => 'nagad',
                         'purple' => 'rocket',
-                        'info' => 'bank',
+                        'warning' => 'upay',
+                        'info' => fn ($state) => in_array($state, ['brac_bank', 'city_bank', 'dbbl', 'ebl', 'bank'], true),
                     ])
                     ->sortable()
                     ->searchable(),
@@ -53,21 +66,26 @@ class IncomingSmsTable
                     ->label('TrxID / Ref')
                     ->fontFamily('mono')
                     ->weight('bold')
+                    ->placeholder('—')
                     ->copyable()
                     ->searchable(),
                 TextColumn::make('amount')
                     ->money('BDT')
                     ->sortable(),
-                TextColumn::make('sender_account')
-                    ->label('Sender')
-                    ->searchable(),
                 TextColumn::make('receiver_account')
-                    ->label('Receiver')
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Receiver A/C')
+                    ->fontFamily('mono')
+                    ->placeholder('—')
+                    ->searchable(),
+                TextColumn::make('sender_account')
+                    ->label('Sender A/C')
+                    ->fontFamily('mono')
+                    ->placeholder('—')
                     ->searchable(),
                 TextColumn::make('transaction_time')
                     ->label('Tx Time')
                     ->dateTime('d M Y h:i A')
+                    ->placeholder('—')
                     ->sortable(),
                 TextColumn::make('raw_message')
                     ->label('SMS Content')
@@ -100,6 +118,10 @@ class IncomingSmsTable
                         'nagad' => 'Nagad',
                         'rocket' => 'Rocket',
                         'upay' => 'Upay',
+                        'brac_bank' => 'BRAC Bank',
+                        'city_bank' => 'City Bank',
+                        'dbbl' => 'DBBL',
+                        'ebl' => 'EBL',
                         'bank' => 'Bank',
                         'other' => 'Other',
                     ]),

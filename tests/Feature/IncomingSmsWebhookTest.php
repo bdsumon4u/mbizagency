@@ -46,9 +46,25 @@ test('http webhook accepts incoming sms json and stores it with parsed fields', 
         'trx_id' => 'BK99HTTP88',
         'amount' => 3500.00,
         'status' => IncomingSmsStatus::Unmatched->value,
+        'transaction_time' => '2026-11-03 14:15:00',
     ]);
 
     Queue::assertPushed(ProcessPendingPaymentVerificationsJob::class);
+});
+
+test('uses the sms date with server time when the sms contains no transaction time', function () {
+    Queue::fake();
+    $serverTime = now()->setDate(2026, 11, 4)->setTime(15, 30, 0);
+    $this->travelTo($serverTime);
+
+    $this->postJson('/api/webhooks/sms', [
+        'message' => 'TK 19,500.00 has been credited to your A/C# 20539**0001 on 03-11-26. TrxID DAYONLY123',
+        'timestamp' => '2024-11-03 12:00:00',
+    ])->assertSuccessful();
+
+    $sms = IncomingSms::query()->where('trx_id', 'DAYONLY123')->firstOrFail();
+
+    expect($sms->transaction_time->format('Y-m-d H:i:s'))->toBe('2026-11-03 15:30:00');
 });
 
 test('http webhook auto-recovers from malformed json with missing quote around text placeholder', function () {
@@ -122,6 +138,32 @@ test('http webhook rejects unauthorized request when secret is wrong', function 
     ]);
 
     $response->assertStatus(401);
+});
+
+test('http webhook rejects requests without a configured secret outside local and test environments', function () {
+    Config::set('app.env', 'production');
+    Config::set('payment_verification.webhook.secret_key', null);
+
+    $this->postJson('/api/webhooks/sms', [
+        'message' => 'You have received Tk 1,000.00 TrxID NOSECRET1',
+    ])->assertUnauthorized();
+});
+
+test('http webhook does not persist credentials from headers or payload metadata', function () {
+    Config::set('payment_verification.webhook.secret_key', 'private-key');
+
+    $this->postJson('/api/webhooks/sms', [
+        'message' => 'You have received Tk 1,000.00 TrxID SAFEMETA1',
+        'api_key' => 'body-secret',
+    ], [
+        'X-API-Key' => 'private-key',
+    ])->assertSuccessful();
+
+    $sms = IncomingSms::query()->where('trx_id', 'SAFEMETA1')->firstOrFail();
+
+    expect($sms->metadata['payload'])->not->toHaveKey('api_key')
+        ->and($sms->metadata['headers'])->not->toHaveKey('authorization')
+        ->and($sms->metadata['headers'])->not->toHaveKey('x-api-key');
 });
 
 test('http webhook is idempotent and prevents duplicate ingestion', function () {

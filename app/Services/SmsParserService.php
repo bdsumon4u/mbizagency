@@ -293,29 +293,49 @@ class SmsParserService
 
     public function extractTransactionTime(string $text): ?Carbon
     {
+        $timezone = date_default_timezone_get();
+
         $datePatterns = [
-            // E.g. "on 29-OCT-26 05:20:41 PM" or "on 29-10-2026 12:20:10 PM"
-            '/(?:on|at|Date:?)\s*([0-9]{2}-[a-zA-Z]{3}-[0-9]{2,4}\s+[0-9]{1,2}:[0-9]{2}:[0-9]{2}\s*(?:AM|PM)?)/i',
-            '/(?:on|at|Date:?)\s*([0-9]{2}-[0-9]{2}-[0-9]{2,4}\s+[0-9]{1,2}:[0-9]{2}:[0-9]{2}\s*(?:AM|PM)?)/i',
+            // E.g. "on 29-OCT-26 05:20 PM" or "on 29-10-2026 12:20:10 PM"
+            '/(?:on|at|Date:?)\s*([0-9]{2}-[a-zA-Z]{3}-[0-9]{2,4}\s+[0-9]{1,2}:[0-9]{2}(?::[0-9]{2})?\s*(?:AM|PM)?)/i',
+            '/(?:on|at|Date:?)\s*([0-9]{2}-[0-9]{2}-[0-9]{2,4}\s+[0-9]{1,2}:[0-9]{2}(?::[0-9]{2})?\s*(?:AM|PM)?)/i',
+            '/(?:on|at|Date:?)\s*([0-9]{2}\/[0-9]{2}\/[0-9]{2,4}\s+[0-9]{1,2}:[0-9]{2}(?::[0-9]{2})?\s*(?:AM|PM)?)/i',
+            '/(20[0-9]{2}-[0-9]{2}-[0-9]{2}[T ]+[0-9]{2}:[0-9]{2}(?::[0-9]{2})?(?:Z|[+-][0-9]{2}:?[0-9]{2})?)/i',
             // E.g. "29-Oct-2026"
             '/([0-9]{2}-[a-zA-Z]{3}-[0-9]{2,4})/',
-            // E.g. "29-10-26"
+            // E.g. "29-10-26" or "03-11-26"
             '/(?:on|Date:?)\s*([0-9]{2}-[0-9]{2}-[0-9]{2,4})/',
-            // E.g. "28/10/2026 15:42"
-            '/(?:at|Date:?)\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4}\s+[0-9]{2}:[0-9]{2}(?::[0-9]{2})?)/i',
-            // E.g. "2026-10-29 15:00:00"
-            '/([0-9]{4}-[0-9]{2}-[0-9]{2}\s+[0-9]{2}:[0-9]{2}(?::[0-9]{2})?)/',
         ];
 
         foreach ($datePatterns as $pattern) {
             if (preg_match($pattern, $text, $matches)) {
                 $rawDate = trim($matches[1]);
                 try {
-                    if (str_contains($rawDate, '/')) {
-                        $rawDate = str_replace('/', '-', $rawDate);
+                    if (preg_match('/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}\s/', $rawDate)) {
+                        foreach (['!d/m/Y H:i:s A', '!d/m/Y H:i A', '!d/m/Y H:i:s', '!d/m/Y H:i'] as $format) {
+                            try {
+                                return Carbon::createFromFormat($format, $rawDate, $timezone);
+                            } catch (\Throwable) {
+                                // Try the next supported Bangladesh date/time format.
+                            }
+                        }
                     }
 
-                    return Carbon::parse($rawDate);
+                    // Handle DD-MM-YY format (e.g. 03-11-26 => 2026-11-03)
+                    if (preg_match('/^([0-9]{2})-([0-9]{2})-([0-9]{2})$/', $rawDate, $dmy)) {
+                        $date = Carbon::createFromFormat('!d-m-y', $rawDate, $timezone);
+
+                        return $date->setTimeFrom(Carbon::now($timezone));
+                    }
+
+                    $hasTime = preg_match('/[0-9]{1,2}:[0-9]{2}/', $rawDate) === 1;
+                    $parsedDate = Carbon::parse($rawDate, $timezone);
+
+                    if (! $hasTime) {
+                        $parsedDate->setTimeFrom(Carbon::now($timezone));
+                    }
+
+                    return $parsedDate;
                 } catch (\Throwable) {
                     // continue
                 }

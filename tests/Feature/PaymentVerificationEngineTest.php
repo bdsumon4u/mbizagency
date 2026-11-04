@@ -5,6 +5,7 @@ use App\Enums\PaymentVerificationStatus;
 use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
 use App\Models\IncomingSms;
+use App\Models\PaymentMethod;
 use App\Models\PaymentVerification;
 use App\Models\User;
 use App\Models\WalletTransaction;
@@ -321,4 +322,95 @@ test('auto-approves dbbl atm crm cash deposit matching masked account and amount
         ->and($walletTx->refresh()->status)->toBe(WalletTransactionStatus::APPROVED)
         ->and($user->refresh()->wallet_balance)->toEqual(8000.00)
         ->and($sms->refresh()->status)->toBe(IncomingSmsStatus::Matched);
+});
+
+test('auto-approves brac bank deposit matching masked account 20539**0001 and amount 12600 BDT', function () {
+    Config::set('payment_verification.window_time_minutes', 5);
+    Config::set('payment_verification.auto_approve', true);
+
+    $user = User::factory()->create(['wallet_balance' => 0.00]);
+
+    // Active agency BRAC Bank payment method
+    PaymentMethod::create([
+        'name' => 'BRAC Bank',
+        'type' => 'Bank',
+        'account_number' => '2053944080001',
+        'is_active' => true,
+    ]);
+
+    $walletTx = WalletTransaction::create([
+        'user_id' => $user->id,
+        'type' => WalletTransactionType::DEPOSIT,
+        'amount' => 12600.00,
+        'status' => WalletTransactionStatus::PENDING,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    // Extracted from screenshot by Gemini
+    $verification = PaymentVerification::create([
+        'verifiable_type' => WalletTransaction::class,
+        'verifiable_id' => $walletTx->id,
+        'provider' => 'brac_bank',
+        'amount' => 12600.00,
+        'confidence_score' => 0.95,
+        'is_suspicious' => false,
+        'verification_status' => PaymentVerificationStatus::Pending,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    // Incoming BRAC Bank SMS from production sample
+    $sms = IncomingSms::create([
+        'provider' => 'brac_bank',
+        'amount' => 12600.00,
+        'receiver_account' => '20539**0001',
+        'balance' => 868662.85,
+        'raw_message' => 'TK 12,600.00 has been credited to your A/C# 20539**0001 on 03-11-26. Your A/C balance is TK 8,68,662.85. For Enquiry call: 16221',
+        'status' => IncomingSmsStatus::Unmatched,
+    ]);
+
+    $engine = app(PaymentVerificationEngine::class);
+    $result = $engine->evaluate($verification);
+
+    expect($result->verification_status)->toBe(PaymentVerificationStatus::Approved)
+        ->and($result->incoming_sms_id)->toBe($sms->id)
+        ->and($walletTx->refresh()->status)->toBe(WalletTransactionStatus::APPROVED)
+        ->and($user->refresh()->wallet_balance)->toEqual(12600.00)
+        ->and($sms->refresh()->status)->toBe(IncomingSmsStatus::Matched);
+});
+
+test('does not match a transaction sms outside the configured screenshot time window', function () {
+    Config::set('payment_verification.window_time_minutes', 5);
+    Config::set('payment_verification.sms_match_window_minutes', 5);
+
+    $user = User::factory()->create();
+    $transactionTime = now()->subMinutes(8);
+    $walletTx = WalletTransaction::create([
+        'user_id' => $user->id,
+        'type' => WalletTransactionType::DEPOSIT,
+        'amount' => 2000.00,
+        'status' => WalletTransactionStatus::PENDING,
+        'created_at' => now()->subMinutes(10),
+    ]);
+    $verification = PaymentVerification::create([
+        'verifiable_type' => WalletTransaction::class,
+        'verifiable_id' => $walletTx->id,
+        'trx_id' => 'OLDTXN123',
+        'transaction_time' => $transactionTime,
+        'confidence_score' => 0.98,
+        'verification_status' => PaymentVerificationStatus::Pending,
+        'created_at' => now()->subMinutes(10),
+    ]);
+    IncomingSms::create([
+        'trx_id' => 'OLDTXN123',
+        'amount' => 2000.00,
+        'transaction_time' => $transactionTime->copy()->subMinutes(6),
+        'raw_message' => 'Received Tk 2,000.00 TrxID OLDTXN123',
+        'status' => IncomingSmsStatus::Unmatched,
+    ]);
+
+    $result = app(PaymentVerificationEngine::class)->evaluate($verification);
+
+    expect($result->verification_status)->toBe(PaymentVerificationStatus::Pending)
+        ->and($result->incoming_sms_id)->toBeNull()
+        ->and($walletTx->refresh()->status)->toBe(WalletTransactionStatus::PENDING);
 });

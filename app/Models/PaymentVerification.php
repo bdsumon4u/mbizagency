@@ -16,6 +16,9 @@ class PaymentVerification extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'fee' => 'decimal:2',
+            'total_amount' => 'decimal:2',
+            'balance' => 'decimal:2',
             'confidence_score' => 'decimal:2',
             'is_suspicious' => 'boolean',
             'transaction_time' => 'datetime',

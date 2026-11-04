@@ -10,6 +10,7 @@ use App\Enums\PaymentVerificationStatus;
 use App\Enums\WalletTransactionStatus;
 use App\Models\IncomingSms;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\PaymentVerification;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +76,17 @@ class PaymentVerificationEngine
             $verification->update([
                 'verification_status' => PaymentVerificationStatus::Suspicious,
                 'status_reason' => 'AI flagged screenshot as potentially edited, fraudulent, or inconsistent.',
+                'checked_at' => now(),
+            ]);
+
+            return $verification->refresh();
+        }
+
+        $screenshotStatus = mb_strtolower((string) data_get($verification->ai_response, 'status_in_screenshot', ''));
+        if ($screenshotStatus !== '' && ! in_array($screenshotStatus, ['successful', 'completed'], true)) {
+            $verification->update([
+                'verification_status' => PaymentVerificationStatus::ManualReview,
+                'status_reason' => "Screenshot transaction status is {$screenshotStatus}; manual review is required.",
                 'checked_at' => now(),
             ]);
 
@@ -223,6 +235,19 @@ class PaymentVerificationEngine
             return $verification->refresh();
         }
 
+        if ($verification->amount === null || abs((float) $verification->amount - $smsAmount) > 0.01) {
+            $verification->update([
+                'incoming_sms_id' => $matchingSms->id,
+                'verification_status' => PaymentVerificationStatus::ManualReview,
+                'status_reason' => $verification->amount === null
+                    ? 'Screenshot amount could not be extracted; manual review is required.'
+                    : "Screenshot amount ({$verification->amount} BDT) does not match the incoming SMS amount ({$smsAmount} BDT).",
+                'checked_at' => now(),
+            ]);
+
+            return $verification->refresh();
+        }
+
         // 10. Auto-Approve Check
         if (! config('payment_verification.auto_approve', true)) {
             $verification->update([
@@ -256,23 +281,36 @@ class PaymentVerificationEngine
                     $q->where('trx_id', $trxId)->orWhere('reference', $trxId);
                 })
                 ->where('status', IncomingSmsStatus::Unmatched)
+                ->orderByDesc('transaction_time')
+                ->orderByDesc('created_at')
                 ->first();
 
-            if ($sms) {
+            if ($sms && $this->isWithinTransactionWindow($verification, $sms)) {
                 return $sms;
             }
         }
 
         // 2. Bank Multi-Factor Match: Provider + Masked Account + Amount
-        // Full account can come from screenshot or paymentMethod on the verifiable
-        $fullAccount = $verification->receiver_account
-            ?: $verifiable->paymentMethod?->account_number;
+        // Full accounts can come from screenshot, verifiable payment method, or system bank accounts
+        $candidateAccounts = array_values(array_filter([
+            $verification->receiver_account,
+            $verifiable->paymentMethod?->account_number,
+        ]));
 
-        if (empty($fullAccount)) {
-            return null;
+        if (empty($candidateAccounts)) {
+            // Check active bank payment methods in the system (e.g. Agency BRAC, City, DBBL)
+            $bankAccounts = PaymentMethod::query()
+                ->where('type', 'Bank')
+                ->active()
+                ->pluck('account_number')
+                ->filter()
+                ->all();
+
+            $candidateAccounts = array_values($bankAccounts);
         }
 
-        $provider = $verification->provider ?: $this->resolveProviderFromPaymentMethod($verifiable);
+        $rawProvider = $verification->provider ?: $this->resolveProviderFromPaymentMethod($verifiable);
+        $provider = $this->normalizeProvider($rawProvider);
 
         $candidates = IncomingSms::query()
             ->where('status', IncomingSmsStatus::Unmatched)
@@ -286,11 +324,24 @@ class PaymentVerificationEngine
                         ->orWhereNull('provider');
                 });
             })
+            ->orderByDesc('transaction_time')
+            ->orderByDesc('created_at')
             ->get();
 
         $matchedCandidates = [];
         foreach ($candidates as $candidate) {
-            if ($candidate->receiver_account && $this->smsParser->matchesMaskedAccount($fullAccount, $candidate->receiver_account)) {
+            if (! $this->isWithinTransactionWindow($verification, $candidate)) {
+                continue;
+            }
+            if ($candidate->receiver_account && ! empty($candidateAccounts)) {
+                foreach ($candidateAccounts as $fullAcc) {
+                    if ($this->smsParser->matchesMaskedAccount((string) $fullAcc, (string) $candidate->receiver_account)) {
+                        $matchedCandidates[] = $candidate;
+                        break;
+                    }
+                }
+            } elseif (empty($candidateAccounts) && $candidate->provider === $provider) {
+                // If account info is not available, match on exact amount and provider
                 $matchedCandidates[] = $candidate;
             }
         }
@@ -310,33 +361,43 @@ class PaymentVerificationEngine
         return $matchedCandidates[0] ?? null;
     }
 
+    private function isWithinTransactionWindow(PaymentVerification $verification, IncomingSms $sms): bool
+    {
+        $windowMinutes = (int) config('payment_verification.sms_match_window_minutes', 5);
+
+        if ($verification->transaction_time && $sms->transaction_time) {
+            return abs($verification->transaction_time->diffInSeconds($sms->transaction_time, false)) <= $windowMinutes * 60;
+        }
+
+        return abs(now()->diffInSeconds($sms->created_at, false)) <= $windowMinutes * 60;
+    }
+
+    private function normalizeProvider(?string $provider): ?string
+    {
+        if (empty($provider)) {
+            return null;
+        }
+
+        $p = mb_strtolower(trim($provider));
+
+        return match (true) {
+            str_contains($p, 'brac') => 'brac_bank',
+            str_contains($p, 'city') => 'city_bank',
+            str_contains($p, 'dbbl') || str_contains($p, 'nexus') || str_contains($p, 'dutch') => 'dbbl',
+            str_contains($p, 'ebl') || str_contains($p, 'eastern') => 'ebl',
+            str_contains($p, 'bkash') => 'bkash',
+            str_contains($p, 'nagad') => 'nagad',
+            str_contains($p, 'rocket') => 'rocket',
+            str_contains($p, 'upay') => 'upay',
+            default => $p,
+        };
+    }
+
     private function resolveProviderFromPaymentMethod(Order|WalletTransaction $verifiable): ?string
     {
-        $name = mb_strtolower($verifiable->paymentMethod?->name ?? '');
+        $name = $verifiable->paymentMethod?->name ?? '';
 
-        if (str_contains($name, 'city')) {
-            return 'city_bank';
-        }
-        if (str_contains($name, 'dbbl') || str_contains($name, 'dutch')) {
-            return 'dbbl';
-        }
-        if (str_contains($name, 'brac')) {
-            return 'brac_bank';
-        }
-        if (str_contains($name, 'ebl') || str_contains($name, 'eastern')) {
-            return 'ebl';
-        }
-        if (str_contains($name, 'bkash')) {
-            return 'bkash';
-        }
-        if (str_contains($name, 'nagad')) {
-            return 'nagad';
-        }
-        if (str_contains($name, 'rocket')) {
-            return 'rocket';
-        }
-
-        return null;
+        return $this->normalizeProvider($name);
     }
 
     private function isVerifiableAlreadyResolved(Order|WalletTransaction $verifiable): bool

@@ -65,36 +65,47 @@ final class AnalyzePaymentScreenshotJob implements ShouldQueue
         $transactionTime = null;
         if (! empty($aiResult['transaction_time'])) {
             try {
-                $transactionTime = Carbon::parse($aiResult['transaction_time']);
+                $transactionTime = Carbon::parse($aiResult['transaction_time'], config('app.timezone'));
             } catch (\Throwable) {
                 // Ignore parse errors
             }
         }
 
-        /** @var PaymentVerification $verification */
-        $verification = PaymentVerification::query()->updateOrCreate(
+        $verification = PaymentVerification::query()->firstOrNew(
             [
                 'verifiable_type' => $this->verifiableType,
                 'verifiable_id' => $this->verifiableId,
-            ],
-            [
-                'screenshot_path' => $primaryScreenshot,
-                'provider' => $aiResult['provider'],
-                'trx_id' => $aiResult['trx_id'],
-                'reference' => $aiResult['reference'] ?? null,
-                'amount' => $aiResult['amount'],
-                'sender_account' => $aiResult['sender_number'],
-                'receiver_account' => $aiResult['receiver_number'],
-                'receiver_name' => $aiResult['receiver_name'] ?? null,
-                'transaction_time' => $transactionTime,
-                'confidence_score' => $aiResult['confidence_score'],
-                'is_suspicious' => $aiResult['is_suspicious_or_edited'],
-                'ai_response' => $aiResult['raw_response'] ?? $aiResult,
-                'verification_status' => PaymentVerificationStatus::Pending,
-                'status_reason' => 'Screenshot analyzed by Gemini. Ready for matching evaluation.',
-                'checked_at' => now(),
             ]
         );
+
+        if ($verification->verification_status === PaymentVerificationStatus::Approved) {
+            return;
+        }
+
+        $verification->fill([
+            'screenshot_path' => $primaryScreenshot,
+            'provider' => $aiResult['provider'],
+            'trx_id' => $aiResult['trx_id'],
+            'reference' => $aiResult['reference'] ?? null,
+            'amount' => $aiResult['amount'],
+            'fee' => $aiResult['fee'] ?? null,
+            'total_amount' => $aiResult['total_amount'] ?? null,
+            'balance' => $aiResult['balance'] ?? null,
+            'txn_type' => $aiResult['txn_type'] ?? null,
+            'beneficiary_bank' => $aiResult['beneficiary_bank'] ?? null,
+            'sender_account' => $aiResult['sender_account'] ?? $aiResult['sender_number'],
+            'sender_name' => $aiResult['sender_name'] ?? null,
+            'receiver_account' => $aiResult['receiver_account'] ?? $aiResult['receiver_number'],
+            'receiver_name' => $aiResult['receiver_name'] ?? null,
+            'transaction_time' => $transactionTime,
+            'confidence_score' => $aiResult['confidence_score'],
+            'is_suspicious' => $aiResult['is_suspicious_or_edited'],
+            'ai_response' => $aiResult['raw_response'] ?? $aiResult,
+            'verification_status' => PaymentVerificationStatus::Pending,
+            'status_reason' => 'Screenshot analyzed by Gemini. Ready for matching evaluation.',
+            'checked_at' => now(),
+        ]);
+        $verification->save();
 
         // Evaluate immediately with verification engine
         $verificationEngine->evaluate($verification);

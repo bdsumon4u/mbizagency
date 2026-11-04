@@ -44,7 +44,7 @@
         @endif
 
         <!-- AI Extracted Data Grid -->
-        <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
             <div>
                 <span class="text-gray-500 dark:text-gray-400">Extracted TrxID:</span>
                 <span class="font-mono font-bold text-gray-900 dark:text-gray-100 ml-1">
@@ -52,9 +52,27 @@
                 </span>
             </div>
             <div>
+                <span class="text-gray-500 dark:text-gray-400">Reference:</span>
+                <span class="font-mono text-gray-900 dark:text-gray-100 ml-1">
+                    {{ $verification->reference ?: 'Not detected' }}
+                </span>
+            </div>
+            <div>
                 <span class="text-gray-500 dark:text-gray-400">Extracted Amount:</span>
                 <span class="font-bold text-gray-900 dark:text-gray-100 ml-1">
-                    {{ $verification->amount ? number_format((float) $verification->amount, 2).' BDT' : 'N/A' }}
+                    {{ $verification->amount !== null ? number_format((float) $verification->amount, 2).' BDT' : 'N/A' }}
+                </span>
+            </div>
+            <div>
+                <span class="text-gray-500 dark:text-gray-400">Fee:</span>
+                <span class="text-gray-900 dark:text-gray-100 ml-1">
+                    {{ $verification->fee !== null ? number_format((float) $verification->fee, 2).' BDT' : 'N/A' }}
+                </span>
+            </div>
+            <div>
+                <span class="text-gray-500 dark:text-gray-400">Total:</span>
+                <span class="font-medium text-gray-900 dark:text-gray-100 ml-1">
+                    {{ $verification->total_amount !== null ? number_format((float) $verification->total_amount, 2).' BDT' : 'N/A' }}
                 </span>
             </div>
             <div>
@@ -63,6 +81,49 @@
                     {{ $verification->provider ?: 'N/A' }}
                 </span>
             </div>
+            <div>
+                <span class="text-gray-500 dark:text-gray-400">From:</span>
+                <span class="font-mono text-gray-900 dark:text-gray-100 ml-1">
+                    {{ collect([$verification->sender_name, $verification->sender_account])->filter()->join(' · ') ?: 'Not detected' }}
+                </span>
+            </div>
+            <div>
+                <span class="text-gray-500 dark:text-gray-400">To:</span>
+                <span class="font-mono text-gray-900 dark:text-gray-100 ml-1">
+                    {{ collect([$verification->receiver_name, $verification->receiver_account])->filter()->join(' · ') ?: 'Not detected' }}
+                </span>
+            </div>
+            <div>
+                <span class="text-gray-500 dark:text-gray-400">Transaction Time:</span>
+                <span class="font-medium text-gray-900 dark:text-gray-100 ml-1">
+                    {{ $verification->transaction_time?->format('d M Y h:i:s A') ?? 'Not detected' }}
+                </span>
+            </div>
+            @if ($verification->txn_type)
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Transaction Type:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $verification->txn_type }}</span>
+                </div>
+            @endif
+            @if ($verification->beneficiary_bank)
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Beneficiary Bank:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $verification->beneficiary_bank }}</span>
+                </div>
+            @endif
+            @if ($verification->balance !== null)
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Balance:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ number_format((float) $verification->balance, 2) }} BDT</span>
+                </div>
+            @endif
+            @php($screenshotStatus = data_get($verification->ai_response, 'status_in_screenshot'))
+            @if ($screenshotStatus)
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Screenshot Status:</span>
+                    <span class="capitalize text-gray-900 dark:text-gray-100 ml-1">{{ $screenshotStatus }}</span>
+                </div>
+            @endif
             <div>
                 <span class="text-gray-500 dark:text-gray-400">AI Confidence:</span>
                 <span class="font-medium text-gray-900 dark:text-gray-100 ml-1">

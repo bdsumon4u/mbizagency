@@ -13,6 +13,8 @@ return [
     */
     'window_time_minutes' => (int) env('PAYMENT_VERIFICATION_WINDOW_MINUTES', 5),
 
+    'sms_match_window_minutes' => (int) env('PAYMENT_VERIFICATION_SMS_MATCH_WINDOW_MINUTES', 5),
+
     /*
     |--------------------------------------------------------------------------
     | Maximum Wait Time For Incoming SMS (Minutes)
@@ -52,13 +54,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | Credentials and model settings for screenshot multimodal analysis.
-    | Gemini 2.5 Flash / Gemini 1.5 Flash provide fast, high-quality multimodal
-    | OCR & extraction at negligible or free-tier cost.
+    | The Flash-Lite model provides low-cost multimodal OCR and extraction.
     |
     */
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'model' => env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
         'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
     ],
 
