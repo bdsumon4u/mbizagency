@@ -320,9 +320,13 @@ class PaymentVerificationEngine
 
         // 2. Bank Multi-Factor Match: Provider + Masked Account + Amount
         // Full accounts can come from screenshot, verifiable payment method, or system bank accounts
+        $paymentMethodAccount = $verifiable instanceof WalletTransaction
+            ? $verifiable->paymentMethod?->account_number
+            : null;
+
         $candidateAccounts = array_values(array_filter([
             $verification->receiver_account,
-            $verifiable->paymentMethod?->account_number,
+            $paymentMethodAccount,
         ]));
 
         if (empty($candidateAccounts)) {
@@ -423,6 +427,10 @@ class PaymentVerificationEngine
 
     private function resolveProviderFromPaymentMethod(Order|WalletTransaction $verifiable): ?string
     {
+        if (! ($verifiable instanceof WalletTransaction)) {
+            return null;
+        }
+
         $name = $verifiable->paymentMethod?->name ?? '';
 
         return $this->normalizeProvider($name);

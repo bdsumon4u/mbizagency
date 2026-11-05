@@ -1,10 +1,14 @@
 <?php
 
 use App\Enums\IncomingSmsStatus;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentVerificationStatus;
 use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
+use App\Models\AdAccount;
+use App\Models\BusinessManager;
 use App\Models\IncomingSms;
+use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\PaymentVerification;
 use App\Models\User;
@@ -12,6 +16,7 @@ use App\Models\WalletTransaction;
 use App\Services\PaymentVerificationEngine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
@@ -526,4 +531,66 @@ test('marks manual review with clear message when ai analysis encounters an erro
 
     expect($result->verification_status)->toBe(PaymentVerificationStatus::ManualReview)
         ->and($result->status_reason)->toContain('Gemini API returned HTTP 503');
+});
+
+test('evaluates payment verification on an order without missing attribute exception', function () {
+    Http::fake([
+        'https://graph.facebook.com/*' => Http::response(['success' => true], 200),
+    ]);
+
+    Config::set('payment_verification.window_time_minutes', 5);
+    Config::set('payment_verification.auto_approve', true);
+
+    $user = User::factory()->create();
+    $bm = BusinessManager::query()->create([
+        'bm_id' => '11111',
+        'access_token' => 'token_secret',
+        'name' => 'BM 1',
+    ]);
+    $adAccount = AdAccount::query()->create([
+        'business_manager_id' => $bm->id,
+        'user_id' => $user->id,
+        'act_id' => '12345',
+        'name' => 'Account 1',
+    ]);
+
+    $order = Order::create([
+        'user_id' => $user->id,
+        'ad_account_id' => $adAccount->id,
+        'usd_amount' => 100.00,
+        'dollar_rate' => 125.00,
+        'bdt_amount' => 12500.00,
+        'processing_fee' => 0.00,
+        'status' => OrderStatus::PENDING,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    $verification = PaymentVerification::create([
+        'verifiable_type' => Order::class,
+        'verifiable_id' => $order->id,
+        'provider' => 'city_bank',
+        'receiver_account' => '1503915274001',
+        'receiver_name' => 'CYBER 32',
+        'reference' => '100019139250',
+        'amount' => 12500.00,
+        'confidence_score' => 0.98,
+        'is_suspicious' => false,
+        'verification_status' => PaymentVerificationStatus::Pending,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    $sms = IncomingSms::create([
+        'provider' => 'city_bank',
+        'amount' => 12500.00,
+        'receiver_account' => '1503***4001',
+        'raw_message' => "CITYTOUCH TXN\nTk. 12,500 Deposit\nA/C: 1503***4001",
+        'status' => IncomingSmsStatus::Unmatched,
+    ]);
+
+    $engine = app(PaymentVerificationEngine::class);
+    $result = $engine->evaluate($verification);
+
+    expect($result->verification_status)->toBe(PaymentVerificationStatus::Approved)
+        ->and($result->incoming_sms_id)->toBe($sms->id)
+        ->and($order->refresh()->status)->toBe(OrderStatus::APPROVED);
 });
