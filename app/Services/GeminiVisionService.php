@@ -37,7 +37,7 @@ class GeminiVisionService
     public function analyzeScreenshot(string $screenshotPath): array
     {
         $apiKey = config('payment_verification.gemini.api_key');
-        $model = config('payment_verification.gemini.model', 'gemini-3.5-flash-lite');
+        $model = config('payment_verification.gemini.model', 'gemini-flash-lite-latest');
         $baseUrl = config('payment_verification.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta');
 
         if (empty($apiKey)) {
@@ -162,6 +162,10 @@ PROMPT;
                 Log::error('Failed to decode Gemini response JSON', ['raw_text' => $rawText]);
 
                 return $this->fallbackResponse('Invalid JSON returned by Gemini');
+            }
+
+            if (array_is_list($decoded) && isset($decoded[0]) && is_array($decoded[0])) {
+                $decoded = $decoded[0];
             }
 
             $provider = $decoded['provider'] ?? null;
