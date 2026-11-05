@@ -251,6 +251,9 @@ test('auto-approves city bank citytouch deposit matching masked account and amou
         'amount' => 6400.00,
         'confidence_score' => 0.96,
         'is_suspicious' => false,
+        'ai_response' => [
+            'status_in_screenshot' => 'unknown', // Even if status is unknown, no sign of failure means it is accepted
+        ],
         'verification_status' => PaymentVerificationStatus::Pending,
         'created_at' => now()->subMinutes(10),
     ]);
@@ -272,6 +275,60 @@ test('auto-approves city bank citytouch deposit matching masked account and amou
         ->and($result->incoming_sms_id)->toBe($sms->id)
         ->and($walletTx->refresh()->status)->toBe(WalletTransactionStatus::APPROVED)
         ->and($user->refresh()->wallet_balance)->toEqual(6400.00)
+        ->and($sms->refresh()->status)->toBe(IncomingSmsStatus::Matched);
+});
+
+test('auto-approves bkash to bank transfer to city bank matching incoming bank sms', function () {
+    Config::set('payment_verification.window_time_minutes', 5);
+    Config::set('payment_verification.auto_approve', true);
+
+    $user = User::factory()->create(['wallet_balance' => 0.00]);
+
+    $walletTx = WalletTransaction::create([
+        'user_id' => $user->id,
+        'type' => WalletTransactionType::DEPOSIT,
+        'amount' => 7000.00,
+        'status' => WalletTransactionStatus::PENDING,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    // Extracted from bKash to Bank screenshot
+    $verification = PaymentVerification::create([
+        'verifiable_type' => WalletTransaction::class,
+        'verifiable_id' => $walletTx->id,
+        'provider' => 'city_bank', // Normalized to City Bank because money is received by City Bank
+        'beneficiary_bank' => 'সিটি ব্যাংক',
+        'receiver_account' => '1503XXXXXX001',
+        'receiver_name' => 'Cyber 32',
+        'trx_id' => 'DK4528OF9R',
+        'amount' => 7000.00,
+        'fee' => 87.50,
+        'total_amount' => 7087.50,
+        'confidence_score' => 0.98,
+        'is_suspicious' => false,
+        'verification_status' => PaymentVerificationStatus::Pending,
+        'transaction_time' => now()->subMinutes(8),
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    // Forwarded City Bank credit notification SMS
+    $sms = IncomingSms::create([
+        'provider' => 'city_bank',
+        'amount' => 7000.00,
+        'receiver_account' => '1503***4001',
+        'balance' => 142318.00,
+        'raw_message' => "04-Nov-2026\nCITYTOUCH TXN\nTk. 7,000 Deposit\nTk. 1,42,318 Balance\nA/C: 1503***4001",
+        'transaction_time' => now()->subMinutes(8),
+        'status' => IncomingSmsStatus::Unmatched,
+    ]);
+
+    $engine = app(PaymentVerificationEngine::class);
+    $result = $engine->evaluate($verification);
+
+    expect($result->verification_status)->toBe(PaymentVerificationStatus::Approved)
+        ->and($result->incoming_sms_id)->toBe($sms->id)
+        ->and($walletTx->refresh()->status)->toBe(WalletTransactionStatus::APPROVED)
+        ->and($user->refresh()->wallet_balance)->toEqual(7000.00)
         ->and($sms->refresh()->status)->toBe(IncomingSmsStatus::Matched);
 });
 
@@ -413,4 +470,60 @@ test('does not match a transaction sms outside the configured screenshot time wi
     expect($result->verification_status)->toBe(PaymentVerificationStatus::Pending)
         ->and($result->incoming_sms_id)->toBeNull()
         ->and($walletTx->refresh()->status)->toBe(WalletTransactionStatus::PENDING);
+});
+
+test('marks manual review when screenshot status explicitly indicates failure', function () {
+    $user = User::factory()->create();
+    $walletTx = WalletTransaction::create([
+        'user_id' => $user->id,
+        'type' => WalletTransactionType::DEPOSIT,
+        'amount' => 1000.00,
+        'status' => WalletTransactionStatus::PENDING,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    $verification = PaymentVerification::create([
+        'verifiable_type' => WalletTransaction::class,
+        'verifiable_id' => $walletTx->id,
+        'amount' => 1000.00,
+        'confidence_score' => 0.95,
+        'ai_response' => [
+            'status_in_screenshot' => 'failed',
+        ],
+        'verification_status' => PaymentVerificationStatus::Pending,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    $result = app(PaymentVerificationEngine::class)->evaluate($verification);
+
+    expect($result->verification_status)->toBe(PaymentVerificationStatus::ManualReview)
+        ->and($result->status_reason)->toContain('Screenshot indicates transaction failed (failed)');
+});
+
+test('marks manual review with clear message when ai analysis encounters an error', function () {
+    $user = User::factory()->create();
+    $walletTx = WalletTransaction::create([
+        'user_id' => $user->id,
+        'type' => WalletTransactionType::DEPOSIT,
+        'amount' => 1000.00,
+        'status' => WalletTransactionStatus::PENDING,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    $verification = PaymentVerification::create([
+        'verifiable_type' => WalletTransaction::class,
+        'verifiable_id' => $walletTx->id,
+        'confidence_score' => 0.0,
+        'ai_response' => [
+            'status_in_screenshot' => 'error',
+            'notes' => 'Gemini API returned HTTP 503.',
+        ],
+        'verification_status' => PaymentVerificationStatus::Pending,
+        'created_at' => now()->subMinutes(10),
+    ]);
+
+    $result = app(PaymentVerificationEngine::class)->evaluate($verification);
+
+    expect($result->verification_status)->toBe(PaymentVerificationStatus::ManualReview)
+        ->and($result->status_reason)->toContain('Gemini API returned HTTP 503');
 });

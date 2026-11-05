@@ -9,7 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:sync-ad-accounts-data')
-    ->everyFifteenMinutes()
+    ->cron('8-59/15 * * * *')
     ->withoutOverlapping(10)
     ->appendOutputTo(storage_path('logs/sync-ad-accounts-'.date('Y-m-d').'.log'));
 

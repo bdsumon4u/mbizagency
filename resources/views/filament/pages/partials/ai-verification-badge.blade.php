@@ -130,6 +130,13 @@
                     {{ $verification->confidence_score !== null ? (float) ($verification->confidence_score * 100).'%' : 'N/A' }}
                 </span>
             </div>
+            @php($aiNotes = data_get($verification->ai_response, 'notes'))
+            @if ($aiNotes && (float) ($verification->confidence_score ?? 0.0) <= 0.0)
+                <div class="sm:col-span-2 text-red-600 dark:text-red-400">
+                    <span class="text-gray-500 dark:text-gray-400">Extraction Error:</span>
+                    <span class="font-mono ml-1">{{ $aiNotes }}</span>
+                </div>
+            @endif
         </div>
 
         <!-- Matched Telegram SMS Details -->

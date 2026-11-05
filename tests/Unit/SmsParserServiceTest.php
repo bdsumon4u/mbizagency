@@ -142,4 +142,9 @@ test('matches masked bank account correctly against full account number', functi
     // Non-matching accounts
     expect($parser->matchesMaskedAccount('1503915274001', '***9999'))->toBeFalse();
     expect($parser->matchesMaskedAccount('1641100042219', '1234***2219'))->toBeFalse();
+
+    // Two differently masked formats of the same account (e.g. bKash 1503XXXXXX001 vs City Bank SMS 1503***4001)
+    expect($parser->matchesMaskedAccount('1503XXXXXX001', '1503***4001'))->toBeTrue();
+    expect($parser->matchesMaskedAccount('1503XXXXXXX001', '1503***4001'))->toBeTrue();
+    expect($parser->matchesMaskedAccount('1503XXXXXX001', '1503***9999'))->toBeFalse();
 });

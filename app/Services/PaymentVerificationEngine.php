@@ -83,10 +83,38 @@ class PaymentVerificationEngine
         }
 
         $screenshotStatus = mb_strtolower((string) data_get($verification->ai_response, 'status_in_screenshot', ''));
-        if ($screenshotStatus !== '' && ! in_array($screenshotStatus, ['successful', 'completed'], true)) {
+        $aiNotes = (string) data_get($verification->ai_response, 'notes', '');
+
+        // If AI analysis encountered an error (e.g. Gemini 503, timeout, missing key, unreadable image)
+        if ($screenshotStatus === 'error') {
+            $reason = ! empty($aiNotes)
+                ? "AI extraction failed ({$aiNotes}); manual review is required."
+                : 'AI could not extract transaction details from screenshot; manual review is required.';
+
             $verification->update([
                 'verification_status' => PaymentVerificationStatus::ManualReview,
-                'status_reason' => "Screenshot transaction status is {$screenshotStatus}; manual review is required.",
+                'status_reason' => $reason,
+                'checked_at' => now(),
+            ]);
+
+            return $verification->refresh();
+        }
+
+        $explicitFailureStatuses = ['failed', 'declined', 'cancelled', 'rejected'];
+        if (in_array($screenshotStatus, $explicitFailureStatuses, true)) {
+            $verification->update([
+                'verification_status' => PaymentVerificationStatus::ManualReview,
+                'status_reason' => "Screenshot indicates transaction failed ({$screenshotStatus}); manual review is required.",
+                'checked_at' => now(),
+            ]);
+
+            return $verification->refresh();
+        }
+
+        if (in_array($screenshotStatus, ['pending', 'processing', 'in_progress'], true)) {
+            $verification->update([
+                'verification_status' => PaymentVerificationStatus::ManualReview,
+                'status_reason' => 'Screenshot transaction is pending or processing; manual review is required.',
                 'checked_at' => now(),
             ]);
 
@@ -94,7 +122,7 @@ class PaymentVerificationEngine
         }
 
         $confidenceThreshold = (float) config('payment_verification.confidence_threshold', 0.85);
-        if ($verification->confidence_score !== null && (float) $verification->confidence_score < $confidenceThreshold) {
+        if ($verification->confidence_score !== null && (float) $verification->confidence_score > 0.0 && (float) $verification->confidence_score < $confidenceThreshold) {
             $verification->update([
                 'verification_status' => PaymentVerificationStatus::ManualReview,
                 'status_reason' => "AI confidence score ({$verification->confidence_score}) is below the required threshold ({$confidenceThreshold}).",

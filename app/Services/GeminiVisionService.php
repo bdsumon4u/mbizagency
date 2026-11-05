@@ -72,6 +72,27 @@ Reference mapping for these receipt layouts:
 - EBL "REF:" is a reference number: set reference, and set trx_id only if a separate transaction ID is explicitly shown.
 - For other providers, put explicitly labeled TrxID/TxnID/Transaction ID/TXN NO in trx_id; keep a separately labeled reference in reference.
 
+Provider Determination for MFS to Bank Transfers (bKash to Bank / বিকাশ টু ব্যাংক, Nagad to Bank, Rocket to Bank, etc.):
+- When money is sent from an MFS app to a bank account (shows a receiving bank name or logo, such as City Bank / সিটি ব্যাংক, BRAC Bank / ব্র্যাক ব্যাংক, DBBL / ডাচ-বাংলা ব্যাংক, Eastern Bank / EBL / ইস্টার্ন ব্যাংক):
+  * The payment is received by the destination bank, and the confirmation SMS will come from that receiving bank.
+  * Therefore, "provider" MUST be set to the receiving/beneficiary bank:
+    - "city_bank" if the receiving bank is City Bank / সিটি ব্যাংক
+    - "brac_bank" if the receiving bank is BRAC Bank / ব্র্যাক ব্যাংক
+    - "dbbl" if the receiving bank is Dutch-Bangla Bank / DBBL / ডাচ-বাংলা ব্যাংক
+    - "ebl" if the receiving bank is Eastern Bank / EBL / ইস্টার্ন ব্যাংক
+  * Put the receiving bank name in "beneficiary_bank" (e.g. "City Bank" or "সিটি ব্যাংক").
+  * Put the MFS transfer description in "txn_type" (e.g. "বিকাশ টু ব্যাংক-এ টাকা পাঠানো").
+  * Put the net transfer amount in "amount" (e.g. 7000.00), any fee in "fee" (e.g. 87.50), and total in "total_amount" (e.g. 7087.50).
+
+Rules for determining status_in_screenshot:
+- Bangladeshi internet banking receipts (City Bank "citytouch", BRAC Bank "Astha", DBBL "NexusPay", EBL), MFS apps (bKash, Nagad, Rocket, Upay), and printed ATM/CRM deposit slips are generated AFTER a transaction has occurred.
+- Classify as "successful" if:
+  * The receipt indicates a completed transfer or deposit (e.g. contains "Transferred to", "Transferred", "Transfer Successful", "Transaction Successful", "Fund Transfer", "Cash Deposit", "Deposit", "Debit Voucher", "Paid", "Success").
+  * Or the receipt shows transaction confirmation details (such as Reference No, Date/Time, Amount, To Account) with NO indicator of failure or error. If there is no sign of failure, it MUST be classified as "successful".
+- Classify as "failed" ONLY if the image explicitly displays an error or failure message (e.g. "Failed", "Transaction Failed", "Declined", "Cancelled", "Rejected", "Error", "Insufficient Balance").
+- Classify as "pending" ONLY if explicitly marked as pending, scheduled, or processing.
+- Do NOT classify as "unknown" if the image is a valid transaction receipt, memo, or deposit slip.
+
 For transaction_time, use the date and time printed on the receipt (Bangladesh local time, Asia/Dhaka), normalized to "YYYY-MM-DD HH:mm:ss". All example receipts include a time. Do not use the phone status-bar time, file metadata, upload time, or current server time.
 For amount, use the transfer/deposit amount. Put any service charge and VAT in fee, and the full debit/grand total in total_amount when shown.
 
@@ -102,9 +123,9 @@ PROMPT;
             $endpoint = "{$baseUrl}/models/{$model}:generateContent";
 
             $response = Http::withHeader('x-goog-api-key', $apiKey)
-                ->connectTimeout(10)
-                ->timeout(30)
-                ->retry(2, 500, null, false)
+                ->connectTimeout(15)
+                ->timeout(45)
+                ->retry(3, 1000, fn () => true, false)
                 ->post($endpoint, [
                     'contents' => [
                         [
@@ -144,6 +165,23 @@ PROMPT;
             }
 
             $provider = $decoded['provider'] ?? null;
+            $beneficiaryBank = $decoded['beneficiary_bank'] ?? null;
+            $txnType = $decoded['txn_type'] ?? $decoded['transaction_type'] ?? null;
+
+            // Normalize MFS to Bank transfers to the receiving bank provider
+            if (! empty($beneficiaryBank) || ($txnType !== null && preg_match('/(?:to\s*bank|টু\s*ব্যাংক)/ui', (string) $txnType))) {
+                $bankTarget = mb_strtolower((string) ($beneficiaryBank ?: $txnType));
+                if (str_contains($bankTarget, 'city') || str_contains($bankTarget, 'সিটি')) {
+                    $provider = 'city_bank';
+                } elseif (str_contains($bankTarget, 'brac') || str_contains($bankTarget, 'ব্র্যাক')) {
+                    $provider = 'brac_bank';
+                } elseif (str_contains($bankTarget, 'dbbl') || str_contains($bankTarget, 'dutch') || str_contains($bankTarget, 'ডাচ') || str_contains($bankTarget, 'nexus')) {
+                    $provider = 'dbbl';
+                } elseif (str_contains($bankTarget, 'ebl') || str_contains($bankTarget, 'eastern') || str_contains($bankTarget, 'ইস্টার্ন')) {
+                    $provider = 'ebl';
+                }
+            }
+
             $reference = $decoded['reference'] ?? $decoded['ref'] ?? null;
             $rawTrxId = $decoded['trx_id'] ?? $decoded['transaction_id'] ?? null;
 
@@ -276,7 +314,7 @@ PROMPT;
             'receiver_name' => null,
             'reference' => null,
             'transaction_time' => null,
-            'status_in_screenshot' => 'unknown',
+            'status_in_screenshot' => 'error',
             'is_suspicious_or_edited' => false,
             'confidence_score' => 0.0,
             'notes' => $reason,

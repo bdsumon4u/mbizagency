@@ -346,23 +346,68 @@ class SmsParserService
     }
 
     /**
-     * Check if a full account number matches a masked account format (e.g. 1503***4001, ***2219, 20539**0001).
+     * Check if an account number matches a masked account format (e.g. 1503***4001, ***2219, 20539**0001, 1503XXXXXX001).
+     * Supports comparing an unmasked account against a masked account, or two differently masked representations.
      */
     public function matchesMaskedAccount(string $fullAccount, string $maskedAccount): bool
     {
-        $cleanFull = (string) preg_replace('/[^0-9]/', '', $fullAccount);
-        $cleanMask = trim($maskedAccount);
+        $acc1 = trim($fullAccount);
+        $acc2 = trim($maskedAccount);
 
-        if ($cleanFull === '' || $cleanMask === '') {
+        if ($acc1 === '' || $acc2 === '') {
             return false;
         }
 
-        if ($cleanFull === $cleanMask) {
+        if ($acc1 === $acc2) {
             return true;
         }
 
-        // Split mask by wildcards (* or x)
-        $split = preg_split('/[\*xX]+/', $cleanMask);
+        $isMasked1 = (bool) preg_match('/[\*xX]/', $acc1);
+        $isMasked2 = (bool) preg_match('/[\*xX]/', $acc2);
+
+        // Case A: Both are masked accounts (e.g. bKash "1503XXXXXX001" vs Bank SMS "1503***4001")
+        if ($isMasked1 && $isMasked2) {
+            $split1 = preg_split('/[\*xX]+/', $acc1);
+            $split2 = preg_split('/[\*xX]+/', $acc2);
+
+            $parts1 = array_values(array_filter(is_array($split1) ? $split1 : [], fn (string $p): bool => $p !== ''));
+            $parts2 = array_values(array_filter(is_array($split2) ? $split2 : [], fn (string $p): bool => $p !== ''));
+
+            $hasPrefix1 = ! preg_match('/^[\*xX]/', $acc1);
+            $hasPrefix2 = ! preg_match('/^[\*xX]/', $acc2);
+
+            // If both have prefixes, compare prefixes
+            if ($hasPrefix1 && $hasPrefix2) {
+                $p1 = (string) ($parts1[0] ?? '');
+                $p2 = (string) ($parts2[0] ?? '');
+                $minPrefixLen = min(strlen($p1), strlen($p2));
+                if ($minPrefixLen >= 3 && substr($p1, 0, $minPrefixLen) !== substr($p2, 0, $minPrefixLen)) {
+                    return false;
+                }
+            } elseif ($hasPrefix1 !== $hasPrefix2 && ! empty($parts1) && ! empty($parts2)) {
+                // One has a prefix and one does not (e.g. ***2219 vs 1641***2219)
+                // We allow matching on suffix
+            }
+
+            // Compare suffixes
+            $s1 = (string) end($parts1);
+            $s2 = (string) end($parts2);
+
+            if ($s1 !== '' && $s2 !== '') {
+                $minLen = min(strlen($s1), strlen($s2));
+
+                return substr($s1, -$minLen) === substr($s2, -$minLen);
+            }
+
+            return true;
+        }
+
+        // Case B: One is unmasked and one is masked
+        $unmasked = $isMasked1 ? $acc2 : $acc1;
+        $masked = $isMasked1 ? $acc1 : $acc2;
+
+        $cleanUnmasked = (string) preg_replace('/[^0-9]/', '', $unmasked);
+        $split = preg_split('/[\*xX]+/', $masked);
         if (! is_array($split)) {
             return false;
         }
@@ -374,9 +419,9 @@ class SmsParserService
         }
 
         // Only suffix masked, e.g. ***2219
-        if (str_starts_with($cleanMask, '*') || str_starts_with($cleanMask, 'x') || str_starts_with($cleanMask, 'X')) {
+        if (preg_match('/^[\*xX]/', $masked)) {
             $suffix = (string) end($parts);
-            if (! str_ends_with($cleanFull, $suffix)) {
+            if (! str_ends_with($cleanUnmasked, $suffix)) {
                 return false;
             }
 
@@ -389,6 +434,6 @@ class SmsParserService
         $prefix = (string) ($parts[0] ?? '');
         $suffix = (string) end($parts);
 
-        return str_starts_with($cleanFull, $prefix) && str_ends_with($cleanFull, $suffix);
+        return str_starts_with($cleanUnmasked, $prefix) && str_ends_with($cleanUnmasked, $suffix);
     }
 }

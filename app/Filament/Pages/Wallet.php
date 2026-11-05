@@ -5,13 +5,17 @@ namespace App\Filament\Pages;
 use App\Actions\ApproveWalletTransactionAction;
 use App\Enums\WalletTransactionStatus;
 use App\Enums\WalletTransactionType;
+use App\Jobs\AnalyzePaymentScreenshotJob;
 use App\Models\WalletTransaction;
+use App\Services\GeminiVisionService;
+use App\Services\PaymentVerificationEngine;
 use DB;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
@@ -114,6 +118,25 @@ class Wallet extends Page implements HasTable
                             'record' => $record,
                         ]))
                         ->modalFooterActions([
+                            Action::make('reanalyzeAi')
+                                ->label('Re-run AI Check')
+                                ->icon('heroicon-o-arrow-path')
+                                ->color('gray')
+                                ->visible(fn (WalletTransaction $record): bool => self::isAdminPanel() && $record->type === WalletTransactionType::DEPOSIT && ! empty($record->screenshots))
+                                ->action(function (WalletTransaction $record) {
+                                    app(AnalyzePaymentScreenshotJob::class, [
+                                        'verifiableType' => WalletTransaction::class,
+                                        'verifiableId' => $record->id,
+                                    ])->handle(
+                                        app(GeminiVisionService::class),
+                                        app(PaymentVerificationEngine::class),
+                                    );
+
+                                    Notification::make()
+                                        ->title('AI Analysis Updated')
+                                        ->success()
+                                        ->send();
+                                }),
                             Action::make('editAmount')
                                 ->label('Edit Amount')
                                 ->icon('heroicon-o-pencil')

@@ -9,7 +9,10 @@ use App\Enums\OrderStatus;
 use App\Filament\Tables\Columns\CurrencyColumn;
 use App\Filament\Tables\Columns\DateTimeColumn;
 use App\Filament\Tables\Columns\OrderHistoryTable\AdAccountColumn;
+use App\Jobs\AnalyzePaymentScreenshotJob;
 use App\Models\Order;
+use App\Services\GeminiVisionService;
+use App\Services\PaymentVerificationEngine;
 use BackedEnum;
 use Exception;
 use Filament\Actions\Action;
@@ -157,6 +160,7 @@ class OrderHistory extends Page implements HasTable
                             'record' => $record,
                         ]))
                         ->modalFooterActions([
+                            self::reanalyzeAiAction(),
                             self::printInvoiceAction(),
                             self::approveOrderAction(),
                             self::rejectOrderAction(),
@@ -236,5 +240,28 @@ class OrderHistory extends Page implements HasTable
             ->cancelParentActions()
             ->requiresConfirmation()
             ->visible(fn (Order $record): bool => static::isAdminPanel() && $record->status !== OrderStatus::REJECTED);
+    }
+
+    private static function reanalyzeAiAction(): Action
+    {
+        return Action::make('reanalyzeAi')
+            ->label('Re-run AI Check')
+            ->icon(Heroicon::OutlinedArrowPath)
+            ->color('gray')
+            ->visible(fn (Order $record): bool => static::isAdminPanel() && $record->status === OrderStatus::PENDING && ! empty($record->screenshots))
+            ->action(function (Order $record): void {
+                app(AnalyzePaymentScreenshotJob::class, [
+                    'verifiableType' => Order::class,
+                    'verifiableId' => $record->id,
+                ])->handle(
+                    app(GeminiVisionService::class),
+                    app(PaymentVerificationEngine::class),
+                );
+
+                Notification::make()
+                    ->title('AI Analysis Updated')
+                    ->success()
+                    ->send();
+            });
     }
 }
